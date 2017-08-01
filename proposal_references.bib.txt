@@ -1,0 +1,91 @@
+@article {JCE:JCE90401,
+author = {WALDO, ALBERT L.},
+title = {Mechanisms of Atrial Fibrillation},
+journal = {Journal of Cardiovascular Electrophysiology},
+volume = {14},
+publisher = {Blackwell Science Inc},
+issn = {1540-8167},
+url = {http://dx.doi.org/10.1046/j.1540-8167.2003.90401.x},
+doi = {10.1046/j.1540-8167.2003.90401.x},
+pages = {S267--S274},
+keywords = {atrial fibrillation, fibrillatory conduction, reentry},
+year = {2003},
+}
+
+@article{PhysRevE.94.042401,
+ 
+title = {Myocardial architecture and patient variability in clinical patterns of atrial fibrillation},
+ 
+author = {Manani, Kishan A. and Christensen, Kim and Peters, Nicholas S.},
+ 
+journal = {Phys. Rev. E},
+ 
+volume = {94},
+ 
+issue = {4},
+ 
+pages = {042401},
+ 
+numpages = {7},
+ 
+year = {2016},
+ 
+month = {Oct},
+ 
+publisher = {American Physical Society},
+ 
+doi = {10.1103/PhysRevE.94.042401},
+ 
+url = {https://link.aps.org/doi/10.1103/PhysRevE.94.042401}
+
+}
+
+
+@article{415219a,
+
+author = {Nattel, Stanley},
+
+title = {New ideas about atrial fibrillation 50 years on
+},
+journal = {Nature
+},
+year = 2002,
+month = {Jan},
+
+volume = 415,
+issue = 6868,
+
+pages = {219
+-226},
+url = {http://dx.doi.org/10.1038/415219a},
+doi = {10.1038/415219a}
+} 
+
+
+@article{PhysRevLett.114.028104,
+  
+title = {Simple Model for Identifying Critical Regions in Atrial Fibrillation},
+ 
+author = {Christensen, Kim and Manani, Kishan A. and Peters, Nicholas S.},
+ 
+journal = {Phys. Rev. Lett.},
+ 
+volume = {114},
+ 
+issue = {2},
+ 
+pages = {028104},
+ 
+numpages = {6},
+ 
+year = {2015},
+ 
+month = {Jan},
+ 
+publisher = {American Physical Society},
+ 
+doi = {10.1103/PhysRevLett.114.028104},
+ 
+url = {https://link.aps.org/doi/10.1103/PhysRevLett.114.028104}
+
+}
