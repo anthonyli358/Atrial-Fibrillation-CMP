@@ -8,47 +8,58 @@ import scipy.ndimage as spim
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-structural_homogenity = 1       # Probability of transverse connections
-dysfunctional_parameter = 0     # Fraction of dysfunctional cells
-substrate_size = (100, 100)
-pacemaker_period = 10  # pacemaker activation period
 
-
-def activate_pacemaker(substrate):
-    # Activate the substrate pacecemaker cells
-    substrate[:, 0] = 15
-
-
-def gen_substrate(substrate_size, structural_homogenity, dysfunction_parameter):
-    substrate = np.zeros(substrate_size)
-    linkage = np.random.choice(a=[True, False],
-                               size=substrate_size,
-                               p=[structural_homogenity, 1-structural_homogenity]
-                               )
-    dysfunction_mask = np.random.choice(a=[True, False],
+class Substrate:
+    def __init__(self, substrate_size, structural_heterogeneity, dysfunction_parameter):
+        self.substrate_size = substrate_size
+        self.structural_heterogeneity = structural_heterogeneity
+        self.dysfunction_parameter = dysfunction_parameter
+        self.activation = np.zeros(substrate_size)  # Grid of activation state
+        self.linkage = np.random.choice(a=[True, False],  # Grid of downward linkages
                                         size=substrate_size,
-                                        p=[dysfunction_parameter, 1-dysfunction_parameter]
+                                        p=[structural_heterogeneity, 1 - structural_heterogeneity]
                                         )
-    return substrate, linkage, dysfunction_mask
+        self.dysfunction_mask = np.random.choice(a=[True, False],  # Grid of dysfunctional nodes
+                                                 size=substrate_size,
+                                                 p=[dysfunction_parameter, 1 - dysfunction_parameter]
+                                                 )
 
-def iterate(substrate):
-    excited = substrate == 15  # Condition for being excited
-    resting = substrate == 0  # Condition for resting
+    def activate_pacemaker(self):
+        # Activate the substrate pacecemaker cells
+        self.activation[:, 0] = 15
 
-    neighbors = [[0, 0, 0],
-                 [1, 0, 1],
-                 [0, 0, 0]]
-    neighbor_excited = spim.convolve(excited, neighbors, mode='constant')
-    substrate[np.invert(resting)] -= 1
-    substrate[resting & neighbor_excited] = 15
+    def iterate(self):
+        excited = self.activation == 15  # Condition for being excited
+        resting = self.activation == 0  # Condition for resting
+
+        l_neighbors = [[0, 0, 0],
+                       [1, 0, 1],
+                       [0, 0, 0]]
+        v_neighbors = [[0, 0, 0],
+                       [0, 0, 0],
+                       [0, 1, 0]]
+        h_neighbor_excited = spim.convolve(excited, l_neighbors, mode='constant')
+        v_neighbor_excited_from_above = spim.convolve(excited & self.linkage,
+                                                      v_neighbors,
+                                                      mode='wrap'
+                                                      )
+        v_neighbor_excited_from_below = spim.convolve(excited & np.roll(self.linkage, 1, axis=0),  # shifts link value down
+                                                      np.roll(v_neighbors,1, axis=0),  # Changes neighbor from down to up
+                                                      mode='wrap'
+                                                      )
+        self.activation[~resting] -= 1  # If not resting, reduce activation count by one
+        excitable = h_neighbor_excited|v_neighbor_excited_from_above|v_neighbor_excited_from_below
+        self.activation[resting & excitable & ~self.dysfunction_mask] = 15
+        return self.activation
+
 
 def simulation(runtime, pacemaker_period, substrate):
     result = np.zeros((runtime,)+substrate_size)
     for t in range(runtime):
         if t % pacemaker_period == 0:
-            activate_pacemaker(substrate)
-        iterate(substrate)
-        result[t] = substrate
+            substrate.activate_pacemaker()
+
+        result[t] = substrate.iterate()
     return result
 
 
@@ -64,10 +75,17 @@ def animate_results(results):
     ani = animation.FuncAnimation(fig, updatefig, interval=1000)
     plt.show()
 
-substrate = np.zeros(substrate_size)
 
-results = simulation(runtime=20, pacemaker_period=25, substrate=substrate)
 
+structural_homogenity = .18       # Probability of transverse connections
+dysfunction_parameter = 0.05     # Fraction of dysfunctional cells
+substrate_size = (200, 200)
+pacemaker_period = 10  # pacemaker activation period
+
+substrate = Substrate(substrate_size, structural_homogenity, dysfunction_parameter)
+
+results = simulation(runtime=200, pacemaker_period=200, substrate=substrate)
+print('Done')
 animate_results(results)
 
 
