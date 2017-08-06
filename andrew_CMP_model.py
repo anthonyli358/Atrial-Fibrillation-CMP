@@ -7,30 +7,36 @@ import numpy as np
 import scipy.ndimage as spim
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import pickle
 
 
 class Substrate:
-    def __init__(self, substrate_size, structural_heterogeneity, dysfunction_parameter):
+    def __init__(self, substrate_size, structural_heterogeneity,
+                 dysfunction_parameter, dysfunction_probability, refractory_period):
         self.substrate_size = substrate_size
         self.structural_heterogeneity = structural_heterogeneity
         self.dysfunction_parameter = dysfunction_parameter
+        self.dysfunction_probability = dysfunction_probability
+        self.refractory_period = refractory_period
         self.activation = np.zeros(substrate_size)  # Grid of activation state
         self.linkage = np.random.choice(a=[True, False],  # Grid of downward linkages
                                         size=substrate_size,
                                         p=[structural_heterogeneity, 1 - structural_heterogeneity]
                                         )
-        self.dysfunction_mask = np.random.choice(a=[True, False],  # Grid of dysfunctional nodes
-                                                 size=substrate_size,
-                                                 p=[dysfunction_parameter, 1 - dysfunction_parameter]
-                                                 )
+        self.dysfunctional = np.random.choice(a=[True, False],  # Grid of dysfunctional nodes
+                                              size=substrate_size,
+                                              p=[dysfunction_parameter, 1 - dysfunction_parameter]
+                                              )
+        self.inactive = np.zeros(substrate_size, dtype=bool)  # Grid of currently dysfunctioning nodes
 
     def activate_pacemaker(self):
         # Activate the substrate pacecemaker cells
-        self.activation[:, 0] = 15
+        self.activation[:, 0] = int(self.refractory_period)
 
     def iterate(self):
-        excited = self.activation == 15  # Condition for being excited
+        excited = self.activation == int(self.refractory_period)  # Condition for being excited
         resting = self.activation == 0  # Condition for resting
+
 
         l_neighbors = [[0, 0, 0],
                        [1, 0, 1],
@@ -48,8 +54,15 @@ class Substrate:
                                                       mode='wrap'
                                                       )
         self.activation[~resting] -= 1  # If not resting, reduce activation count by one
-        excitable = h_neighbor_excited|v_neighbor_excited_from_above|v_neighbor_excited_from_below
-        self.activation[resting & excitable & ~self.dysfunction_mask] = 15
+        excitable = h_neighbor_excited | v_neighbor_excited_from_above | v_neighbor_excited_from_below
+
+        self.inactive[self.dysfunctional & excitable] = np.random.choice(a=[True, False],  # Deactivate dysfunctional nodes
+                                                             size=len(self.inactive[self.dysfunctional & excitable]),
+                                                             p=[self.dysfunction_probability,
+                                                                1 - self.dysfunction_probability]
+                                                             )
+
+        self.activation[resting & excitable & ~self.inactive] = self.refractory_period
         return self.activation
 
 
@@ -65,30 +78,25 @@ def simulation(runtime, pacemaker_period, substrate):
 
 def animate_results(results):
     fig = plt.figure()
-    t = 0
+    ims = [[plt.imshow(frame, animated=True)] for frame in results]
 
-    def updatefig(t):
-        im = plt.imshow(results[t], animated=True)
-        t += 1
-        return im
-
-    ani = animation.FuncAnimation(fig, updatefig, interval=1000)
+    ani = animation.ArtistAnimation(fig, ims, interval=5, blit=True,
+                                    repeat_delay=500)
     plt.show()
 
 
+structural_homogeniety = 1     # Probability of transverse connections
+dysfunction_parameter = .78    # Fraction of dysfunctional cells
+dysfunction_probability = .5
+substrate_size = (300, 300)
+pacemaker_period = 220  # pacemaker activation period
+refractory_period = 50
 
-structural_homogenity = .18       # Probability of transverse connections
-dysfunction_parameter = 0.05     # Fraction of dysfunctional cells
-substrate_size = (200, 200)
-pacemaker_period = 10  # pacemaker activation period
+substrate = Substrate(substrate_size, structural_homogeniety,
+                      dysfunction_parameter, dysfunction_probability, refractory_period)
 
-substrate = Substrate(substrate_size, structural_homogenity, dysfunction_parameter)
-
-results = simulation(runtime=200, pacemaker_period=200, substrate=substrate)
+results = simulation(runtime=1000, pacemaker_period=200, substrate=substrate)
 print('Done')
 animate_results(results)
 
-
-
-
-
+plt.show()
