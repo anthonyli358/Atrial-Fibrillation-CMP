@@ -35,19 +35,13 @@ class Substrate:
         excited = self.activation == self.refractory_period  # Condition for being excited
         resting = self.activation == 0  # Condition for resting
 
-        h_neighbors = [[0, 0, 0],
-                       [1, 0, 1],
-                       [0, 0, 0]]
-        v_neighbord = [[0, 0, 0],
-                       [0, 0, 0],
-                       [0, 1, 0]]
-        v_neighboru = [[0, 1, 0],
-                       [0, 0, 0],
-                       [0, 0, 0]]
-        h_neighbor_excited = convolve(excited, h_neighbors, mode='constant')
-        v_neighbor_excited_from_above = convolve(excited & self.linkage, v_neighbord, mode='wrap')
-        v_neighbor_excited_from_below = convolve(excited & np.roll(self.linkage, 1, axis=0),  # shifts link value down
-                                                 v_neighboru, mode='wrap')
+        h_neighbor_excited = (np.delete(np.pad(excited, [[0,0],[1,0]], mode='constant'), -1, axis=1)
+                              | np.delete(np.pad(excited, [[0,0],[0,1]], mode='constant'), 0, axis=1))
+
+        v_neighbor_excited_from_above = np.roll(excited & self.linkage, 1, axis=0)
+
+        v_neighbor_excited_from_below = np.roll(excited & np.roll(self.linkage, 1, axis=0), -1, axis=0)
+
 
         excitable = h_neighbor_excited | v_neighbor_excited_from_above | v_neighbor_excited_from_below
 
@@ -79,9 +73,9 @@ def animate(results):
     plt.show()
 
 
-structural_homogeneity = .18  # Probability of transverse connections
-dysfunction_parameter = .05  # Fraction of dysfunctional cells
-dysfunction_probability = .05
+structural_homogeneity = .14  # Probability of transverse connections
+dysfunction_parameter = .1  # Fraction of dysfunctional cells
+dysfunction_probability = .1
 substrate_size = (300, 300)
 pacemaker_period = 220  # pacemaker activation period
 refractory_period = 50
