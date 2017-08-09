@@ -8,7 +8,6 @@ import time
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.ndimage import convolve
 
 
 class Substrate:
@@ -35,15 +34,17 @@ class Substrate:
         excited = self.activation == self.refractory_period  # Condition for being excited
         resting = self.activation == 0  # Condition for resting
 
-        h_neighbor_excited = (np.delete(np.pad(excited, [[0,0],[1,0]], mode='constant'), -1, axis=1)
-                              | np.delete(np.pad(excited, [[0,0],[0,1]], mode='constant'), 0, axis=1))
+        excited_from_left = np.roll(excited, 1, axis=1)
+        excited_from_left[:,0] = np.bool_(False)  # Eliminates wrapping boundary, use numpy bool just in case
 
-        v_neighbor_excited_from_above = np.roll(excited & self.linkage, 1, axis=0)
+        excited_from_right = np.roll(excited, -1, axis=1)
+        excited_from_right[:, -1] = np.bool_(False)
 
-        v_neighbor_excited_from_below = np.roll(excited & np.roll(self.linkage, 1, axis=0), -1, axis=0)
+        excited_from_above = np.roll(excited & self.linkage, 1, axis=0)
 
+        excited_from_below = np.roll(excited & np.roll(self.linkage, 1, axis=0), -1, axis=0)
 
-        excitable = h_neighbor_excited | v_neighbor_excited_from_above | v_neighbor_excited_from_below
+        excitable = excited_from_left | excited_from_right | excited_from_above | excited_from_below
 
         self.inactive[self.dysfunctional & excitable] = (np.random.random(len(self.inactive[self.dysfunctional
                                                                                             & excitable]))
@@ -55,7 +56,7 @@ class Substrate:
 
 
 def simulation(runtime, pacemaker_period, substrate):
-    result = np.zeros((runtime,) + substrate_size, dtype='int8')
+    result = np.zeros((runtime,) + substrate.substrate_size, dtype='int8')
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
@@ -64,35 +65,20 @@ def simulation(runtime, pacemaker_period, substrate):
     return result
 
 
-def animate(results):
+def animate(results, save=False):
     fig = plt.figure()
     ims = [[plt.imshow(frame, animated=True)] for frame in results]
 
     ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True,
                                     repeat_delay=500)
+    if save:
+        plt.rcParams['animation.ffmpeg_path'] = "C:/Program Files/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
+
+        writer = animation.writers['ffmpeg'](fps=30)
+        print('SAVING')
+        ani.save(save, writer)
+        print('Saved as {}'.format(save))
     plt.show()
 
 
-structural_homogeneity = .14  # Probability of transverse connections
-dysfunction_parameter = .1  # Fraction of dysfunctional cells
-dysfunction_probability = .1
-substrate_size = (300, 300)
-pacemaker_period = 220  # pacemaker activation period
-refractory_period = 50
-runtime = 1000
 
-start = time.time()
-print('GENERATING SUBSTRATE')
-
-substrate = Substrate(substrate_size, structural_homogeneity,
-                      dysfunction_parameter, dysfunction_probability, refractory_period)
-
-print('RUNNING SIMULATION')
-
-results = simulation(runtime, pacemaker_period, substrate)
-
-runtime = time.time() - start
-print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
-
-print('ANIMATING RESULTS')
-animate(results)
