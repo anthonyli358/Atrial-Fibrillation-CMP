@@ -487,7 +487,14 @@
       <option name="project" value="LOCAL" />
       <updated>1507323634802</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Added 3d">
+      <created>1507323719976</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1507323719976</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -593,7 +600,8 @@
     <MESSAGE value="started building my model" />
     <MESSAGE value="Working model" />
     <MESSAGE value="Removed convolutions, 3.5-1.0 second runtime" />
-    <option name="LAST_COMMIT_MESSAGE" value="Removed convolutions, 3.5-1.0 second runtime" />
+    <MESSAGE value="Added 3d" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added 3d" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
