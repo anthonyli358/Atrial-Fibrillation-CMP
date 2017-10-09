@@ -45,7 +45,7 @@ class Substrate:
         excited_from_inside = np.roll(excited & self.layer_linkage, 1, axis=2)
         excited_from_inside[:,:,0] = np.bool(False)
 
-        excited_from_outside = np.roll(excited & self.layer_linkage, -1, axis=2)
+        excited_from_outside = np.roll(excited & np.roll(self.layer_linkage, 1, axis=2), -1, axis=2)
         excited_from_outside[:,:,-1] = np.bool(False)
 
         excited_from_above = np.roll(excited & self.linkage, 1, axis=0)
