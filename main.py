@@ -2,10 +2,10 @@ import time
 import af_model as af
 import numpy as np
 
-structural_homogeneity = .16  # Probability of transverse connections
-dysfunction_parameter = .1  # Fraction of dysfunctional cells
-dysfunction_probability = .1
-substrate_size = (500, 500, 1)
+structural_homogeneity = .14  # Probability of transverse connections
+dysfunction_parameter = .05  # Fraction of dysfunctional cells
+dysfunction_probability = .05
+substrate_size = (200, 200, 1)
 pacemaker_period = 220  # pacemaker activation period
 refractory_period = 50
 runtime = 1000
@@ -28,5 +28,5 @@ print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 # print(results[:,:,:,0])
 print('ANIMATING RESULTS')
-# af.animate(results[:,:,50,:]) # Cut through
+af.animate(results[:,:,50,:]) # Cut through
 af.animate(results[:,:,:,0])  # Normal view
