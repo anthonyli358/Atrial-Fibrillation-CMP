@@ -7,6 +7,7 @@ import time
 
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 
 
@@ -74,10 +75,16 @@ def simulation(runtime, pacemaker_period, substrate):
     return result
 
 
-def animate(results, save=False):
+def animate(results, save=False, cross_view=False):
     fig = plt.figure()
-    ims = [[plt.imshow(frame, animated=True)] for frame in results]
-
+    if cross_view:
+        gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[-2:])
+        ax1 = plt.subplot(gs[0])
+        ax2 = plt.subplot(gs[1])
+        ax2.set(adjustable='box-forced')
+        ims = [[ax1.imshow(frame[:,:,0], animated=True), ax2.imshow(frame[:,-1,:], animated=True)] for frame in results]
+    else:
+        ims = [[plt.imshow(frame[:,:,0], animated=True)] for frame in results]
     ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True,
                                     repeat_delay=500)
     if save:
