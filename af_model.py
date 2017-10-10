@@ -13,18 +13,23 @@ import numpy as np
 
 class Substrate:
     def __init__(self, substrate_size, structural_homogeneity,
-                 dysfunction_parameter, dysfunction_probability, refractory_period, layer_linkage):
+                 dysfunction_parameter, dysfunction_probability, refractory_period, layer_homogenity, seed=False):
+        if not seed:
+            seed = np.random.randint(0,2**32-1, dtype='uint32')
+        self.seed = seed
+        self.r = np.random.RandomState(seed)
         self.substrate_size = substrate_size
         self.structural_heterogeneity = structural_homogeneity
         self.dysfunction_parameter = dysfunction_parameter
         self.dysfunction_probability = dysfunction_probability
         self.refractory_period = np.int8(refractory_period)
+        self.layer_homogenity = layer_homogenity
         self.activation = np.zeros(substrate_size, dtype='int8')  # Grid of activation state
-        self.linkage = np.random.choice(a=[True, False], size=substrate_size,  # Grid of downward linkages
+        self.linkage = self.r.choice(a=[True, False], size=substrate_size,  # Grid of downward linkages
                                         p=[structural_homogeneity, 1 - structural_homogeneity])
-        self.layer_linkage = np.random.choice(a=[True, False], size=substrate_size,  # Grid of layer linkages
-                                        p=[layer_linkage, 1 - layer_linkage])
-        self.dysfunctional = np.random.choice(a=[True, False], size=substrate_size,  # Grid of dysfunctional nodes
+        self.layer_linkage = self.r.choice(a=[True, False], size=substrate_size,  # Grid of layer linkages
+                                        p=[layer_homogenity, 1 - layer_homogenity])
+        self.dysfunctional = self.r.choice(a=[True, False], size=substrate_size,  # Grid of dysfunctional nodes
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
 
         self.inactive = np.zeros(substrate_size, dtype=bool)  # Grid of currently dysfunctional nodes
@@ -64,6 +69,11 @@ class Substrate:
         self.activation[resting & excitable & ~self.inactive] = self.refractory_period
         return self.activation
 
+    def identifier(self):
+        return '{},{},{},{},{},{},{}'.format(self.substrate_size, self.structural_heterogeneity,self.dysfunction_parameter,
+                                    self.dysfunction_probability, self.refractory_period, self.layer_homogenity,
+                                    self.seed)
+
 
 def simulation(runtime, pacemaker_period, substrate):
     result = np.zeros((runtime,) + substrate.substrate_size, dtype='int8')
@@ -75,14 +85,13 @@ def simulation(runtime, pacemaker_period, substrate):
     return result
 
 
-def animate(results, save=False, cross_view=False):
+def animate(results, save=False, cross_view=False, cross_pos=-1):
     fig = plt.figure()
     if cross_view:
         gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[-2:])
         ax1 = plt.subplot(gs[0])
         ax2 = plt.subplot(gs[1])
-        ax2.set(adjustable='box-forced')
-        ims = [[ax1.imshow(frame[:,:,0], animated=True), ax2.imshow(frame[:,-1,:], animated=True)] for frame in results]
+        ims = [[ax1.imshow(frame[:,:,0], animated=True), ax2.imshow(frame[:, cross_pos, :], animated=True)] for frame in results]
     else:
         ims = [[plt.imshow(frame[:,:,0], animated=True)] for frame in results]
     ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True,
