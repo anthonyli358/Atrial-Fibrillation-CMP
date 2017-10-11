@@ -4,7 +4,6 @@ Model of atrial fibrillation
 Andrew Ford
 """
 
-
 import numpy as np
 
 
@@ -12,6 +11,7 @@ class Substrate:
     """
 
     """
+
     def __init__(self, substrate_size, s_structural_homogeneity, p_structural_homogeneity,
                  dysfunction_parameter, dysfunction_probability, refractory_period, seed=False):
         """
@@ -26,7 +26,7 @@ class Substrate:
         :param seed:
         """
         if not seed:
-            seed = np.random.randint(0,2**32-1, dtype='uint32')
+            seed = np.random.randint(0, 2 ** 32 - 1, dtype='uint32')
         self.seed = seed
         self.r = np.random.RandomState(seed)
         self.substrate_size = substrate_size
@@ -37,11 +37,11 @@ class Substrate:
         self.refractory_period = np.int8(refractory_period)
         self.activation = np.zeros(substrate_size, dtype='int8')  # Grid of activation state
         self.s_linkage = self.r.choice(a=[True, False], size=substrate_size,  # Grid of downward linkages
-                                        p=[s_structural_homogeneity, 1 - s_structural_homogeneity])
+                                       p=[s_structural_homogeneity, 1 - s_structural_homogeneity])
         self.p_linkage = self.r.choice(a=[True, False], size=substrate_size,  # Grid of layer linkages
-                                        p=[p_structural_homogeneity, 1 - p_structural_homogeneity])
+                                       p=[p_structural_homogeneity, 1 - p_structural_homogeneity])
         self.dysfunctional = self.r.choice(a=[True, False], size=substrate_size,  # Grid of dysfunctional nodes
-                                              p=[dysfunction_parameter, 1 - dysfunction_parameter])
+                                           p=[dysfunction_parameter, 1 - dysfunction_parameter])
 
         self.inactive = np.zeros(substrate_size, dtype=bool)  # Grid of currently dysfunctional nodes
 
@@ -51,7 +51,7 @@ class Substrate:
 
         :return:
         """
-        self.activation[:, 0,:] = self.refractory_period
+        self.activation[:, 0, :] = self.refractory_period
 
     def iterate(self):
         """
@@ -63,16 +63,16 @@ class Substrate:
         resting = self.activation == 0  # Condition for resting
 
         excited_from_rear = np.roll(excited, 1, axis=1)
-        excited_from_rear[:,0] = np.bool_(False)  # Eliminates wrapping boundary, use numpy bool just in case
+        excited_from_rear[:, 0] = np.bool_(False)  # Eliminates wrapping boundary, use numpy bool just in case
 
         excited_from_fwrd = np.roll(excited, -1, axis=1)
         excited_from_fwrd[:, -1] = np.bool_(False)
 
         excited_from_inside = np.roll(excited & self.p_linkage, 1, axis=2)
-        excited_from_inside[:,:,0] = np.bool(False)
+        excited_from_inside[:, :, 0] = np.bool(False)
 
         excited_from_outside = np.roll(excited & np.roll(self.p_linkage, 1, axis=2), -1, axis=2)
-        excited_from_outside[:,:,-1] = np.bool(False)
+        excited_from_outside[:, :, -1] = np.bool(False)
 
         excited_from_above = np.roll(excited & self.s_linkage, 1, axis=0)
 
@@ -95,15 +95,8 @@ class Substrate:
 
         :return:
         """
-        return '{},{},{},{},{},{},{}'.format(self.substrate_size, self.s_structural_heterogeneity, self.dysfunction_parameter,
-                                             self.dysfunction_probability, self.refractory_period, self.p_structural_homogeneity,
+        return '{},{},{},{},{},{},{}'.format(self.substrate_size, self.s_structural_heterogeneity,
+                                             self.dysfunction_parameter,
+                                             self.dysfunction_probability, self.refractory_period,
+                                             self.p_structural_homogeneity,
                                              self.seed)
-
-
-
-
-
-
-
-
-
