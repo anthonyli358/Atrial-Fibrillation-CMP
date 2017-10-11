@@ -1,32 +1,46 @@
 import time
 import af_model as af
+import viewer
 import numpy as np
+import config
 
-structural_homogeneity = .09  # Probability of transverse connections
-dysfunction_parameter = .1  # Fraction of dysfunctional cells
-dysfunction_probability = .1
-substrate_size = (500, 500, 1)
-pacemaker_period = 220  # pacemaker activation period
-refractory_period = 50
-runtime = 10000
-layer_linkage = .1
+
+def simulation(substrate, runtime, pacemaker_period):
+    """
+
+    :param runtime: Number of timesteps in simulation.
+    :type runtime: int
+    :param pacemaker_period: Period of the pacemaker cells
+    :type pacemaker_period: int
+    :param substrate: Substrate to run simulaton on
+    :type substrate: af_model.Substrate
+    :return:
+    :rtype:
+    """
+    result = np.zeros((runtime,) + substrate.substrate_size, dtype='int8')
+    for t in range(runtime):
+        if t % pacemaker_period == 0:
+            substrate.activate_pacemaker()
+        result[t] = substrate.iterate()
+    return result
+
 
 start = time.time()
 print('GENERATING SUBSTRATE')
 
-substrate = af.Substrate(substrate_size, structural_homogeneity,
-                         dysfunction_parameter, dysfunction_probability, refractory_period, layer_linkage)
+substrate = af.Substrate(**config.settings["structure"])
+print(substrate.identifier())
 
 print('RUNNING SIMULATION')
 
-results = af.simulation(runtime, pacemaker_period, substrate)
+results = simulation(substrate, **config.settings["sim"])
 
 runtime = time.time() - start
 print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-# print(results[:,:,:,0])
+
 print('ANIMATING RESULTS')
 # af.animate(results[:,:,50,:]) # Cut through
-# af.animate(results[:,:,:,0])  # Normal view
+af.animate(results[:,:,:,0])  # Normal view
