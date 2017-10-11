@@ -42,5 +42,4 @@ print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 
 print('ANIMATING RESULTS')
-# af.animate(results[:,:,50,:]) # Cut through
-af.animate(results[:,:,:,0])  # Normal view
+viewer.animate(results, config.settings["structure"]["refractory_period"], cross_view=True, cross_pos=80)  # Cut through
