@@ -1,7 +1,7 @@
 A computational MSci Physics project at Imperial College London using the Christensen-Manani-Peters (CMP) model to investigate atrial fibrillation. 
  
 ## Authors 
-Andrew Ford - andrewjford@hotmail.co.uk 
+Andrew Ford - andrewjford@hotmail.co.uk  
 Anthony Li - anthonyli358@gmail.com   
  
 ## Development 
