@@ -1,5 +1,5 @@
 # PyCharm files 
-/.idea
+.idea/
 __pycache__/
 *.pyc
 
