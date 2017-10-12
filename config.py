@@ -12,5 +12,4 @@ settings = dict(
         pacemaker_period=220,  # pacemaker activation period
         runtime=1000,
     )
-
 )

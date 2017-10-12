@@ -1,5 +1,5 @@
 import time
-import af_model as af
+import model as af
 import viewer
 import numpy as np
 import config
@@ -33,7 +33,7 @@ print(substrate.identifier())
 
 print('RUNNING SIMULATION')
 
-results = simulation(substrate, **config.settings["sim"])
+results = simulation(substrate, **config.settings["sim"], )
 
 runtime = time.time() - start
 print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
@@ -42,4 +42,5 @@ print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 
 print('ANIMATING RESULTS')
-viewer.animate(results, config.settings["structure"]["refractory_period"], cross_view=True, cross_pos=80)  # Cut through
+viewer.animate(results, config.settings["structure"]["refractory_period"],
+               cross_view=True, cross_pos=80)  # Cut through

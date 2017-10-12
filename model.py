@@ -91,7 +91,7 @@ class Substrate:
 
     def identifier(self):
         """
-        Retrun unique identifier for each substrate
+        Return unique identifier for each substrate
 
         :return:
         """

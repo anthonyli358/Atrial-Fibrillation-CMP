@@ -23,8 +23,10 @@ def animate(results, refractory_period, save=False, cross_view=False, cross_pos=
         ax1 = plt.subplot(gs[0])
         ax2 = plt.subplot(gs[1])
         ims = [[ax1.imshow(frame[:, :, 0], animated=True, vmin=0, vmax=refractory_period),
-                ax2.imshow(frame[:, cross_pos, :], animated=True, vmin=0, vmax=refractory_period)]
+                ax2.imshow(frame[:, cross_pos, :], animated=True, vmin=0, vmax=refractory_period),
+                ax1.axvline(x=cross_pos, color='cyan', zorder=10, animated=True, linestyle='--')]
                for frame in results]
+
     else:
         ims = [[plt.imshow(frame[:, :, 0], animated=True, vmin=0, vmax=refractory_period)] for frame in results]
     ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True,
