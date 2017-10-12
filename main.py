@@ -5,6 +5,7 @@ import numpy as np
 import config
 import analysis
 from matplotlib import pyplot as plt
+import gc
 
 
 
@@ -27,24 +28,35 @@ def simulation(substrate, runtime, pacemaker_period):
         result[t] = substrate.iterate()
     return result
 
-
-start = time.time()
-print('GENERATING SUBSTRATE')
-
-substrate = af.Substrate(**config.settings["structure"])
-print(substrate.identifier())
-
-print('RUNNING SIMULATION')
-
-results = simulation(substrate, **config.settings["sim"], )
-
-runtime = time.time() - start
-print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
+#
+# start = time.time()
+# print('GENERATING SUBSTRATE')
+#
+# substrate = af.Substrate(**config.settings["structure"])
+# print(substrate.identifier())
+#
+# print('RUNNING SIMULATION')
+#
+# results = simulation(substrate, **config.settings["sim"], )
+#
+# runtime = time.time() - start
+# print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-plt.plot(analysis.sum_test(results, config.settings["structure"]["refractory_period"]))
-plt.show()
+fracs = []
+for i in range(10):
+    # config.settings['structure']['s_homogeneity'] = i
+    substrate = af.Substrate(**config.settings["structure"])
+    results = simulation(substrate, **config.settings["sim"], )
+    frac = analysis.sum_test(results, config.settings["structure"]["refractory_period"], threshold=220)[1]
+    fracs.append(frac)
+    print( frac)
+    gc.collect()
+# count, frac =analysis.sum_test(results, config.settings["structure"]["refractory_period"], threshold = 220)
+# print('AF FRACTION = {}'.format(frac))
+# plt.plot(count)
+# plt.show()
 
 print('ANIMATING RESULTS')
 # viewer.animate(results, config.settings["structure"]["refractory_period"],
