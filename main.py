@@ -3,6 +3,9 @@ import model as af
 import viewer
 import numpy as np
 import config
+import analysis
+from matplotlib import pyplot as plt
+
 
 
 def simulation(substrate, runtime, pacemaker_period):
@@ -40,7 +43,9 @@ print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
+plt.plot(analysis.sum_test(results, config.settings["structure"]["refractory_period"]))
+plt.show()
 
 print('ANIMATING RESULTS')
-viewer.animate(results, config.settings["structure"]["refractory_period"],
-               cross_view=True, cross_pos=80)  # Cut through
+# viewer.animate(results, config.settings["structure"]["refractory_period"],
+#                cross_view=True, cross_pos=80)  # Cut through
