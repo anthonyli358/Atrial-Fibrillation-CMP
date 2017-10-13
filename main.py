@@ -1,5 +1,5 @@
 import time
-import af_model as af
+import model as af
 import viewer
 import numpy as np
 import config
@@ -17,7 +17,7 @@ def simulation(substrate, runtime, pacemaker_period):
     :return:
     :rtype:
     """
-    result = np.zeros((runtime,) + substrate.substrate_size, dtype='int8')
+    result = np.zeros((runtime,) + substrate.size, dtype=int)
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
@@ -28,7 +28,7 @@ def simulation(substrate, runtime, pacemaker_period):
 start = time.time()
 print('GENERATING SUBSTRATE')
 
-substrate = af.Substrate(**config.settings["structure"])
+substrate = af.Model(**config.settings["structure"])
 print(substrate.identifier())
 
 print('RUNNING SIMULATION')
@@ -40,7 +40,5 @@ print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-
 print('ANIMATING RESULTS')
-# af.animate(results[:,:,50,:]) # Cut through
-af.animate(results[:,:,:,0])  # Normal view
+viewer.animate(results, config.settings["structure"]["refractory_period"], cross_view=True, cross_pos=80)  # Cut through
