@@ -74,12 +74,12 @@ class Substrate:
         excited_from_outside = np.roll(excited & np.roll(self.p_linkage, 1, axis=2), -1, axis=2)
         excited_from_outside[:, :, -1] = np.bool(False)
 
-        excited_from_above = np.roll(excited & self.s_linkage, 1, axis=0)
+        # excited_from_above = np.roll(excited & self.s_linkage, 1, axis=0)
+        #
+        # excited_from_below = np.roll(excited & np.roll(self.s_linkage, 1, axis=0), -1, axis=0)
+        # excited_from_above | excited_from_below |
 
-        excited_from_below = np.roll(excited & np.roll(self.s_linkage, 1, axis=0), -1, axis=0)
-
-        excitable = (excited_from_rear | excited_from_fwrd | excited_from_above |
-                     excited_from_below | excited_from_inside | excited_from_outside)
+        excitable = (excited_from_rear | excited_from_fwrd | excited_from_inside | excited_from_outside)
 
         self.inactive[self.dysfunctional & excitable] = (np.random.random(len(self.inactive[self.dysfunctional
                                                                                             & excitable]))
