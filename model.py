@@ -94,10 +94,8 @@ class Model:
 
         return self.activation
 
-# ToDo: 2d and 3d running options
 # ToDo: Save a copy of config
 # toDo: Data Output
 # ToDo: Other Modules
 # ToDo: OPTIMISE
 # ToDo: UNIT TESTS
-
