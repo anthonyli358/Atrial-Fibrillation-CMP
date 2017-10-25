@@ -1,8 +1,9 @@
 import os
 import h5py
-from collections import OrderedDict
+import numpy as np
 from shutil import move
 from tempfile import mkstemp
+import config as cfg
 
 
 class ModelRecorder:
@@ -16,8 +17,13 @@ class ModelRecorder:
         :param model: The model being recorded
         """
         self.model = model
-        self.model_list = []
-        self.model_data = OrderedDict([('excited', []), ('refractory', []), ('resting', []), ('failed', [])])
+        self.model_array_list = np.zeros(cfg.settings['sim']['runtime'])
+        self.model_data_dict = dict(
+            excited=np.zeros(cfg.settings['sim']['runtime']),
+            resting=np.zeros(cfg.settings['sim']['runtime']),
+            refractory=np.zeros(cfg.settings['sim']['runtime']),
+            failed=np.zeros(cfg.settings['sim']['runtime'])
+        )
 
         # Create output directories if they don't exist
         if not os.path.exists(os.path.join('data', model.seed, 'data_files')):
@@ -32,14 +38,15 @@ class ModelRecorder:
         os.close(fd)  # prevent file descriptor leakage
         move(new_path, os.path.join('data', model.seed, 'config.py'))  # move new file
 
-    def generate_model_stats(self):
-        """Add statistics for the current model iteration to a list."""
+    def update_model_stats(self):
+        """Update statistic lists for the current model iteration."""
 
-        model_param = ['excited', 'refractory', 'resting', 'failed']
-        model_append = [self.model.excited, self.model.refractory, self.model.resting, self.model.failed]
+        model_keys = ['excited', 'resting', 'refractory, ''failed']
+        model_values = [np.sum(self.model.excited), np.sum(self.model.resting),
+                        np.sum(self.model.excited) - np.sum(self.model.resting), np.sum(self.model.inactive)]
 
-        for param_list, x in zip(model_param, model_append):
-            self.model_data[param_list].append(x)
+        for k, v in zip(model_keys, model_values):
+            self.model_data_dict[k][self.model.time] = v
 
     def output_model_stats(self):
         """Output statistics in HDF5 file format for rapid output and analysis."""
@@ -48,7 +55,10 @@ class ModelRecorder:
 
         model_data_file = h5py.File(os.path.join('data/{}/data_files/model_statistics'.format(self.model.seed)), 'w')
 
-        for k, v in self.model_data.items():
-            model_data_file.create_dataset(k, data=v)
+        for k, v in self.model_data_dict.items():
+            model_data_file.create_dataset(k, data=v, dtype='int32')
 
-# TODO: OUTPUT MODEL AT EACH TIMESTEP OR OVERALL?
+    def update_model_array_list(self):
+        """Update model array list for the current model iteration."""
+
+        self.model_array_list[self.model.time] = self.model.model_array
