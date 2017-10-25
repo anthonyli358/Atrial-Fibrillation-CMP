@@ -3,7 +3,7 @@ import time
 import numpy as np
 from matplotlib import pyplot as plt
 
-import analysis
+# import analysis
 import config
 import model as af
 import gc
@@ -22,7 +22,7 @@ def simulation(substrate, runtime, pacemaker_period):
     :return:
     :rtype:
     """
-    result = np.zeros((runtime,) + substrate.substrate_size)
+    result = np.zeros((runtime,) + substrate.size, dtype=int)
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
@@ -42,33 +42,33 @@ def risksim(substrate,settings):
     return result
 
 
-if __name__ == '__main__':
+substrate = af.Model(**config.settings["structure"])
 
-    # start = time.time()
-    # print('GENERATING SUBSTRATE')
-    # substrate = af.Substrate(**config.settings["structure"])
-    # print(substrate.identifier())
-    # print('RUNNING SIMULATION')
-    # results = simulation(substrate, **config.settings["sim"], )
-    # runtime = time.time() - start
-    # print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
-    # # np.save('rotor_formation(0.18,0.1,0.1)x', results)
-    # count, frac = analysis.sum_test(results, config.settings["structure"]["refractory_period"], threshold=220)
-    # print('AF FRACTION = {}'.format(frac))
-    # plt.figure()
-    # plt.plot(count)
-    # plt.show()
-    # print('ANIMATING RESULTS')
-    # viewer.animate(results, config.settings["structure"]["refractory_period"],
-    #                cross_view=False, cross_pos=80)  # Cut through
+print('RUNNING SIMULATION')
 
-    fracs = []
-    for i in range(48):
-        # config.settings['structure']['s_homogeneity'] = i
-        substrate = af.Substrate(**config.settings["structure"])
-        result = risksim(substrate, config.settings)
-        frac = np.count_nonzero(result > 220) / len(result)
-        fracs.append(frac)
-        print('{},\t{}'.format(frac, substrate.seed))
-        gc.collect()
-    print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
+start = time.time()
+
+results = simulation(substrate, **config.settings["sim"], )
+
+runtime = time.time() - start
+print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
+
+# np.save('rotor_formation(0.18,0.1,0.1)x', results)
+
+print('ANIMATING RESULTS')
+viewer.animate(results, config.settings["structure"]["refractory_period"], cross_view=substrate.d3, cross_pos=80)  # Cut through
+
+# fracs = []  # Loop to generate risk data
+# for i in range(48):
+#     # config.settings['structure']['s_homogeneity'] = i
+#     substrate = af.Substrate(**config.settings["structure"])
+#     result = risksim(substrate, config.settings)
+#     frac = np.count_nonzero(result > 220) / len(result)
+#     fracs.append(frac)
+#     print('{},\t{}'.format(frac, substrate.seed))
+#     gc.collect()
+# print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
+
+# ToDo: ECGs
+# ToDo: 3D Tuning
+

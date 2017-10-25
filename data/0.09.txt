@@ -1,18 +1,4 @@
-settings = dict(
-    structure=dict(
-        s_structural_homogeneity=0.09,  # Probability of transverse connections
-        p_structural_homogeneity=0,
-        dysfunction_parameter=0.05,  # Fraction of dysfunctional cells
-        dysfunction_probability=0.05,
-        substrate_size=(200, 200, 1),
-        refractory_period=50,
-        seed=None
-    ),
-    sim=dict(
-        pacemaker_period=220,  # pacemaker activation period
-        runtime=1000000
-    )
-)
+{'structure': {'s_structural_homogeneity': 0.09, 'p_structural_homogeneity': 0, 'dysfunction_parameter': 0.05, 'dysfunction_probability': 0.05, 'substrate_size': (200, 200, 1), 'refractory_period': 50, 'seed': None}, 'sim': {'pacemaker_period': 220, 'runtime': 1000000}}
 0.999903,	4051452347
 0.999873,	253925177
 0.999858,	3027708493
@@ -63,4 +49,3 @@ settings = dict(
 0.999774,	3835785915
 Average = 0.9995346875000001
 Standard deviation = 0.00040732399861013487
-1508003441.9197505

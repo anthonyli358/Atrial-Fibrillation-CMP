@@ -1,15 +1,16 @@
 settings = dict(
     structure=dict(
-        s_structural_homogeneity=0.15,  # Probability of transverse connections
-        p_structural_homogeneity=0,
+        y_coupling=.13,  # Probability of transverse connections
         dysfunction_parameter=0.05,  # Fraction of dysfunctional cells
         dysfunction_probability=0.05,
-        substrate_size=(200, 200, 1),
+        size=(200, 200, 1),  # (y, x, z)
         refractory_period=50,
-        seed=None
+        d3=True,
+        z_coupling=.01,
+        seed=3901440440
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period
-        runtime=1000000
+        runtime=1000
     )
 )
