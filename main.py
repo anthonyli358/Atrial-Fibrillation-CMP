@@ -3,7 +3,7 @@ import model as af
 import viewer
 import numpy as np
 import config
-
+np.set_printoptions(threshold=np.nan)
 
 def simulation(substrate, runtime, pacemaker_period):
     """
@@ -18,9 +18,12 @@ def simulation(substrate, runtime, pacemaker_period):
     :rtype:
     """
     result = np.zeros((runtime,) + substrate.substrate_size, dtype='int8')
+    # substrate.create_rotor((100,100))
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
+        if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
+            substrate.activate((70,100,0))
         result[t] = substrate.iterate()
     return result
 
@@ -42,5 +45,4 @@ print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
 
 
 print('ANIMATING RESULTS')
-viewer.animate(results, config.settings["structure"]["refractory_period"],
-               cross_view=True, cross_pos=80)  # Cut through
+viewer.animate(results, config.settings)  # Cut through
