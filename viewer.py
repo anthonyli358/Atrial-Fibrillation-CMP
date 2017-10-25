@@ -5,6 +5,10 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 
 
+# model folder (output video/snapshots here)
+# model statistics folder
+# resting.etc cells over time, and ecgs over time
+
 def animate(results, refractory_period, save=False, cross_view=False, cross_pos=-1):
     """
     Animate time series of activation matrices.

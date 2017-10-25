@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class ecg:
+class ECG:
     """
     A class for the ECG analysis of model data.
     """
