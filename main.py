@@ -1,16 +1,12 @@
 import time
-
 import numpy as np
-from matplotlib import pyplot as plt
-
-# import analysis
-import config
 import model as af
-import gc
-import viewer
-import numpy as np
 import config
+import viewer
 from model_recorder import ModelRecorder
+
+from matplotlib import pyplot as plt
+import gc
 
 
 def simulation(substrate, recorder, runtime, pacemaker_period):
@@ -34,17 +30,19 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
         recorder.update_model_array_list()
     return result
 
+
 def risksim(substrate,settings):
     runtime = settings['sim']['runtime']
-    refractory_perid = settings["structure"]["refractory_period"]
+    refractory_period = settings["structure"]["refractory_period"]
     pacemaker_period = settings['sim']['pacemaker_period']
     result = np.zeros(int(runtime))
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
         sub = substrate.iterate()
-        result[t] =np.count_nonzero(sub == refractory_perid)
+        result[t] = np.count_nonzero(sub == refractory_period)
     return result
+
 
 start = time.time()
 print("GENERATING SUBSTRATE")
@@ -67,7 +65,6 @@ model_recorder.output_model_array_list()
 print("ANIMATING RESULTS")
 viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=substrate.d3, cross_pos=80)  # Cut through
 
-# TODO: KILLSWITCH()
 # fracs = []  # Loop to generate risk data
 # for i in range(48):
 #     # config.settings['structure']['s_homogeneity'] = i
@@ -79,6 +76,6 @@ viewer.animate(results, config.settings['structure']['refractory_period'], cross
 #     gc.collect()
 # print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
 
+# TODO: KILLSWITCH()
 # ToDo: ECGs
 # ToDo: 3D Tuning
-
