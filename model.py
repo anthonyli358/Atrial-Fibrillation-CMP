@@ -1,5 +1,6 @@
 import datetime
 import numpy as np
+from re import sub
 
 
 class Model:
@@ -26,20 +27,20 @@ class Model:
         self.dysfunction_probability = dysfunction_probability
         self.refractory_period = refractory_period
         self.time = time
-        self.seed = seed if seed is not None else datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        np.random.seed(self.seed)
+        self.seed = seed if seed is not None else datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
+        np.random.seed(int(sub('[^0-9]', '', self.seed)))
 
         self.excited, self.resting, self.failed = (0 for _ in range(3))
-        self.model_array = np.zeros(size, dtype='int16')  # Grid of model_array state
-        self.y_linkage = np.random.choice(a=[True, False], size=size,  # Grid of downward linkages
+        self.model_array = np.zeros(size, dtype='int16')  # array of model_array state
+        self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of downward linkages
                                           p=[y_coupling, 1 - y_coupling])
-        self.dysfunctional = np.random.choice(a=[True, False], size=size,  # Grid of dysfunctional nodes
+        self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
-        self.inactive = np.zeros(size, dtype=bool)  # Grid of currently dysfunctional nodes
+        self.inactive = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
 
         self.d3 = d3
         if d3:
-            self.z_linkage = np.random.choice(a=[True, False], size=size,  # Grid of layer linkages
+            self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
                                               p=[z_coupling, 1 - z_coupling])
 
     def activate_pacemaker(self):
@@ -57,8 +58,8 @@ class Model:
         Iterate model forward one time step.
         :return: Activation Array
         """
-        self.excited = self.model_array == self.refractory_period  # Condition for being excited
-        self.resting = self.model_array == 0  # Condition for resting
+        self.excited = self.model_array == self.refractory_period  # condition for being excited
+        self.resting = self.model_array == 0  # condition for resting
 
         # Roll excited values to get arrays of possible excitations
         excited_from_above = np.roll(self.excited & self.y_linkage, 1, axis=0)
@@ -66,7 +67,7 @@ class Model:
         excited_from_below = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=0), -1, axis=0)
 
         excited_from_rear = np.roll(self.excited, 1, axis=1)
-        excited_from_rear[:, 0] = np.bool_(False)  # Eliminates wrapping boundary, use numpy bool just in case
+        excited_from_rear[:, 0] = np.bool_(False)  # eliminates wrapping boundary, use numpy bool just in case
 
         excited_from_fwrd = np.roll(self.excited, -1, axis=1)
         excited_from_fwrd[:, -1] = np.bool_(False)
@@ -98,7 +99,9 @@ class Model:
 
         return self.model_array
 
-# ToDo: Data Output
-# ToDo: Other Modules
+# ToDo: Viewer
+# TODO: MAIN
+# TODO: ECG
 # ToDo: OPTIMISE
+# TODO: COMMENT AND ORGANISE ALL MODULES
 # ToDo: UNIT TESTS

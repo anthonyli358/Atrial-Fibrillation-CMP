@@ -5,10 +5,6 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 
 
-# model folder (output video/snapshots here)
-# model statistics folder
-# resting.etc cells over time, and ecgs over time
-
 def animate(results, refractory_period, save=False, cross_view=False, cross_pos=-1):
     """
     Animate time series of activation matrices.
@@ -39,8 +35,12 @@ def animate(results, refractory_period, save=False, cross_view=False, cross_pos=
         plt.rcParams['animation.ffmpeg_path'] = "C:/Program Files/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 
         writer = animation.writers['ffmpeg'](fps=30)
-        print('SAVING')
+        print("SAVING")
         t = time.time()
         ani.save(save, writer)
-        print('Saved as {} in {:.1f} seconds'.format(save, time.time() - t))
+        print("Saved as {} in {:.1f} seconds".format(save, time.time() - t))
     plt.show()
+
+# TODO: model folder (output video/snapshots here)
+# TODO: model statistics folder
+# TODO: resting.etc cells over time, and ecgs over time

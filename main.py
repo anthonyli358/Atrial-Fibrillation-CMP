@@ -3,9 +3,10 @@ import model as af
 import viewer
 import numpy as np
 import config
+from model_recorder import ModelRecorder
 
 
-def simulation(substrate, runtime, pacemaker_period):
+def simulation(substrate, recorder, runtime, pacemaker_period):
     """
 
     :param runtime: Number of timesteps in simulation.
@@ -22,25 +23,32 @@ def simulation(substrate, runtime, pacemaker_period):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
         result[t] = substrate.iterate()
+        recorder.update_model_stats()
+        recorder.update_model_array_list()
     return result
 
 
 start = time.time()
-print('GENERATING SUBSTRATE')
+print("GENERATING SUBSTRATE")
 
-substrate = af.Model(**config.settings["structure"])
+substrate = af.Model(**config.settings['structure'])
+model_recorder = ModelRecorder(substrate)
 
-print('RUNNING SIMULATION')
+print("RUNNING SIMULATION")
 
-results = simulation(substrate, **config.settings["sim"], )
+results = simulation(substrate, model_recorder, **config.settings['sim'], )
 
 runtime = time.time() - start
-print('SIMULATION COMPLETE IN {:.1f} SECONDS'.format(runtime))
+print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
+
+model_recorder.output_model_stats()
+model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-print('ANIMATING RESULTS')
-viewer.animate(results, config.settings["structure"]["refractory_period"], cross_view=substrate.d3, cross_pos=80)  # Cut through
+print("ANIMATING RESULTS")
+viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=substrate.d3, cross_pos=80)  # Cut through
 
+# TODO: KILLSWITCH()
 # ToDo: ECGs
 # ToDo: 3D Tuning
