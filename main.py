@@ -22,13 +22,13 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     :return:
     :rtype:
     """
-    result = np.zeros((runtime,) + substrate.size, dtype=int)
-    for t in range(runtime):
+    result = np.zeros((runtime + 1,) + substrate.size, dtype=int)
+    for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
-        result[t] = substrate.iterate()
         recorder.update_model_stats()
-        recorder.update_model_array_list()
+        # recorder.update_model_array_list()
+        result[t] = substrate.iterate()
     return result
 
 
@@ -36,8 +36,8 @@ def risksim(substrate,settings):
     runtime = settings['sim']['runtime']
     refractory_period = settings["structure"]["refractory_period"]
     pacemaker_period = settings['sim']['pacemaker_period']
-    result = np.zeros(int(runtime))
-    for t in range(runtime):
+    result = np.zeros(int(runtime + 1))
+    for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
         sub = substrate.iterate()
@@ -59,7 +59,7 @@ runtime = time.time() - start
 print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
 
 model_recorder.output_model_stats()
-model_recorder.output_model_array_list()
+# model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 

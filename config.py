@@ -10,6 +10,6 @@ settings = dict(
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period
-        runtime=100,
+        runtime=1000,
     )
 )

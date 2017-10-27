@@ -26,7 +26,7 @@ class ModelRecorder:
             '%y-%m-%d_%H-%M-%S')
         self.model_array_list = []
         self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1) for k in
-                                ['excited', 'resting', 'refractory', 'inactive']}
+                                ['excited', 'resting', 'refractory', 'failed']}
 
         # Create output directories if they don't exist
         if not os.path.exists(os.path.join('data', self.path, 'data_files')):
@@ -44,12 +44,15 @@ class ModelRecorder:
     def update_model_stats(self):
         """Update statistic lists for the current model iteration."""
 
-        # Defining and zipping lists in order using a for loop (better coding practice) would be slower
-        self.model_stat_dict['excited'][self.model.time] = np.sum(self.model.excited)
-        self.model_stat_dict['resting'][self.model.time] = np.sum(self.model.resting)
-        self.model_stat_dict['refractory'][self.model.time] = reduce(mul, cfg.settings['structure']['size']) - (
-            np.sum(self.model.excited) + np.sum(self.model.resting))
-        self.model_stat_dict['inactive'][self.model.time] = np.sum(self.model.inactive)
+        stat_keys = ['excited', 'resting', 'refractory', 'failed']  # define manually as model_stats_dict not ordered
+        stat_values = [np.sum(self.model.excited),
+                       np.sum(self.model.resting),
+                       reduce(mul, cfg.settings['structure']['size']) - (
+                           np.sum(self.model.excited) + np.sum(self.model.resting)),
+                       np.sum(self.model.failed)]
+
+        for k, v in zip(stat_keys, stat_values):
+            self.model_stat_dict[k][self.model.time] = v
 
     def output_model_stats(self):
         """Output statistics in HDF5 file format for rapid output and analysis."""

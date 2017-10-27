@@ -15,7 +15,7 @@ class Viewer:
     def __init__(self, path):
         """
         Viewer Initialisation
-        :param seed: The seed value for data to read and view
+        :param path: The path for data to read and view
         """
         self.path = path
 
@@ -30,6 +30,8 @@ class Viewer:
 
         with h5py.File('data/{}/data_files/model_statistics'.format(self.path), 'r') as model_stats_file:
             model_stat_dict = {k: v[:] for k, v in model_stats_file.items()}
+
+        print(model_stat_dict)
 
         data_to_plot = []
         time = [i for i in range(max(map(len, model_stat_dict)))]
