@@ -41,6 +41,7 @@ def animate(results, refractory_period, save=False, cross_view=False, cross_pos=
         print("Saved as {} in {:.1f} seconds".format(save, time.time() - t))
     plt.show()
 
+# TODO: 2D AND 3D VIEWING OPTIONS
 # TODO: model folder (output video/snapshots here)
 # TODO: model statistics folder
 # TODO: resting.etc cells over time, and ecgs over time

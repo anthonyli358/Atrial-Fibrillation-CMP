@@ -1,6 +1,7 @@
 import datetime
 import numpy as np
 from re import sub
+import config as cfg
 
 
 class Model:
@@ -8,8 +9,8 @@ class Model:
     A class for the cellular automata basis of the CMP model.
     """
 
-    def __init__(self, size, y_coupling, dysfunction_parameter, dysfunction_probability, refractory_period,
-                 d3=False, z_coupling=0, time=0, seed=False):
+    def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, y_coupling,
+                 z_coupling, seed, dimensions=len(cfg.settings['structure']['size']), time=0):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -18,14 +19,14 @@ class Model:
         :param dysfunction_parameter: The fraction of dysfunctional cells
         :param dysfunction_probability: The fraction of dysfunctional cells which fail to excite
         :param refractory_period: Cell refractory period
-        :param d3: Set to True to enable 3d modelling
+        :param dimensions: 2d or 3d model
         :param time: Current time step
         :param seed: Model randomisation seed
         """
         self.size = size
+        self.refractory_period = refractory_period
         self.dysfunction_parameter = dysfunction_parameter
         self.dysfunction_probability = dysfunction_probability
-        self.refractory_period = refractory_period
         self.time = time
         self.seed = seed if seed is not None else datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
         np.random.seed(int(sub('[^0-9]', '', self.seed)))
@@ -38,8 +39,11 @@ class Model:
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.inactive = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
 
-        self.d3 = d3
-        if d3:
+        if dimensions != 2 and dimensions != 3:
+            raise TypeError("Length of size tuple is invalid to initialise a 2d or 3d model...")
+        self.dimensions = dimensions
+        # Initialise z linkage for 3d
+        if self.dimensions == 3:
             self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
                                               p=[z_coupling, 1 - z_coupling])
 
@@ -48,10 +52,10 @@ class Model:
         Activate the pacemaker cells at the sinoatrial node (very left of the model).
         """
 
-        if self.d3:
-            self.model_array[:, 0, :] = self.refractory_period
-        else:
+        if self.dimensions == 2:
             self.model_array[:, 0] = self.refractory_period
+        elif self.dimensions == 3:
+            self.model_array[:, 0, :] = self.refractory_period
 
     def iterate(self):
         """
@@ -72,8 +76,10 @@ class Model:
         excited_from_fwrd = np.roll(self.excited, -1, axis=1)
         excited_from_fwrd[:, -1] = np.bool_(False)
 
-        # 3d model
-        if self.d3:
+        # 2d or 3d model
+        if self.dimensions == 2:
+            excitable = (excited_from_above | excited_from_below | excited_from_rear | excited_from_fwrd)
+        elif self.dimensions == 3:
             excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=2)
             excited_from_inside[:, :, 0] = np.bool(False)
 
@@ -83,9 +89,6 @@ class Model:
             # Create array of excitable cells
             excitable = (excited_from_above | excited_from_below | excited_from_rear |
                          excited_from_fwrd | excited_from_inside | excited_from_outside)
-
-        else:
-            excitable = (excited_from_above | excited_from_below | excited_from_rear | excited_from_fwrd)
 
         # Check if dysfunctional cells fail to excite
         self.inactive[self.dysfunctional & excitable] = (np.random.random(len(self.inactive[self.dysfunctional

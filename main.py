@@ -62,8 +62,11 @@ model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
+# Need cross_view?
+d3 = True if substrate.dimensions == 3 else False
+
 print("ANIMATING RESULTS")
-viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=substrate.d3, cross_pos=80)  # Cut through
+viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=d3, cross_pos=80)  # Cut through
 
 # fracs = []  # Loop to generate risk data
 # for i in range(48):
