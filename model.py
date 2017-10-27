@@ -40,7 +40,7 @@ class Model:
         self.inactive = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
 
         if dimensions != 2 and dimensions != 3:
-            raise TypeError("Length of size tuple is invalid to initialise a 2d or 3d model...")
+            raise TypeError("Size config is invalid to initialise a 2d or 3d model...")
         self.dimensions = dimensions
         # Initialise z linkage for 3d
         if self.dimensions == 3:
@@ -91,6 +91,7 @@ class Model:
                          excited_from_fwrd | excited_from_inside | excited_from_outside)
 
         # Check if dysfunctional cells fail to excite
+        # TODO: ERROR HERE? DIDN'T CHECK IF INACTIVE CELLS WERE RESTING
         self.inactive[self.dysfunctional & excitable] = (np.random.random(len(self.inactive[self.dysfunctional
                                                                                             & excitable]))
                                                          < self.dysfunction_probability)

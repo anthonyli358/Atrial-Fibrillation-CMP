@@ -4,6 +4,7 @@ import model as af
 import config
 import viewer
 from model_recorder import ModelRecorder
+from viewer import Viewer
 
 from matplotlib import pyplot as plt
 import gc
@@ -62,11 +63,14 @@ model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-# Need cross_view?
-d3 = True if substrate.dimensions == 3 else False
+model_viewer = Viewer(model_recorder.path)
+model_viewer.plot_model_stats()
 
-print("ANIMATING RESULTS")
-viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=d3, cross_pos=80)  # Cut through
+# # Need cross_view?
+# d3 = True if substrate.dimensions == 3 else False
+#
+# print("ANIMATING RESULTS")
+# viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=d3, cross_pos=80)  # Cut through
 
 # fracs = []  # Loop to generate risk data
 # for i in range(48):
