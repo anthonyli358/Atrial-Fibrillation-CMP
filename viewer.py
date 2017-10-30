@@ -1,10 +1,11 @@
-import time
+import h5py
+import os
+
+from matplotlib import pyplot as plt
+
 import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
-import os
-import h5py
 
 
 class Viewer:
@@ -31,11 +32,41 @@ class Viewer:
         with h5py.File('data/{}/data_files/model_statistics'.format(self.path), 'r') as model_stats_file:
             model_stat_dict = {k: v[:] for k, v in model_stats_file.items()}
 
-        print(model_stat_dict)
-
         data_to_plot = []
-        time = [i for i in range(max(map(len, model_stat_dict)))]
+        time = [i for i in range(max(map(len, model_stat_dict.values())))]
         size = sum([stat_list[0] for stat_list in model_stat_dict.values()])
+
+        data_excited = [(model_stat_dict['excited'] / size, "Excited")]
+        data_to_plot.append({'data': data_excited, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
+                             'title': "Excited Cells", 'filename': "excited.png"})
+
+        data_resting = [(model_stat_dict['resting'] / size, "Resting")]
+        data_to_plot.append({'data': data_resting, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': [0, 1],
+                             'title': "Resting Cells", 'filename': "resting.png"})
+
+        data_refractory = [(model_stat_dict['refractory'] / size, "Refractory")]
+        data_to_plot.append({'data': data_refractory, 'x_label': "Time", 'y_label': "Fraction of Cells",
+                             'y_lim': [0, 1], 'title': "Refractory Cells", 'filename': "refractory.png"})
+
+        data_failed = [(model_stat_dict['failed'] / size, "Failed")]
+        data_to_plot.append({'data': data_failed, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
+                             'title': "Failed Cells", 'filename': "failed.png"})
+
+        data_overall = [*data_excited, *data_resting, *data_refractory, *data_failed]
+        data_to_plot.append({'data': data_overall, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': [0, 1],
+                             'title': "Overall Cells", 'filename': "overall.png"})
+
+        for data_dict in data_to_plot:
+            plt.figure()
+            for (y, l) in data_dict['data']:
+                plt.plot(time, y, label=l)
+            plt.xlabel(data_dict['x_label'])
+            plt.ylabel(data_dict['y_label'])
+            plt.ylim(data_dict['y_lim'])
+            plt.legend(loc=0)
+            plt.title(data_dict['title'])
+            plt.savefig(os.path.join('data', self.path, 'model_statistics', data_dict['filename']))
+            plt.close()
 
 # def animate(results, refractory_period, save=False, cross_view=False, cross_pos=-1):
 #     """
@@ -74,5 +105,6 @@ class Viewer:
 #     plt.show()
 
 # TODO: 2D AND 3D VIEWING OPTIONS
-# TODO: model folder (output video/snapshots here)
+# TODO: JUST ANIMATE DATA OPTION
+# TODO: model folder (output video/snapshots (specify timestep) here)
 # TODO: ECGS
