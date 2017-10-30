@@ -1,11 +1,10 @@
 import h5py
+import numpy as np
 import os
+import pyqtgraph as pg
+import seaborn as sns
 
 from matplotlib import pyplot as plt
-
-import matplotlib.animation as animation
-import matplotlib.gridspec as gridspec
-import numpy as np
 
 
 class Viewer:
@@ -20,8 +19,31 @@ class Viewer:
         """
         self.path = path
 
+    def view_model_array(self):
+        """Read the HDF5 data file and view the model array."""
+
+        print("reading & viewing model array...")
+
+        # Import the model_array from HFD5 format
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            model_array_list = model_data_file['array_list'][:]
+
+        app = pg.mkQApp()
+        view = pg.GraphicsLayoutWidget()
+        view.show()
+        w1 = view.addPlot()
+        w1.disableAutoRange()
+        for array in model_array_list:
+            w1.plot(array)
+        w1.autoRange()
+        app.exec_()
+
+        # if len(np.shape(model_array_list[0])) == 2:
+
+        # TODO: CHECK 2D VS 3D
+
     def plot_model_stats(self):
-        """Read the HDF5 data files and plot the model statistics."""
+        """Read the HDF5 data file and plot the model statistics."""
 
         print("reading & plotting model statistics...")
 
@@ -29,12 +51,14 @@ class Viewer:
         if not os.path.exists(os.path.join('data', self.path, 'model_statistics')):
             os.makedirs(os.path.join('data', self.path, 'model_statistics'))
 
-        with h5py.File('data/{}/data_files/model_statistics'.format(self.path), 'r') as model_stats_file:
+        # Import the model_stat_dict from HFD5 format
+        with h5py.File('data/{}/data_files/model_stat_dict'.format(self.path), 'r') as model_stats_file:
             model_stat_dict = {k: v[:] for k, v in model_stats_file.items()}
 
+        # Create data keys and values for plotting
         data_to_plot = []
-        time = [i for i in range(max(map(len, model_stat_dict.values())))]
-        size = sum([stat_list[0] for stat_list in model_stat_dict.values()])
+        time = [i for i in range(max(map(len, model_stat_dict.values())))]  # get longest time series in dict
+        size = sum([stat_list[0] for stat_list in model_stat_dict.values()])  # sum values at time=0 for model size
 
         data_excited = [(model_stat_dict['excited'] / size, "Excited")]
         data_to_plot.append({'data': data_excited, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
@@ -56,55 +80,31 @@ class Viewer:
         data_to_plot.append({'data': data_overall, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': [0, 1],
                              'title': "Overall Cells", 'filename': "overall.png"})
 
+        # Plot data keys and values
         for data_dict in data_to_plot:
             plt.figure()
+            sns.set_style('ticks')
             for (y, l) in data_dict['data']:
                 plt.plot(time, y, label=l)
             plt.xlabel(data_dict['x_label'])
             plt.ylabel(data_dict['y_label'])
             plt.ylim(data_dict['y_lim'])
-            plt.legend(loc=0)
+            plt.legend(loc=0, fontsize=12, frameon=True)
             plt.title(data_dict['title'])
             plt.savefig(os.path.join('data', self.path, 'model_statistics', data_dict['filename']))
             plt.close()
 
-# def animate(results, refractory_period, save=False, cross_view=False, cross_pos=-1):
-#     """
-#     Animate time series of activation matrices.
-#
-#     :rtype: object
-#     :param results: Time series of activation matrices
-#     :param refractory_period: Refractory period used in substrate.
-#     :param save: If specified, name mp4 filename to save to.
-#     :param cross_view: Enable the cross-view in the animation.
-#     :param cross_pos: Specify location of cross-view.
-#     :return:
-#     """
-#     fig = plt.figure()
-#     if cross_view:
-#         gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[-2:])
-#         ax1 = plt.subplot(gs[0])
-#         ax2 = plt.subplot(gs[1])
-#         ims = [[ax1.imshow(frame[:, :, 0], animated=True, vmin=0, vmax=refractory_period),
-#                 ax2.imshow(frame[:, cross_pos, :], animated=True, vmin=0, vmax=refractory_period),
-#                 ax1.axvline(x=cross_pos, color='cyan', zorder=10, animated=True, linestyle='--')]
-#                for frame in results]
-#
-#     else:
-#         ims = [[plt.imshow(frame[:, :, 0], animated=True, vmin=0, vmax=refractory_period)] for frame in results]
-#     ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True,
-#                                     repeat_delay=500)
-#     if save:
-#         plt.rcParams['animation.ffmpeg_path'] = "C:/Program Files/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
-#
-#         writer = animation.writers['ffmpeg'](fps=30)
-#         print("SAVING")
-#         t = time.time()
-#         ani.save(save, writer)
-#         print("Saved as {} in {:.1f} seconds".format(save, time.time() - t))
-#     plt.show()
+    def plot_model_array(self):
+        """Read the HDF5 data file and view the model array."""
 
-# TODO: 2D AND 3D VIEWING OPTIONS
-# TODO: JUST ANIMATE DATA OPTION
-# TODO: model folder (output video/snapshots (specify timestep) here)
-# TODO: ECGS
+        print("reading & plotting model array...")
+
+        # Create output directory if it doesn't exist
+        if not os.path.exists(os.path.join('data', self.path, 'model_array')):
+            os.makedirs(os.path.join('data', self.path, 'model_array'))
+
+        # TODO: CHECK 2D VS 3D
+        # TODO: (output video - only way is matplotlib or screencap/snapshots (specify timestep) here)
+
+    def plot_ecg(self):
+        """Read the HDF5 data file create an ECG from the model array."""

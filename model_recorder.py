@@ -41,7 +41,7 @@ class ModelRecorder:
         os.close(fd)  # prevent file descriptor leakage
         move(new_path, os.path.join('data', self.path, 'config.py'))  # move new file
 
-    def update_model_stats(self):
+    def update_model_stat_dict(self):
         """Update statistic lists for the current model iteration."""
 
         stat_keys = ['excited', 'resting', 'refractory', 'failed']  # define manually as model_stats_dict not ordered
@@ -54,12 +54,12 @@ class ModelRecorder:
         for k, v in zip(stat_keys, stat_values):
             self.model_stat_dict[k][self.model.time] = v
 
-    def output_model_stats(self):
+    def output_model_stat_dict(self):
         """Output statistics in HDF5 file format for rapid output and analysis."""
 
         print("outputting model statistics...")
 
-        with h5py.File('data/{}/data_files/model_statistics'.format(self.path), 'w') as model_stats_file:
+        with h5py.File('data/{}/data_files/model_stat_dict'.format(self.path), 'w') as model_stats_file:
             for k, v in self.model_stat_dict.items():
                 model_stats_file.create_dataset(k, data=v, dtype='int32')
 

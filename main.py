@@ -26,8 +26,8 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
-        recorder.update_model_stats()
-        # recorder.update_model_array_list()
+        recorder.update_model_stat_dict()
+        recorder.update_model_array_list()
         result[t] = substrate.iterate()
     return result
 
@@ -58,8 +58,8 @@ results = simulation(substrate, model_recorder, **config.settings['sim'], )
 runtime = time.time() - start
 print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
 
-model_recorder.output_model_stats()
-# model_recorder.output_model_array_list()
+model_recorder.output_model_stat_dict()
+model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
