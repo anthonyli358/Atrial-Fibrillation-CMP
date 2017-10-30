@@ -88,7 +88,9 @@ class Model:
 
             # Create array of excitable cells
             excitable = (excited_from_above | excited_from_below | excited_from_rear |
-                         excited_from_fwrd | excited_from_inside | excited_from_outside)
+                         excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
+
+
 
         # Check if dysfunctional cells fail to excite
         self.inactive[self.dysfunctional & excitable] = (np.random.random(len(self.inactive[self.dysfunctional
@@ -97,7 +99,7 @@ class Model:
 
         # Time +1: Reduce excitation and excite resting and excitable (not inactive) cells.
         self.model_array[~self.resting] -= 1
-        self.model_array[self.resting & excitable & ~self.inactive] = self.refractory_period
+        self.model_array[excitable & ~self.inactive] = self.refractory_period
         self.time += 1
 
         return self.model_array
