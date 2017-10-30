@@ -22,8 +22,8 @@ def simulation(substrate, runtime, pacemaker_period):
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
-        if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
-            substrate.activate((70,100,0))
+        # if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
+        #     substrate.activate((70,100,-1))
         result[t] = substrate.iterate()
     return result
 

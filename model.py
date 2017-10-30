@@ -67,12 +67,15 @@ class Substrate:
 
         excited_from_fwrd = np.roll(excited, -1, axis=1)
         excited_from_fwrd[:, -1] = np.False_
+        if self.substrate_size[0] > 1:
+            excited_from_inside = np.roll(excited & self.y_linkage, 1, axis=2)
+            excited_from_inside[:, :, 0] = np.False_
 
-        excited_from_inside = np.roll(excited & self.y_linkage, 1, axis=2)
-        excited_from_inside[:, :, 0] = np.False_
-
-        excited_from_outside = np.roll(excited & np.roll(self.y_linkage, 1, axis=2), -1, axis=2)
-        excited_from_outside[:, :, -1] = np.False_
+            excited_from_outside = np.roll(excited & np.roll(self.y_linkage, 1, axis=2), -1, axis=2)
+            excited_from_outside[:, :, -1] = np.False_
+        else:
+            excited_from_outside = np.False_
+            excited_from_inside = np.False_
 
         excited_from_above = np.roll(excited & self.x_linkage, 1, axis=0)
 
@@ -100,6 +103,7 @@ class Substrate:
                                              self.dysfunction_probability, self.refractory_period,
                                              self.y_structural_homogeneity,
                                              self.seed)
+
     def one_d_create_rotor(self, rotor_coord):
         """
         Create a rotor at the specified coordinate
@@ -110,10 +114,9 @@ class Substrate:
         :rtype:
         """
         self.x_linkage[rotor_coord[0] - 1:rotor_coord[0] + 1,
-        rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
+                       rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
         self.activation[rotor_coord[0], rotor_coord[1] + 3, 0] = self.refractory_period
         self.activation[rotor_coord[0], rotor_coord[1] + 4, 0] = self.refractory_period - 1
-
 
     def activate(self, coordinate):
         """
