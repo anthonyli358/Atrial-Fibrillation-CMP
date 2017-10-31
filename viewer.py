@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 import os
 import seaborn as sns
+import sys
 
 from matplotlib import pyplot as plt
 plt.rcParams['animation.ffmpeg_path'] = "C:/Year4_Project/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
@@ -87,30 +88,35 @@ class Viewer:
         if not os.path.exists(os.path.join('data', self.path, 'model_array')):
             os.makedirs(os.path.join('data', self.path, 'model_array'))
 
-        # TODO: CHECK 2D VS 3D
-        # TODO: (output video - only way is matplotlib or screencap/snapshots (specify timestep) here)
+        # TODO: ISSUE WITH THIS READ FUNCTION
+        # Import the model_array from HFD5 format
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            model_array_list = model_data_file['array_list'][:]
 
-        # def plot_world_data(self, days=None, start=0, plot_world=False):
-        #     """
-        #     Plot the data for a range of times.
-        #     :param days: Number of days to plot
-        #     :param start: Start time
-        #     :param plot_world: Set to True to plot the world
-        #     """
-        #
-        #     # Counts number of CSV (comma-separated values) data files, equivalent to the total number of days simulated
-        #     total_days = len(
-        #         fnmatch.filter(os.listdir(os.path.join('data', self.seed, 'data_files', 'world_data')), '*.csv'))
-        #
-        #     if days is None or days > total_days:
-        #         days = total_days - start
-        #
-        #     # Plot the data for each day
-        #     for i in range(days):
-        #         sys.stdout.write(
-        #             '\r' + 'reading & plotting world data, time: %r' % (start + i) + '/%r' % (total_days - 1) + '...')
-        #         sys.stdout.flush()
-        #         self.plot_day_data(day=start + i, world=plot_world)
+        total_time = len(model_array_list)
+        refractory_period = max(model_array_list.flatten())
+
+        # TODO: CHECK 2D VS 3D
+
+        if time_steps is None or time_steps > total_time:
+            time_steps = total_time - start
+
+        # World plotting axis initialisation
+        ax = plt.figure(figsize=(20, 20)).add_subplot(1, 1, 1)
+        plt.subplots_adjust(top=0.95, bottom=0.02, left=0.02, right=0.98)
+
+        # TODO: VARIABLE FIGSIZE AND FONTSIZE - GET MODEL ARRAY SIZE FROM DATA
+
+        # Plot the data for each time step
+        for i in range(time_steps):
+            sys.stdout.write(
+                '\r' + 'reading & plotting model array, time_step: {}/{}...'.format(start + i, total_time - 1))
+            sys.stdout.flush()
+            ax.axis('off')
+            plt.title('time={}'.format(start + i), fontsize=40)
+            plt.imshow(model_array_list[start + i][:, :, 0], cmap='Greys_r', vmin=0, vmax=refractory_period)
+            plt.savefig(os.path.join('data', self.path, 'model_array', '{}.png'.format(i)))
+            plt.cla()
 
     def animate_model_array(self, save=True):
         """Read the HDF5 data file and animate the model array."""
@@ -142,8 +148,10 @@ class Viewer:
             ani.save(os.path.join('data', self.path, 'model_array', '_animation.mp4'), writer)
             print("Saved in {:.1f}s".format(save, time() - t))
 
+        # TODO: PYQTPLOT SO CAN GET ROTOR POSITIONS
         # TODO: 2D VS 3D
         # TODO: ANIMATE A SPECIFIC TIME SEGMENT
+        # TODO: CROSS VIEW
 
             # if cross_view:
             #     gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[-2:])
