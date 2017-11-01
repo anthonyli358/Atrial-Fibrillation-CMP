@@ -10,6 +10,12 @@ settings = dict(
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period
-        runtime=500,
+        runtime=1000,
+    ),
+    viewer=dict(
+        cross_view =True,  # Enable display of cut_through
+        cross_pos=50,  # Location of cut_through
+        interval=20,  # Length of each frame in milliseconds
+        save=None,  # Specify location to save animation to
     )
 )

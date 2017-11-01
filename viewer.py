@@ -3,9 +3,10 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
+plt.rcParams['image.cmap'] = 'viridis'
 
 
-def animate(results, refractory_period, save=False, cross_view=False, cross_pos=-1):
+def animate(results, settings):
     """
     Animate time series of activation matrices.
 
@@ -17,6 +18,12 @@ def animate(results, refractory_period, save=False, cross_view=False, cross_pos=
     :param cross_pos: Specify location of cross-view.
     :return:
     """
+    cross_view = settings['viewer']['cross_view']
+    cross_pos = settings['viewer']['cross_pos']
+    refractory_period = settings['structure']['refractory_period']
+    save = settings['viewer']['save']
+    interval = settings['viewer']['interval']
+
     fig = plt.figure()
     if cross_view:
         gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[2:0:-1])
@@ -29,7 +36,7 @@ def animate(results, refractory_period, save=False, cross_view=False, cross_pos=
 
     else:
         ims = [[plt.imshow(frame[0, :, :], animated=True, vmin=0, vmax=refractory_period)] for frame in results]
-    ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True,
+    ani = animation.ArtistAnimation(fig, ims, interval=interval, blit=True,
                                     repeat_delay=500)
     if save:
         plt.rcParams['animation.ffmpeg_path'] = "C:/Program Files/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"

@@ -21,10 +21,12 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     :return:
     :rtype:
     """
-    result = np.zeros((runtime,) + substrate.size, dtype=int)
+    result = np.zeros((runtime,) + substrate.size, dtype='uint8')
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
+        # if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
+        #     substrate.activate((70,100,-1))
         result[t] = substrate.iterate()
         recorder.update_model_stats()
         recorder.update_model_array_list()
@@ -64,8 +66,8 @@ model_recorder.output_model_array_list()
 
 # Need cross_view?
 
-print("ANIMATING RESULTS")
-viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=True, cross_pos=80)  # Cut through
+print('ANIMATING RESULTS')
+viewer.animate(results, config.settings)  # Cut through
 
 # fracs = []  # Loop to generate risk data
 # for i in range(48):

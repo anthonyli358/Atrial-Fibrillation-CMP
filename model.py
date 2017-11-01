@@ -69,7 +69,6 @@ class Model:
         excited_from_fwrd = np.roll(self.excited, -1, axis=2)
         excited_from_fwrd[:, :, -1] = np.bool_(False)
 
-
         excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=0)
         excited_from_inside[0, :, :] = np.bool(False)
 
@@ -93,6 +92,34 @@ class Model:
         self.time += 1
 
         return self.model_array
+
+        self.x_linkage[0, rotor_coord[0] - 1:rotor_coord[0] + 1,
+        self.activation[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
+        self.activation[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
+    def one_d_create_rotor(self, rotor_coord):
+        """
+        Create a rotor at the specified coordinate
+
+        :param rotor_coord:
+        :type rotor_coord:
+        :return:
+        :rtype:
+        """
+        self.x_linkage[rotor_coord[0] - 1:rotor_coord[0] + 1,
+                       rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
+        self.activation[rotor_coord[0], rotor_coord[1] + 3, 0] = self.refractory_period
+        self.activation[rotor_coord[0], rotor_coord[1] + 4, 0] = self.refractory_period - 1
+
+    def activate(self, coordinate):
+        """
+        Activate specified cell
+        :param coordinate:
+        :type coordinate:
+        :return:
+        :rtype:
+        """
+        self.activation[tuple(coordinate)] = self.refractory_period
+
 
 # ToDo: Viewer
 # TODO: MAIN
