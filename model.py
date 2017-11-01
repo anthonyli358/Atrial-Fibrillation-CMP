@@ -38,8 +38,6 @@ class Model:
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.inactive = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
 
-        if len(self.size) != 3:
-            raise TypeError("Length of size tuple is not 3...")
         # Initialise z linkage for 3d
         self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
                                           p=[z_coupling, 1 - z_coupling])
@@ -92,24 +90,6 @@ class Model:
         self.time += 1
 
         return self.model_array
-
-        self.x_linkage[0, rotor_coord[0] - 1:rotor_coord[0] + 1,
-        self.activation[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
-        self.activation[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
-    def one_d_create_rotor(self, rotor_coord):
-        """
-        Create a rotor at the specified coordinate
-
-        :param rotor_coord:
-        :type rotor_coord:
-        :return:
-        :rtype:
-        """
-        self.x_linkage[rotor_coord[0] - 1:rotor_coord[0] + 1,
-                       rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
-        self.activation[rotor_coord[0], rotor_coord[1] + 3, 0] = self.refractory_period
-        self.activation[rotor_coord[0], rotor_coord[1] + 4, 0] = self.refractory_period - 1
-
     def activate(self, coordinate):
         """
         Activate specified cell
@@ -119,6 +99,21 @@ class Model:
         :rtype:
         """
         self.activation[tuple(coordinate)] = self.refractory_period
+
+
+    def one_d_create_rotor(self, rotor_coord):
+        """
+        Create a rotor at the specified coordinate
+
+        :param rotor_coord:
+        :type rotor_coord:
+        :return:
+        :rtype:
+        """
+        self.y_linkage[0, rotor_coord[0] - 1:rotor_coord[0] + 1,
+                       rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
+        self.model_array[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
+        self.model_array[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
 
 
 # ToDo: Viewer
