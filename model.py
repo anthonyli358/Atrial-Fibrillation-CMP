@@ -10,7 +10,7 @@ class Model:
     """
 
     def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, y_coupling,
-                 z_coupling, seed, dimensions=len(cfg.settings['structure']['size']), time=0):
+                 z_coupling, seed, time=0):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -19,7 +19,6 @@ class Model:
         :param dysfunction_parameter: The fraction of dysfunctional cells
         :param dysfunction_probability: The fraction of dysfunctional cells which fail to excite
         :param refractory_period: Cell refractory period
-        :param dimensions: 2d or 3d model
         :param time: Current time step
         :param seed: Model randomisation seed
         """
@@ -39,23 +38,17 @@ class Model:
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.inactive = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
 
-        if dimensions != 2 and dimensions != 3:
-            raise TypeError("Length of size tuple is invalid to initialise a 2d or 3d model...")
-        self.dimensions = dimensions
+        if len(self.size) != 3:
+            raise TypeError("Length of size tuple is not 3...")
         # Initialise z linkage for 3d
-        if self.dimensions == 3:
-            self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
-                                              p=[z_coupling, 1 - z_coupling])
+        self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
+                                          p=[z_coupling, 1 - z_coupling])
 
     def activate_pacemaker(self):
         """
         Activate the pacemaker cells at the sinoatrial node (very left of the model).
         """
-
-        if self.dimensions == 2:
-            self.model_array[:, 0] = self.refractory_period
-        elif self.dimensions == 3:
-            self.model_array[:, 0, :] = self.refractory_period
+        self.model_array[:,:,0] = self.refractory_period
 
     def iterate(self):
         """
@@ -66,29 +59,26 @@ class Model:
         self.resting = self.model_array == 0  # condition for resting
 
         # Roll excited values to get arrays of possible excitations
-        excited_from_above = np.roll(self.excited & self.y_linkage, 1, axis=0)
+        excited_from_above = np.roll(self.excited & self.y_linkage, 1, axis=1)
 
-        excited_from_below = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=0), -1, axis=0)
+        excited_from_below = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=0), -1, axis=1)
 
-        excited_from_rear = np.roll(self.excited, 1, axis=1)
-        excited_from_rear[:, 0] = np.bool_(False)  # eliminates wrapping boundary, use numpy bool just in case
+        excited_from_rear = np.roll(self.excited, 1, axis=2)
+        excited_from_rear[:, :, 0] = np.bool_(False)  # eliminates wrapping boundary, use numpy bool just in case
 
-        excited_from_fwrd = np.roll(self.excited, -1, axis=1)
-        excited_from_fwrd[:, -1] = np.bool_(False)
+        excited_from_fwrd = np.roll(self.excited, -1, axis=2)
+        excited_from_fwrd[:, :, -1] = np.bool_(False)
 
-        # 2d or 3d model
-        if self.dimensions == 2:
-            excitable = (excited_from_above | excited_from_below | excited_from_rear | excited_from_fwrd)
-        elif self.dimensions == 3:
-            excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=2)
-            excited_from_inside[:, :, 0] = np.bool(False)
 
-            excited_from_outside = np.roll(self.excited & np.roll(self.z_linkage, 1, axis=2), -1, axis=2)
-            excited_from_outside[:, :, -1] = np.bool(False)
+        excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=0)
+        excited_from_inside[0, :, :] = np.bool(False)
 
-            # Create array of excitable cells
-            excitable = (excited_from_above | excited_from_below | excited_from_rear |
-                         excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
+        excited_from_outside = np.roll(self.excited & np.roll(self.z_linkage, 1, axis=2), -1, axis=0)
+        excited_from_outside[-1, :, :] = np.bool(False)
+
+        # Create array of excitable cells
+        excitable = (excited_from_above | excited_from_below | excited_from_rear |
+                     excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
 
 
 

@@ -1,6 +1,6 @@
 settings = dict(
     structure=dict(
-        size=(200, 200, 1),  # (y, x, z)
+        size=(5, 200, 200),  # (z, y, x)
         refractory_period=50,
         dysfunction_parameter=0.05,  # fraction of dysfunctional cells
         dysfunction_probability=0.05,
@@ -10,6 +10,6 @@ settings = dict(
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period
-        runtime=100,
+        runtime=500,
     )
 )
