@@ -59,8 +59,10 @@ results = simulation(substrate, model_recorder, **config.settings['sim'], )
 runtime = time.time() - start
 print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
 
-model_recorder.output_model_stats()
-model_recorder.output_model_array_list()
+
+if config.settings['output']:
+    model_recorder.output_model_stats()
+    model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 

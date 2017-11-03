@@ -17,5 +17,6 @@ settings = dict(
         cross_pos=50,  # Location of cut_through
         interval=20,  # Length of each frame in milliseconds
         save=None,  # Specify location to save animation to
-    )
+    ),
+    output=False,  # Enable or disable file saving
 )
