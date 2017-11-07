@@ -36,7 +36,7 @@ class Model:
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
         self.failed = np.zeros(size, dtype=bool)
-        self.model_array = np.zeros(size, dtype='int16')  # array of model_array state
+        self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
         self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of downward linkages
                                           p=[y_coupling, 1 - y_coupling])
         self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes
@@ -112,6 +112,7 @@ class Model:
         return self.model_array
 
 # ToDo: Viewer
+# TODO: TURN COPY PASTE FUNCTIONS INTO UTILITY METHODS (CREATE DIRECTORY)
 # TODO: MAIN
 # TODO: ECG
 # ToDo: OPTIMISE

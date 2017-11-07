@@ -2,9 +2,12 @@ import time
 import numpy as np
 import model as af
 import config
+import cProfile
+
 import viewer
 from model_recorder import ModelRecorder
 from viewer import Viewer
+
 
 from matplotlib import pyplot as plt
 import gc
@@ -63,8 +66,8 @@ model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-model_viewer = Viewer(model_recorder.path)
-model_viewer.plot_model_stats()
+# model_viewer = Viewer(model_recorder.path)
+# model_viewer.plot_model_stats()
 
 # # Need cross_view?
 # d3 = True if substrate.dimensions == 3 else False

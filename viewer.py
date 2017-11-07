@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import os
+import pandas as pd
 import seaborn as sns
 import sys
 
@@ -32,34 +33,39 @@ class Viewer:
         if not os.path.exists(os.path.join('data', self.path, 'model_statistics')):
             os.makedirs(os.path.join('data', self.path, 'model_statistics'))
 
-        # Import the model_stat_dict from HFD5 format
-        with h5py.File('data/{}/data_files/model_stat_dict'.format(self.path), 'r') as model_stats_file:
-            model_stat_dict = {k: v[:] for k, v in model_stats_file.items()}
+        # Import the stat_data_frame from HFD5 format
+
+        # with h5py.File('data/{}/data_files/stat_data_frame'.format(self.path), 'r') as model_stats_file:
+        #     stat_data_frame = {k: v[:] for k, v in model_stats_file.items()}
+
+        stat_data_frame = pd.read_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame')
 
         # Create data keys and values for plotting
         data_to_plot = []
-        time = [i for i in range(max(map(len, model_stat_dict.values())))]  # get longest time series in dict
-        size = sum([stat_list[0] for stat_list in model_stat_dict.values()])  # sum values at time=0 for model size
+        time = stat_data_frame.shape[0]  # get longest time series in dict
+        size = stat_data_frame.loc[0].sum()  # sum values at time=0 for model size
 
-        data_excited = [(model_stat_dict['excited'] / size, "Excited")]
+        data_excited = [(stat_data_frame['excited'] / size, "Excited")]
         data_to_plot.append({'data': data_excited, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
                              'title': "Excited Cells", 'filename': "excited.png"})
 
-        data_resting = [(model_stat_dict['resting'] / size, "Resting")]
-        data_to_plot.append({'data': data_resting, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': [0, 1],
+        data_resting = [(stat_data_frame['resting'] / size, "Resting")]
+        data_to_plot.append({'data': data_resting, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
                              'title': "Resting Cells", 'filename': "resting.png"})
 
-        data_refractory = [(model_stat_dict['refractory'] / size, "Refractory")]
+        data_refractory = [(stat_data_frame['refractory'] / size, "Refractory")]
         data_to_plot.append({'data': data_refractory, 'x_label': "Time", 'y_label': "Fraction of Cells",
-                             'y_lim': [0, 1], 'title': "Refractory Cells", 'filename': "refractory.png"})
+                             'y_lim': None, 'title': "Refractory Cells", 'filename': "refractory.png"})
 
-        data_failed = [(model_stat_dict['failed'] / size, "Failed")]
+        data_failed = [(stat_data_frame['failed'] / size, "Failed")]
         data_to_plot.append({'data': data_failed, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
                              'title': "Failed Cells", 'filename': "failed.png"})
 
         data_overall = [*data_excited, *data_resting, *data_refractory, *data_failed]
         data_to_plot.append({'data': data_overall, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': [0, 1],
                              'title': "Overall Cells", 'filename': "overall.png"})
+
+        # TODO: UPDATE PLOTTING TO BE SUITABLE WITH PANDAS
 
         # Plot data keys and values
         for data_dict in data_to_plot:
@@ -75,50 +81,7 @@ class Viewer:
             plt.savefig(os.path.join('data', self.path, 'model_statistics', data_dict['filename']))
             plt.close()
 
-    def plot_model_array(self, time_steps=None, start=0):
-        """
-        Read the HDF5 data file and view the model array for a range of time steps.
-        :param time_steps: Number of time steps to plot
-        :param start: Start time
-        """
-
-        print("reading & plotting model array...")
-
-        # Create output directory if it doesn't exist
-        if not os.path.exists(os.path.join('data', self.path, 'model_array')):
-            os.makedirs(os.path.join('data', self.path, 'model_array'))
-
-        # TODO: ISSUE WITH THIS READ FUNCTION
-        # Import the model_array from HFD5 format
-        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
-            model_array_list = model_data_file['array_list'][:]
-
-        total_time = len(model_array_list)
-        refractory_period = max(model_array_list.flatten())
-
-        # TODO: CHECK 2D VS 3D
-
-        if time_steps is None or time_steps > total_time:
-            time_steps = total_time - start
-
-        # World plotting axis initialisation
-        ax = plt.figure(figsize=(20, 20)).add_subplot(1, 1, 1)
-        plt.subplots_adjust(top=0.95, bottom=0.02, left=0.02, right=0.98)
-
-        # TODO: VARIABLE FIGSIZE AND FONTSIZE - GET MODEL ARRAY SIZE FROM DATA
-
-        # Plot the data for each time step
-        for i in range(time_steps):
-            sys.stdout.write(
-                '\r' + 'reading & plotting model array, time_step: {}/{}...'.format(start + i, total_time - 1))
-            sys.stdout.flush()
-            ax.axis('off')
-            plt.title('time={}'.format(start + i), fontsize=40)
-            plt.imshow(model_array_list[start + i][:, :, 0], cmap='Greys_r', vmin=0, vmax=refractory_period)
-            plt.savefig(os.path.join('data', self.path, 'model_array', '{}.png'.format(i)))
-            plt.cla()
-
-    def animate_model_array(self, save=True):
+    def animate_model_array(self, save=False):
         """Read the HDF5 data file and animate the model array."""
 
         print("reading & animating model array...")
@@ -148,8 +111,7 @@ class Viewer:
             ani.save(os.path.join('data', self.path, 'model_array', '_animation.mp4'), writer)
             print("Saved in {:.1f}s".format(save, time() - t))
 
-        # TODO: PYQTPLOT SO CAN GET ROTOR POSITIONS
-        # TODO: 2D VS 3D
+        # TODO: Y AXIS STARTS FROM 0 AT THE TOP
         # TODO: ANIMATE A SPECIFIC TIME SEGMENT
         # TODO: CROSS VIEW
 
@@ -163,6 +125,47 @@ class Viewer:
             #            for frame in results]
             #
             # else:
+
+    def plot_model_array(self, time_steps=None, start=0):
+        """
+        Read the HDF5 data file and view the model array for a range of time steps.
+        :param time_steps: Number of time steps to plot
+        :param start: Start time
+        """
+
+        print("reading model array...")
+
+        # Create output directory if it doesn't exist
+        if not os.path.exists(os.path.join('data', self.path, 'model_array')):
+            os.makedirs(os.path.join('data', self.path, 'model_array'))
+
+        # Import the model_array from HFD5 format
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            model_array_list = model_data_file['array_list'][:]
+
+        total_time = len(model_array_list)
+        refractory_period = max(model_array_list.flatten())
+
+        if time_steps is None or time_steps > total_time:
+            time_steps = total_time - start
+
+        # World plotting axis initialisation
+        ax = plt.figure(figsize=(20, 20)).add_subplot(1, 1, 1)
+        plt.subplots_adjust(top=0.95, bottom=0.02, left=0.02, right=0.98)
+
+        # TODO: VARIABLE FIGSIZE AND FONTSIZE - GET MODEL ARRAY SIZE FROM DATA
+        # TODO: GRAPH STYLING
+
+        # Plot the data for each time step
+        for i in range(time_steps):
+            sys.stdout.write(
+                '\r' + 'reading & plotting model array, time_step: {}/{}...'.format(start + i, total_time - 1))
+            sys.stdout.flush()
+            ax.axis('off')
+            plt.title('time={}'.format(start + i), fontsize=40)
+            plt.imshow(model_array_list[start + i][:, :, 0], cmap='Greys_r', vmin=0, vmax=refractory_period)
+            plt.savefig(os.path.join('data', self.path, 'model_array', '{}.png'.format(i)))
+            plt.cla()
 
     def plot_ecg(self):
         """Read the HDF5 data file create an ECG from the model array."""

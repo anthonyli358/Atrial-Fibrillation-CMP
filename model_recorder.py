@@ -2,6 +2,7 @@ import datetime
 import h5py
 import numpy as np
 import os
+import pandas as pd
 
 from functools import reduce
 from operator import mul
@@ -25,7 +26,7 @@ class ModelRecorder:
         self.path = model.seed if cfg.settings['structure']['seed'] is None else datetime.datetime.now().strftime(
             '%y-%m-%d_%H-%M-%S')
         self.model_array_list = []
-        self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1) for k in
+        self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1, dtype='int32') for k in
                                 ['excited', 'resting', 'refractory', 'failed']}
 
         # Create output directories if they don't exist
@@ -59,14 +60,17 @@ class ModelRecorder:
 
         print("outputting model statistics...")
 
-        with h5py.File('data/{}/data_files/model_stat_dict'.format(self.path), 'w') as model_stats_file:
-            for k, v in self.model_stat_dict.items():
-                model_stats_file.create_dataset(k, data=v, dtype='int32')
+        # with h5py.File('data/{}/data_files/model_stat_dict'.format(self.path), 'w') as model_stats_file:
+        #     for k, v in self.model_stat_dict.items():
+        #         model_stats_file.create_dataset(k, data=v, dtype='uint16')
+
+        stat_data_frame = pd.DataFrame.from_dict(self.model_stat_dict)
+        stat_data_frame.to_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame', mode='w')
 
     def update_model_array_list(self):
         """Update model array list for the current model iteration."""
 
-        self.model_array_list.append(self.model.model_array)
+        self.model_array_list.append(self.model.model_array.copy())
 
     def output_model_array_list(self):
         """Output numpy array list representing the model state for the current iteration in HDF5 file format."""
@@ -74,4 +78,4 @@ class ModelRecorder:
         print("outputting model array list...")
 
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'w') as model_data_file:
-            model_data_file.create_dataset('array_list', data=self.model_array_list, dtype='int16')
+            model_data_file.create_dataset('array_list', data=self.model_array_list, dtype='uint8')
