@@ -1,10 +1,11 @@
 settings = dict(
     structure=dict(
-        size=(5, 200, 200),  # (z, y, x)
+        size=(1, 200, 200),  # (z, y, x)
         refractory_period=50,
         dysfunction_parameter=0.05,  # fraction of dysfunctional cells
         dysfunction_probability=0.05,
-        y_coupling=.13,  # probability of y linkage
+        x_decoupling=0.1,  # Probability of a break in x coupling
+        y_coupling=.2,  # probability of y linkage
         z_coupling=.01,
         seed=None
     ),

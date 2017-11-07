@@ -9,8 +9,8 @@ class Model:
     A class for the cellular automata basis of the CMP model.
     """
 
-    def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, y_coupling,
-                 z_coupling, seed, time=0):
+    def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, x_decoupling,
+                 y_coupling, z_coupling, seed, time=0):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -32,15 +32,17 @@ class Model:
 
         self.excited, self.resting, self.failed = (0 for _ in range(3))
         self.model_array = np.zeros(size, dtype='int16')  # array of model_array state
+        self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of downward linkages
+                                          p=[1 - x_decoupling, x_decoupling])
         self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of downward linkages
                                           p=[y_coupling, 1 - y_coupling])
+        self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
+                                          p=[z_coupling, 1 - z_coupling])
         self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.inactive = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
 
-        # Initialise z linkage for 3d
-        self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
-                                          p=[z_coupling, 1 - z_coupling])
+
 
     def activate_pacemaker(self):
         """
@@ -61,10 +63,10 @@ class Model:
 
         excited_from_below = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=0), -1, axis=1)
 
-        excited_from_rear = np.roll(self.excited, 1, axis=2)
+        excited_from_rear = np.roll(self.excited & self.x_linkage, 1, axis=2)
         excited_from_rear[:, :, 0] = np.bool_(False)  # eliminates wrapping boundary, use numpy bool just in case
 
-        excited_from_fwrd = np.roll(self.excited, -1, axis=2)
+        excited_from_fwrd = np.roll(self.excited & np.roll(self.x_linkage, 1, axis=0), -1, axis=2)
         excited_from_fwrd[:, :, -1] = np.bool_(False)
 
         excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=0)
