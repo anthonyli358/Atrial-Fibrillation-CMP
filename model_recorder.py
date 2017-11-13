@@ -1,10 +1,15 @@
-import os
+import datetime
 import h5py
 import numpy as np
+import os
+import pandas as pd
+
+from functools import reduce
+from operator import mul
 from shutil import move
 from tempfile import mkstemp
+
 import config as cfg
-import datetime
 
 
 class ModelRecorder:
@@ -21,8 +26,8 @@ class ModelRecorder:
         self.path = model.seed if cfg.settings['structure']['seed'] is None else datetime.datetime.now().strftime(
             '%y-%m-%d_%H-%M-%S')
         self.model_array_list = []
-        self.model_data_dict = dict.fromkeys(
-            ['excited', 'resting', 'refractory', 'failed'], np.zeros(cfg.settings['sim']['runtime'] + 1))
+        self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1, dtype='int32') for k in
+                                ['excited', 'resting', 'refractory', 'failed']}
 
         # Create output directories if they don't exist
         if not os.path.exists(os.path.join('data', self.path, 'data_files')):
@@ -33,40 +38,40 @@ class ModelRecorder:
         with open(new_path, 'w') as new_file:
             with open('config.py') as old_file:
                 for line in old_file:
-                    new_file.write(line.replace('seed=None', 'seed={}'.format(self.path)))
+                    new_file.write(line.replace('seed=None', 'seed={}'.format(model.seed)))
         os.close(fd)  # prevent file descriptor leakage
         move(new_path, os.path.join('data', self.path, 'config.py'))  # move new file
 
-    def update_model_stats(self):
+    def update_model_stat_dict(self):
         """Update statistic lists for the current model iteration."""
 
-        model_keys = ['excited', 'resting', 'refractory', 'failed']
-        model_values = [np.sum(self.model.excited), np.sum(self.model.resting),
-                        np.sum(self.model.excited) - np.sum(self.model.resting), np.sum(self.model.inactive)]
+        stat_keys = ['excited', 'resting', 'refractory', 'failed']  # define manually as model_stats_dict not ordered
+        stat_values = [np.sum(self.model.excited),
+                       np.sum(self.model.resting),
+                       reduce(mul, cfg.settings['structure']['size']) - (
+                           np.sum(self.model.excited) + np.sum(self.model.resting)),
+                       np.sum(self.model.failed)]
 
-        for k, v in zip(model_keys, model_values):
-            self.model_data_dict[k][self.model.time] = v
+        for k, v in zip(stat_keys, stat_values):
+            self.model_stat_dict[k][self.model.time] = v
 
-    def output_model_stats(self):
+    def output_model_stat_dict(self):
         """Output statistics in HDF5 file format for rapid output and analysis."""
 
         print("outputting model statistics...")
 
-        with h5py.File(
-                os.path.join('data/{}/data_files/model_statistics'.format(self.path)), 'w') as model_data_file:
-            for k, v in self.model_data_dict.items():
-                model_data_file.create_dataset(k, data=v, dtype='int32')
+        stat_data_frame = pd.DataFrame.from_dict(self.model_stat_dict)
+        stat_data_frame.to_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame', mode='w')
 
     def update_model_array_list(self):
         """Update model array list for the current model iteration."""
 
-        self.model_array_list.append(self.model.model_array)
+        self.model_array_list.append(self.model.model_array.copy())
 
     def output_model_array_list(self):
         """Output numpy array list representing the model state for the current iteration in HDF5 file format."""
 
         print("outputting model array list...")
 
-        with h5py.File(
-                os.path.join('data/{}/data_files/model_array_list'.format(self.path)), 'w') as model_data_file:
-            model_data_file.create_dataset('array_list', data=self.model_array_list, dtype='int16')
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'w') as model_data_file:
+            model_data_file.create_dataset('array_list', data=self.model_array_list, dtype='uint8')

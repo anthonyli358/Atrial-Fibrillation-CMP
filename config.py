@@ -21,3 +21,6 @@ settings = dict(
     ),
     output=False,  # Enable or disable file saving
 )
+
+# TODO: CHECK POSSIBLE TO GET A WAVEFRONT / FIBRILLATION
+# TODO: 1D, 2D, 3D

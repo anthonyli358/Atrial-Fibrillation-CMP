@@ -2,8 +2,12 @@ import time
 import numpy as np
 import model as af
 import config
+import cProfile
+
 import viewer
 from model_recorder import ModelRecorder
+from viewer import Viewer
+
 
 from matplotlib import pyplot as plt
 import gc
@@ -25,11 +29,11 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     for t in range(runtime):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
+        recorder.update_model_stat_dict()
+        recorder.update_model_array_list()
         # if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
         #     substrate.activate((70,100,-1))
         result[t] = substrate.iterate()
-        recorder.update_model_stats()
-        recorder.update_model_array_list()
     return result
 
 
@@ -37,8 +41,8 @@ def risksim(substrate,settings):
     runtime = settings['sim']['runtime']
     refractory_period = settings["structure"]["refractory_period"]
     pacemaker_period = settings['sim']['pacemaker_period']
-    result = np.zeros(int(runtime))
-    for t in range(runtime):
+    result = np.zeros(int(runtime + 1))
+    for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
         sub = substrate.iterate()
@@ -59,6 +63,8 @@ results = simulation(substrate, model_recorder, **config.settings['sim'], )
 runtime = time.time() - start
 print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
 
+model_recorder.output_model_stat_dict()
+model_recorder.output_model_array_list()
 
 if config.settings['output']:
     model_recorder.output_model_stats()
@@ -66,10 +72,14 @@ if config.settings['output']:
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-# Need cross_view?
+# model_viewer = Viewer(model_recorder.path)
+# model_viewer.plot_model_stats()
 
-print('ANIMATING RESULTS')
-viewer.animate(results, config.settings)  # Cut through
+# # Need cross_view?
+# d3 = True if substrate.dimensions == 3 else False
+#
+# print("ANIMATING RESULTS")
+# viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=d3, cross_pos=80)  # Cut through
 
 # fracs = []  # Loop to generate risk data
 # for i in range(48):
