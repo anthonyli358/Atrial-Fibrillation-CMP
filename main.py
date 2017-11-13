@@ -67,14 +67,12 @@ model_recorder.output_model_array_list()
 
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
-# model_viewer = Viewer(model_recorder.path)
-# model_viewer.plot_model_stats()
+model_viewer = Viewer(model_recorder.path)
+model_viewer.animate_model_array()
 
-# # Need cross_view?
-# d3 = True if substrate.dimensions == 3 else False
-#
+
 # print("ANIMATING RESULTS")
-# viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=d3, cross_pos=80)  # Cut through
+# Viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=True, cross_pos=80)  # Cut through
 
 # -------------------
 # Risc_Recording_Code
@@ -104,7 +102,6 @@ model_recorder.output_model_array_list()
 # plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
 # plt.show()
 
-print(results)
 
 # TODO: KILLSWITCH()
 # ToDo: ECGs
