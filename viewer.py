@@ -6,6 +6,7 @@ import seaborn as sns
 import sys
 
 from matplotlib import pyplot as plt
+
 plt.rcParams['animation.ffmpeg_path'] = "C:/Year4_Project/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
@@ -33,53 +34,30 @@ class Viewer:
         if not os.path.exists(os.path.join('data', self.path, 'model_statistics')):
             os.makedirs(os.path.join('data', self.path, 'model_statistics'))
 
-        # Import the stat_data_frame from HFD5 format
-
-        # with h5py.File('data/{}/data_files/stat_data_frame'.format(self.path), 'r') as model_stats_file:
-        #     stat_data_frame = {k: v[:] for k, v in model_stats_file.items()}
-
+        # Import the pandas stat_data_frame from HDF5 format
         stat_data_frame = pd.read_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame')
-
-        # Create data keys and values for plotting
-        data_to_plot = []
-        time = stat_data_frame.shape[0]  # get longest time series in dict
         size = stat_data_frame.loc[0].sum()  # sum values at time=0 for model size
 
-        data_excited = [(stat_data_frame['excited'] / size, "Excited")]
-        data_to_plot.append({'data': data_excited, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
-                             'title': "Excited Cells", 'filename': "excited.png"})
+        plotting_data_frame = stat_data_frame.copy()/size  # normalise values and change variable name for clarity
 
-        data_resting = [(stat_data_frame['resting'] / size, "Resting")]
-        data_to_plot.append({'data': data_resting, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
-                             'title': "Resting Cells", 'filename': "resting.png"})
-
-        data_refractory = [(stat_data_frame['refractory'] / size, "Refractory")]
-        data_to_plot.append({'data': data_refractory, 'x_label': "Time", 'y_label': "Fraction of Cells",
-                             'y_lim': None, 'title': "Refractory Cells", 'filename': "refractory.png"})
-
-        data_failed = [(stat_data_frame['failed'] / size, "Failed")]
-        data_to_plot.append({'data': data_failed, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': None,
-                             'title': "Failed Cells", 'filename': "failed.png"})
-
-        data_overall = [*data_excited, *data_resting, *data_refractory, *data_failed]
-        data_to_plot.append({'data': data_overall, 'x_label': "Time", 'y_label': "Fraction of Cells", 'y_lim': [0, 1],
-                             'title': "Overall Cells", 'filename': "overall.png"})
-
-        # TODO: UPDATE PLOTTING TO BE SUITABLE WITH PANDAS
-
-        # Plot data keys and values
-        for data_dict in data_to_plot:
+        # Plot statistics
+        for key in stat_data_frame.columns.values.tolist():
             plt.figure()
             sns.set_style('ticks')
-            for (y, l) in data_dict['data']:
-                plt.plot(time, y, label=l)
-            plt.xlabel(data_dict['x_label'])
-            plt.ylabel(data_dict['y_label'])
-            plt.ylim(data_dict['y_lim'])
+            plotting_data_frame[key].plot(title="{} Cells".format(key).title())
+            plt.xlabel("Time")
+            plt.ylabel("Fraction of Cells")
             plt.legend(loc=0, fontsize=12, frameon=True)
-            plt.title(data_dict['title'])
-            plt.savefig(os.path.join('data', self.path, 'model_statistics', data_dict['filename']))
+            plt.savefig(os.path.join('data', self.path, 'model_statistics', "{}.png".format(key)))
             plt.close()
+
+        plt.figure()
+        plotting_data_frame.plot(title="Overall Cells", ylim=[0, 1])
+        plt.xlabel("Time")
+        plt.ylabel("Fraction of Cells")
+        plt.legend(loc=0, fontsize=12, frameon=True)
+        plt.savefig(os.path.join('data', self.path, 'model_statistics', "overall.png"))
+        plt.close()
 
     def animate_model_array(self, save=False):
         """Read the HDF5 data file and animate the model array."""
@@ -111,9 +89,9 @@ class Viewer:
             ani.save(os.path.join('data', self.path, 'model_array', '_animation.mp4'), writer)
             print("Saved in {:.1f}s".format(save, time() - t))
 
-        # TODO: Y AXIS STARTS FROM 0 AT THE TOP
-        # TODO: ANIMATE A SPECIFIC TIME SEGMENT
-        # TODO: CROSS VIEW
+            # TODO: Y AXIS STARTS FROM 0 AT THE TOP
+            # TODO: ANIMATE A SPECIFIC TIME SEGMENT
+            # TODO: CROSS VIEW
 
             # if cross_view:
             #     gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[-2:])

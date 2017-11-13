@@ -60,10 +60,6 @@ class ModelRecorder:
 
         print("outputting model statistics...")
 
-        # with h5py.File('data/{}/data_files/model_stat_dict'.format(self.path), 'w') as model_stats_file:
-        #     for k, v in self.model_stat_dict.items():
-        #         model_stats_file.create_dataset(k, data=v, dtype='uint16')
-
         stat_data_frame = pd.DataFrame.from_dict(self.model_stat_dict)
         stat_data_frame.to_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame', mode='w')
 

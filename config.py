@@ -13,3 +13,6 @@ settings = dict(
         runtime=1000,
     )
 )
+
+# TODO: CHECK POSSIBLE TO GET A WAVEFRONT / FIBRILLATION
+# TODO: 1D, 2D, 3D
