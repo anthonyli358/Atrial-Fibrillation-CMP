@@ -4,10 +4,8 @@ import model as af
 import config
 import cProfile
 
-import viewer
 from model_recorder import ModelRecorder
 from viewer import Viewer
-
 
 from matplotlib import pyplot as plt
 import gc
@@ -25,8 +23,8 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     :return:
     :rtype:
     """
-    result = np.zeros((runtime,) + substrate.size, dtype='uint8')
-    for t in range(runtime):
+    result = np.zeros((runtime + 1,) + substrate.size, dtype='uint8')
+    for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
         recorder.update_model_stat_dict()
@@ -37,7 +35,7 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     return result
 
 
-def risksim(substrate,settings):
+def risk_sim(substrate,settings):
     runtime = settings['sim']['runtime']
     refractory_period = settings["structure"]["refractory_period"]
     pacemaker_period = settings['sim']['pacemaker_period']
@@ -66,10 +64,6 @@ print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
 model_recorder.output_model_stat_dict()
 model_recorder.output_model_array_list()
 
-if config.settings['output']:
-    model_recorder.output_model_stats()
-    model_recorder.output_model_array_list()
-
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
 # model_viewer = Viewer(model_recorder.path)
@@ -85,7 +79,7 @@ if config.settings['output']:
 # for i in range(48):
 #     # config.settings['structure']['s_homogeneity'] = i
 #     substrate = af.Substrate(**config.settings["structure"])
-#     result = risksim(substrate, config.settings)
+#     result = risk_sim(substrate, config.settings)
 #     frac = np.count_nonzero(result > 220) / len(result)
 #     fracs.append(frac)
 #     print('{},\t{}'.format(frac, substrate.seed))
