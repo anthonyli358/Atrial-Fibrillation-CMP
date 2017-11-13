@@ -53,6 +53,7 @@ print("GENERATING SUBSTRATE")
 
 substrate = af.Model(**config.settings['structure'])
 model_recorder = ModelRecorder(substrate)
+print('SEED: {}'.format(substrate.seed))
 
 print("RUNNING SIMULATION")
 
@@ -75,16 +76,35 @@ model_recorder.output_model_array_list()
 # print("ANIMATING RESULTS")
 # viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=d3, cross_pos=80)  # Cut through
 
-# fracs = []  # Loop to generate risk data
-# for i in range(48):
-#     # config.settings['structure']['s_homogeneity'] = i
-#     substrate = af.Substrate(**config.settings["structure"])
-#     result = risk_sim(substrate, config.settings)
-#     frac = np.count_nonzero(result > 220) / len(result)
-#     fracs.append(frac)
-#     print('{},\t{}'.format(frac, substrate.seed))
-#     gc.collect()
-# print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
+# -------------------
+# Risc_Recording_Code
+# -------------------
+# results = []
+# runs = 24
+# results.append([config.settings['structure']['size'], config.settings['structure']['refractory_period'],
+#                 config.settings['structure']['dysfunction_parameter'], config.settings['structure']['dysfunction_probability']
+#                 ])
+# config.settings['structure']['x_coupling'] = 0.85
+# for coupling in np.linspace(0.0,.14,29):
+#     fracs = []
+#     for i in range(runs):
+#         config.settings['structure']['y_coupling'] = coupling
+#         config.settings['structure']['z_coupling'] = coupling
+#         substrate = af.Model(**config.settings["structure"])
+#         result = risksim(substrate, config.settings)[220:]
+#         frac = np.count_nonzero(result > 1100) / len(result)
+#         fracs.append(frac)
+#         # print('{},\t{}'.format(frac, substrate.seed))
+#         output = [coupling,np.average(fracs),np.std(fracs)]
+#     results.append(output)
+#     print(output)
+#     # print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
+# data = np.array(results[1:])
+# np.save('{}_test1000t{}nu'.format(runs, config.settings['structure']['x_coupling']), data)
+# plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
+# plt.show()
+
+print(results)
 
 # TODO: KILLSWITCH()
 # ToDo: ECGs
