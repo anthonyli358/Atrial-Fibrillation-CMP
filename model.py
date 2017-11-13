@@ -83,12 +83,12 @@ class Model:
 
         # Check if dysfunctional cells fail to excite
         # TODO: COULD OPTIMISE BY SAVING THE (RESTING & EXCITABLE & DYSFUNCTIONAL) INDEX ARRAY INSTEAD OF RECALCULATING
-        self.failed[self.resting & excitable & self.dysfunctional] = np.random.random(
-            len(self.failed[self.resting & excitable & self.dysfunctional])) < self.dysfunction_probability
+        self.failed[excitable & self.dysfunctional] = np.random.random(
+            len(self.failed[excitable & self.dysfunctional])) < self.dysfunction_probability
 
         # Time +1: Reduce excitation and excite resting and excitable (not failed) cells.
         self.model_array[~self.resting] -= 1
-        self.model_array[self.resting & excitable & ~self.failed] = self.refractory_period
+        self.model_array[excitable & ~self.failed] = self.refractory_period
         self.time += 1
 
         # Update excited and resting arrays
