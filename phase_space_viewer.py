@@ -41,10 +41,14 @@ plt.imshow(data[:,:,3], extent=(0,0.99,0.995,0))
 comb=np.load('Phase_Spaces/Data2.npy')
 plt.figure()
 plt.imshow(comb[:,:,2], extent=(0,1,1,0))
+plt.colorbar()
 plt.figure()
 plt.imshow(comb[:,:,4], extent=(0,1,1,0))
+plt.colorbar()
 plt.figure()
 plt.imshow(comb[:,:,3], extent=(0,1,1,0))
+plt.colorbar()
+
 
 
 plt.show()

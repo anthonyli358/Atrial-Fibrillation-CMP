@@ -23,16 +23,16 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     :return:
     :rtype:
     """
-    result = np.zeros((runtime + 1,) + substrate.size, dtype='uint8')
+
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
-        recorder.update_model_stat_dict()
-        recorder.update_model_array_list()
         # if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
         #     substrate.activate((70,100,-1))
-        result[t] = substrate.iterate()
-    return result
+
+        recorder.update_model_stat_dict()
+        recorder.update_model_array_list()
+        substrate.iterate()
 
 
 def risk_sim(substrate,settings):
@@ -57,22 +57,18 @@ print('SEED: {}'.format(substrate.seed))
 
 print("RUNNING SIMULATION")
 
-results = simulation(substrate, model_recorder, **config.settings['sim'], )
+simulation(substrate, model_recorder, **config.settings['sim'], )
 
-runtime = time.time() - start
-print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
+run = time.time() - start
+print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(run))
 
 model_recorder.output_model_stat_dict()
 model_recorder.output_model_array_list()
 
-# np.save('rotor_formation(0.18,0.1,0.1)x', results)
-
 model_viewer = Viewer(model_recorder.path)
+model_viewer.plot_model_stats()
 model_viewer.animate_model_array()
 
-
-# print("ANIMATING RESULTS")
-# Viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=True, cross_pos=80)  # Cut through
 
 # -------------------
 # Risc_Recording_Code
@@ -89,7 +85,7 @@ model_viewer.animate_model_array()
 #         config.settings['structure']['y_coupling'] = coupling
 #         config.settings['structure']['z_coupling'] = coupling
 #         substrate = af.Model(**config.settings["structure"])
-#         result = risksim(substrate, config.settings)[220:]
+#         result = risk_sim(substrate, config.settings)[220:]
 #         frac = np.count_nonzero(result > 1100) / len(result)
 #         fracs.append(frac)
 #         # print('{},\t{}'.format(frac, substrate.seed))

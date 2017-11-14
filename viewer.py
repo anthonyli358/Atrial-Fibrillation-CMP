@@ -11,6 +11,7 @@ plt.rcParams['animation.ffmpeg_path'] = "C:/Year4_Project/ffmpeg-20170807-1bef00
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
 from time import time
+import numpy as np
 
 
 class Viewer:
@@ -36,17 +37,20 @@ class Viewer:
 
         # Import the pandas stat_data_frame from HDF5 format
         stat_data_frame = pd.read_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame')
-        size = stat_data_frame.loc[0].sum()  # sum values at time=0 for model size
 
-        plotting_data_frame = stat_data_frame.copy()/size  # normalise values and change variable name for clarity
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            dimensions = np.shape(model_data_file['array_list'][0])
+        size = np.product(dimensions)  # sum values at time=0 for model size
+        area = np.product(dimensions[:-1])
+        plotting_data_frame = stat_data_frame.copy()  # Change variable name for clarity
 
         # Plot statistics
         for key in stat_data_frame.columns.values.tolist():
             plt.figure()
             sns.set_style('ticks')
-            plotting_data_frame[key].plot(title="{} Cells".format(key).title())
+            (plotting_data_frame[key]/(size if key != 'excited' else area)).plot(title="{} Cells".format(key).title())
             plt.xlabel("Time")
-            plt.ylabel("Fraction of Cells")
+            plt.ylabel("Fraction of Cells" if key !='excited' else "Number of Excited Cells / Ideal Number of Excited Cells")
             plt.legend(loc=0, fontsize=12, frameon=True)
             plt.savefig(os.path.join('data', self.path, 'model_statistics', "{}.png".format(key)))
             plt.close()
