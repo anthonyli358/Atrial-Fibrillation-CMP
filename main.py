@@ -3,6 +3,7 @@ import numpy as np
 import model as af
 import config
 import cProfile
+import datetime
 
 from model_recorder import ModelRecorder
 from viewer import Viewer
@@ -74,8 +75,8 @@ results.append([config.settings['structure']['size'], config.settings['structure
                 config.settings['structure']['dysfunction_parameter'], config.settings['structure']['dysfunction_probability']
                 ])
 config.settings['structure']['x_coupling'] = 0.85
-for x_coupling in np.linspace(0.85,0.9,3):
-    for yz_coupling in np.linspace(0.0, .14, 3):
+for x_coupling in np.linspace(0.0,0.2,20, endpoint=False):
+    for yz_coupling in np.linspace(0.0, 1, 100, endpoint=False):
         fracs = []
         conducting = []
         config.settings['structure']['x_coupling'] = x_coupling
@@ -97,9 +98,12 @@ for x_coupling in np.linspace(0.85,0.9,3):
         print(output,',')
         # print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
 data = np.array(results[1:])
+identifier = datetime.datetime.now().strftime('%y-%m-%d_%H-%M-%S')
+save_file = 'data_file_1_200_200-{}.npy'.format(identifier)
+np.save(save_file, data)
 
-plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
-plt.show()
+# plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
+# plt.show()
 
 
 # TODO: KILLSWITCH()
