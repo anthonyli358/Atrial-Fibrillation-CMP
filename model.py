@@ -14,9 +14,9 @@ class Model:
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
-        :param x_coupling: The x coupling factor
-        :param y_coupling: The y coupling factor
-        :param z_coupling: The z coupling factor
+        :param x_coupling: The x yz_coupling factor
+        :param y_coupling: The y yz_coupling factor
+        :param z_coupling: The z yz_coupling factor
         :param dysfunction_parameter: The fraction of dysfunctional cells
         :param dysfunction_probability: The fraction of dysfunctional cells which fail to excite
         :param refractory_period: Cell refractory period

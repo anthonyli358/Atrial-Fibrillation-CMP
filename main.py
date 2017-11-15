@@ -39,64 +39,67 @@ def risk_sim(substrate,settings):
     runtime = settings['sim']['runtime']
     refractory_period = settings["structure"]["refractory_period"]
     pacemaker_period = settings['sim']['pacemaker_period']
-    result = np.zeros(int(runtime + 1))
+    sum_result = [[],[]]
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
         sub = substrate.iterate()
-        result[t] = np.count_nonzero(sub == refractory_period)
-    return result
+        sum_result[0].append(np.count_nonzero(sub == refractory_period))
+        sum_result[1].append(np.count_nonzero(sub[:,:,-1] == refractory_period))
+    return sum_result
 
 
-start = time.time()
-print("GENERATING SUBSTRATE")
-
-substrate = af.Model(**config.settings['structure'])
-model_recorder = ModelRecorder(substrate)
-print('SEED: {}'.format(substrate.seed))
-
-print("RUNNING SIMULATION")
-
-simulation(substrate, model_recorder, **config.settings['sim'], )
-
-run = time.time() - start
-print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(run))
-
-model_recorder.output_model_stat_dict()
-model_recorder.output_model_array_list()
-
-model_viewer = Viewer(model_recorder.path)
-model_viewer.plot_model_stats()
-model_viewer.animate_model_array()
+# start = time.time()
+# print("GENERATING SUBSTRATE")
+# substrate = af.Model(**config.settings['structure'])
+# model_recorder = ModelRecorder(substrate)
+# print('SEED: {}'.format(substrate.seed))
+# print("RUNNING SIMULATION")
+# simulation(substrate, model_recorder, **config.settings['sim'], )
+# run = time.time() - start
+# print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(run))
+# model_recorder.output_model_stat_dict()
+# model_recorder.output_model_array_list()
+# model_viewer = Viewer(model_recorder.path)
+# model_viewer.plot_model_stats()
+# model_viewer.animate_model_array()
 
 
 # -------------------
 # Risc_Recording_Code
 # -------------------
-# results = []
-# runs = 24
-# results.append([config.settings['structure']['size'], config.settings['structure']['refractory_period'],
-#                 config.settings['structure']['dysfunction_parameter'], config.settings['structure']['dysfunction_probability']
-#                 ])
-# config.settings['structure']['x_coupling'] = 0.85
-# for coupling in np.linspace(0.0,.14,29):
-#     fracs = []
-#     for i in range(runs):
-#         config.settings['structure']['y_coupling'] = coupling
-#         config.settings['structure']['z_coupling'] = coupling
-#         substrate = af.Model(**config.settings["structure"])
-#         result = risk_sim(substrate, config.settings)[220:]
-#         frac = np.count_nonzero(result > 1100) / len(result)
-#         fracs.append(frac)
-#         # print('{},\t{}'.format(frac, substrate.seed))
-#         output = [coupling,np.average(fracs),np.std(fracs)]
-#     results.append(output)
-#     print(output)
-#     # print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
-# data = np.array(results[1:])
-# np.save('{}_test1000t{}nu'.format(runs, config.settings['structure']['x_coupling']), data)
-# plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
-# plt.show()
+results = []
+runs = 24
+results.append([config.settings['structure']['size'], config.settings['structure']['refractory_period'],
+                config.settings['structure']['dysfunction_parameter'], config.settings['structure']['dysfunction_probability']
+                ])
+config.settings['structure']['x_coupling'] = 0.85
+for x_coupling in np.linspace(0.85,0.9,3):
+    for yz_coupling in np.linspace(0.0, .14, 3):
+        fracs = []
+        conducting = []
+        config.settings['structure']['x_coupling'] = x_coupling
+        for i in range(runs):
+            config.settings['structure']['y_coupling'] = yz_coupling
+            config.settings['structure']['z_coupling'] = yz_coupling
+            substrate = af.Model(**config.settings["structure"])
+            result,conduction = risk_sim(substrate, config.settings)
+            frac = np.sum(result[220:] > 1.5*np.product(config.settings['structure']['size'][:-1])) / len(result)
+            if np.any(conduction):
+                conducting.append(True)
+            else:
+                conducting.append(False)
+            fracs.append(frac)
+            # print('{},\t{}'.format(frac, substrate.seed))
+
+        output = [x_coupling, yz_coupling, np.average(fracs), np.std(fracs), np.average(conducting)]
+        results.append(output)
+        print(output,',')
+        # print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
+data = np.array(results[1:])
+
+plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
+plt.show()
 
 
 # TODO: KILLSWITCH()
