@@ -7,10 +7,12 @@ import sys
 
 from matplotlib import pyplot as plt
 
-plt.rcParams['animation.ffmpeg_path'] = "C:/Year4_Project/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
+plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
 from time import time
+
+from utility_methods import *
 
 
 class Viewer:
@@ -30,9 +32,7 @@ class Viewer:
 
         print("reading & plotting model statistics...")
 
-        # Create output directory if it doesn't exist
-        if not os.path.exists(os.path.join('data', self.path, 'model_statistics')):
-            os.makedirs(os.path.join('data', self.path, 'model_statistics'))
+        create_dir('{}/model_statistics'.format(self.path))
 
         # Import the pandas stat_data_frame from HDF5 format
         stat_data_frame = pd.read_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame')
@@ -41,22 +41,23 @@ class Viewer:
         plotting_data_frame = stat_data_frame.copy()/size  # normalise values and change variable name for clarity
 
         # Plot statistics
-        for key in stat_data_frame.columns.values.tolist():
+        for key in plotting_data_frame.columns.values.tolist():
             plt.figure()
             sns.set_style('ticks')
             plotting_data_frame[key].plot(title="{} Cells".format(key).title())
             plt.xlabel("Time")
             plt.ylabel("Fraction of Cells")
             plt.legend(loc=0, fontsize=12, frameon=True)
-            plt.savefig(os.path.join('data', self.path, 'model_statistics', "{}.png".format(key)))
+            plt.savefig('data/{}/model_statistics/{}.png'.format(self.path, key))
             plt.close()
 
         plt.figure()
+        sns.set_style('ticks')
         plotting_data_frame.plot(title="Overall Cells", ylim=[0, 1])
         plt.xlabel("Time")
         plt.ylabel("Fraction of Cells")
         plt.legend(loc=0, fontsize=12, frameon=True)
-        plt.savefig(os.path.join('data', self.path, 'model_statistics', "overall.png"))
+        plt.savefig('data/{}/model_statistics/overall.png'.format(self.path))
         plt.close()
 
     def animate_model_array(self, save=False):
@@ -70,28 +71,26 @@ class Viewer:
 
         refractory_period = max(model_array_list.flatten())
 
-        # if len(np.shape(model_array_list[0])) == 3:
-
-        fig = plt.figure()
+        fig = plt.figure(1)
         ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
                for frame in model_array_list]
         ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
 
         plt.show()
 
+        # TODO: SAVING DOESN'T WORK
         if save:
-            if not os.path.exists(os.path.join('data', self.path, 'model_array')):
-                os.makedirs(os.path.join('data', self.path, 'model_array'))
+            create_dir('{}/model_array'.format(self.path))
 
             writer = animation.writers['ffmpeg'](fps=30)
             print("Saving animation (approx 1s/10 time steps for 40000 cells)...")
             t = time()
-            ani.save(os.path.join('data', self.path, 'model_array', '_animation.mp4'), writer)
+            ani.save('data/{}/model_array/_animation.mp4', writer)
             print("Saved in {:.1f}s".format(save, time() - t))
 
-            # TODO: Y AXIS STARTS FROM 0 AT THE TOP
             # TODO: ANIMATE A SPECIFIC TIME SEGMENT
             # TODO: CROSS VIEW
+            # TODO: COLOURBAR
 
             # if cross_view:
             #     gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[-2:])
@@ -113,9 +112,7 @@ class Viewer:
 
         print("reading model array...")
 
-        # Create output directory if it doesn't exist
-        if not os.path.exists(os.path.join('data', self.path, 'model_array')):
-            os.makedirs(os.path.join('data', self.path, 'model_array'))
+        create_dir('{}/model_array'.format(self.path))
 
         # Import the model_array from HFD5 format
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
@@ -137,13 +134,15 @@ class Viewer:
         # Plot the data for each time step
         for i in range(time_steps):
             sys.stdout.write(
-                '\r' + 'reading & plotting model array, time_step: {}/{}...'.format(start + i, total_time - 1))
+                '\r' + "reading & plotting model array, time_step: {}/{}...".format(start + i, total_time - 1))
             sys.stdout.flush()
             ax.axis('off')
-            plt.title('time={}'.format(start + i), fontsize=40)
-            plt.imshow(model_array_list[start + i][:, :, 0], cmap='Greys_r', vmin=0, vmax=refractory_period)
-            plt.savefig(os.path.join('data', self.path, 'model_array', '{}.png'.format(i)))
+            plt.title("time={}".format(start + i), fontsize=40)
+            plt.imshow(model_array_list[start + i][0, :, :], cmap='Greys_r', vmin=0, vmax=refractory_period)
+            plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
             plt.cla()
 
     def plot_ecg(self):
         """Read the HDF5 data file create an ECG from the model array."""
+
+# TODO: LOAD DATA ON INITIALISATION
