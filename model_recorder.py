@@ -39,7 +39,7 @@ class ModelRecorder:
                 for line in old_file:
                     new_file.write(line.replace('seed=None', 'seed={}'.format(model.seed)))
         os.close(fd)  # prevent file descriptor leakage
-        move(new_path, 'data/{}config.py'.format(self.path))  # move new file
+        move(new_path, 'data/{}/config.py'.format(self.path))  # move new file
 
     def update_model_stat_dict(self):
         """Update statistic lists for the current model iteration."""

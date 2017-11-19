@@ -41,10 +41,10 @@ class Viewer:
         plotting_data_frame = stat_data_frame.copy()/size  # normalise values and change variable name for clarity
 
         # Plot statistics
-        for key in plotting_data_frame.columns.values.tolist():
+        for key in stat_data_frame.columns.values.tolist():
             plt.figure()
             sns.set_style('ticks')
-            plotting_data_frame[key].plot(title="{} Cells".format(key).title())
+            stat_data_frame[key].plot(title="{} Cells".format(key).title())
             plt.xlabel("Time")
             plt.ylabel("Fraction of Cells")
             plt.legend(loc=0, fontsize=12, frameon=True)
@@ -62,6 +62,8 @@ class Viewer:
 
     def animate_model_array(self, save=False):
         """Read the HDF5 data file and animate the model array."""
+
+        # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
 
         print("reading & animating model array...")
 

@@ -68,6 +68,7 @@ model_recorder.output_model_array_list()
 # np.save('rotor_formation(0.18,0.1,0.1)x', results)
 
 model_viewer = Viewer(model_recorder.path)
+model_viewer.plot_model_stats()
 model_viewer.animate_model_array()
 
 
