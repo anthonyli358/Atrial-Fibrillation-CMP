@@ -144,7 +144,5 @@ class Viewer:
             plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
             plt.cla()
 
-    def plot_ecg(self):
-        """Read the HDF5 data file create an ECG from the model array."""
 
 # TODO: LOAD DATA ON INITIALISATION

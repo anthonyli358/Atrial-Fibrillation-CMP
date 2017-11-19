@@ -23,20 +23,16 @@ class ECG:
         # np.around(voltage_array, decimals=2)
 
         voltage = 0
-        for i in range(voltage_array.shape[1]):
-            for j in range(voltage_array.shape[0]):
-                if i == self.centre[0] and j == self.centre[0]:
-                    pass
-                else:
-                    voltage += ((i - self.centre[0]) * (voltage_array[j, i] - voltage_array[j, i - 1])
-                                + (j - self.centre[1]) * (voltage_array[j, i] - voltage_array[j - 1, i])
-                                ) / ((i - self.centre[0])**2 + (j - self.centre[1])**2) ** 1.5
+        for ((j, i), v) in np.ndenumerate(voltage_array):
+            if [j, i] == self.centre:
+                pass
+            else:
+                voltage += ((i - self.centre[1]) * (voltage_array[j, i] - voltage_array[j, i - 1])
+                            + (j - self.centre[0]) * (voltage_array[j, i] - voltage_array[j - 1, i])
+                            ) / ((i - self.centre[1])**2 + (j - self.centre[0])**2) ** 1.5
 
         return voltage
 
-# TODO: USE BROADCASTING
-# TODO: BETTER WAY TO CHECK VALUES
 
-
-ecg = ECG([1, 1])
+ecg = ECG([1, 1])  # [y, x]
 print(ecg.voltage())
