@@ -60,7 +60,7 @@ class Viewer:
         plt.savefig('data/{}/model_statistics/overall.png'.format(self.path))
         plt.close()
 
-    def animate_model_array(self, save=False):
+    def animate_model_array(self, save=False, cross_view=False, cross_pos=None):
         """Read the HDF5 data file and animate the model array."""
 
         # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
@@ -74,10 +74,22 @@ class Viewer:
         refractory_period = max(model_array_list.flatten())
 
         fig = plt.figure(1)
-        ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
-               for frame in model_array_list]
-        ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
+        if cross_view:
+            gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
+            ax1 = plt.subplot(gs[0])
+            ax2 = plt.subplot(gs[1])
+            ims = [[ax1.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
+                    ax2.imshow(frame[:, :, cross_pos], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
+                    ax1.axvline(x=cross_pos, color='r', zorder=10, animated=True, linestyle='--')]
+                   for frame in model_array_list]
 
+        # TODO: 2ND PLOT HAS NO HEIGHT
+
+        else:
+            ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
+                   for frame in model_array_list]
+
+        ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
         plt.show()
 
         # TODO: SAVING DOESN'T WORK
@@ -93,17 +105,6 @@ class Viewer:
             # TODO: ANIMATE A SPECIFIC TIME SEGMENT
             # TODO: CROSS VIEW
             # TODO: COLOURBAR
-
-            # if cross_view:
-            #     gs = gridspec.GridSpec(1, 2, width_ratios=np.shape(results)[-2:])
-            #     ax1 = plt.subplot(gs[0])
-            #     ax2 = plt.subplot(gs[1])
-            #     ims = [[ax1.imshow(frame[:, :, 0], animated=True, vmin=0, vmax=refractory_period),
-            #             ax2.imshow(frame[:, cross_pos, :], animated=True, vmin=0, vmax=refractory_period),
-            #             ax1.axvline(x=cross_pos, color='cyan', zorder=10, animated=True, linestyle='--')]
-            #            for frame in results]
-            #
-            # else:
 
     def plot_model_array(self, time_steps=None, start=0):
         """

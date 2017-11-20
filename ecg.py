@@ -24,6 +24,7 @@ class ECG:
         # Import the model_array from HFD5 format
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
             self.model_array_list = model_data_file['array_list'][:]
+        self.refractory_period = max(self.model_array_list.flatten())
 
         create_dir('{}/ecg'.format(self.path))
 
@@ -33,10 +34,8 @@ class ECG:
         :param time: Current time step
         """
 
-        # TODO: TAKE IN DATA ARRAY AND OUTPUT PLOT
         # TODO: SELECT SURFACE (3D)
-
-        voltage_array = self.model_array_list[time][0, :, :].astype(dtype=float) * (110 / 50) - 90
+        voltage_array = self.model_array_list[time][0, :, :].astype(dtype=float) * (110 / self.refractory_period) - 90
         voltage = 0
 
         for ((j, i), v) in np.ndenumerate(voltage_array):
@@ -82,5 +81,5 @@ class ECG:
         plt.close()
 
 
-e = ECG([1, 1], '11-20_17-02-39')  # [y, x]
+e = ECG([1, 1], '11-20_20-09-43')  # [y, x]
 e.plot_ecg([i for i in range(len(e.model_array_list))], e.ecg(), "ecg")
