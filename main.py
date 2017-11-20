@@ -105,5 +105,3 @@ model_viewer.animate_model_array()
 
 
 # TODO: KILLSWITCH()
-# ToDo: ECGs
-# ToDo: 3D Tuning

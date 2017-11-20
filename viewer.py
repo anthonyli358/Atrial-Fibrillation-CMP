@@ -46,7 +46,7 @@ class Viewer:
             sns.set_style('ticks')
             stat_data_frame[key].plot(title="{} Cells".format(key).title())
             plt.xlabel("Time")
-            plt.ylabel("Fraction of Cells")
+            plt.ylabel("Number of Cells")
             plt.legend(loc=0, fontsize=12, frameon=True)
             plt.savefig('data/{}/model_statistics/{}.png'.format(self.path, key))
             plt.close()
@@ -144,5 +144,5 @@ class Viewer:
             plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
             plt.cla()
 
-
+# TODO: @STATICMETHOD FOR PLOTTING
 # TODO: LOAD DATA ON INITIALISATION

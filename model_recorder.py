@@ -1,9 +1,7 @@
 import datetime
 import h5py
 import numpy as np
-import os
 import pandas as pd
-
 from functools import reduce
 from operator import mul
 from shutil import move

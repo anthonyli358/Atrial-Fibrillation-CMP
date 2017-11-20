@@ -11,9 +11,9 @@ settings = dict(
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period
-        runtime=1220,
+        runtime=10,
     ),
 )
 
-# TODO: ECGS
-# TODO: VIEWER ARCHITECTURE
+# TODO: VIEWER ARCHITECTURE - JUST USE MAIN VIEWER (VIEW EACH DATA SET INDIVIDUALLY) CAN CHANGE LATER IF COMPLICATED
+# TODO: VIEWER ARCHITECTURE - PLOT FUNCTION
