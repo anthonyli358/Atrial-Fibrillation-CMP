@@ -12,10 +12,11 @@ class ECG:
     A class for the ECG analysis of model data.
     """
 
-    def __init__(self, centre, path):
+    def __init__(self, centre, probe_height, path):
         """
         ECG Initialisation
         :param centre: The point of ecg contact on the surface
+        :param probe_height: Height of the probe above the surface
         :param path: The path for data to read and view
         """
         self.centre = centre  # 0 based
@@ -26,25 +27,43 @@ class ECG:
             self.model_array_list = model_data_file['array_list'][:]
         self.refractory_period = max(self.model_array_list.flatten())
 
+        # TODO: IS ROLL WORKING
+        self.voltage_array_list = [array[0, :, :].astype(dtype=float) * (
+            110 / self.refractory_period) - 90 for array in self.model_array_list]
+        (y, x) = self.voltage_array_list[0].shape
+        y1 = round(y / 2)
+        x1 = round(x / 2)
+        self.voltage_array_list = [np.roll(array, y1 - self.centre[0], axis=0) for array in self.voltage_array_list]
+        self.voltage_array_list = [np.roll(array, x1 - self.centre[1], axis=1) for array in self.voltage_array_list]
+
         create_dir('{}/ecg'.format(self.path))
 
-    def voltage(self, time):
+    def voltage(self, voltage_array):
         """
         Get the ECG voltage for the current time step.
-        :param time: Current time step
         """
 
         # TODO: SELECT SURFACE (3D)
-        voltage_array = self.model_array_list[time][0, :, :].astype(dtype=float) * (110 / self.refractory_period) - 90
-        voltage = 0
 
-        for ((j, i), v) in np.ndenumerate(voltage_array):
-            if [j, i] == self.centre:
-                pass
-            else:
-                voltage += ((i - self.centre[1]) * (voltage_array[j, i] - voltage_array[j, i - 1])
-                            + (j - self.centre[0]) * (voltage_array[j, i] - voltage_array[j - 1, i])
-                            ) / ((i - self.centre[1])**2 + (j - self.centre[0])**2) ** 1.5
+        y_pos_diff = np.array([i for i in range(voltage_array.shape[0])]) - self.centre[0]
+        x_pos_diff = np.array([i for i in range(voltage_array.shape[1])]) - self.centre[1]
+        y_diff = np.insert(np.diff(voltage_array, axis=0), 0, voltage_array[0, :] - voltage_array[-1, :], axis=0)
+        x_diff = np.insert(np.diff(voltage_array, axis=1), 0, voltage_array[:, 0] - voltage_array[:, -1], axis=0)
+
+        voltage = np.sum((x_pos_diff * x_diff) + (y_pos_diff * y_diff.transpose()).transpose()) /
+
+        # TODO: FORM MATRIX FROM X_POS, YPOS
+        # TODO: THEANO?
+
+        # TODO: USE NUMPY.GRADIENT
+        # TODO: PROBE DISTANCE FROM SURFACE
+
+        # voltages = np.roll(self.f(excitation_matrix.astype('float')), self.roll - probe_centre[0], axis=0)
+        # x_dif = np.gradient(voltages, axis=1)
+        # y_dif = np.gradient(voltages, axis=0)
+        # x_temp = self.x_dist - probe_centre[1]
+        #
+        # return np.sum(((x_dif * x_temp) + (y_dif * self.y_dist)) / self.g(x_temp, self.y_dist))
 
         return voltage
 
@@ -81,5 +100,5 @@ class ECG:
         plt.close()
 
 
-e = ECG([1, 1], '11-20_20-09-43')  # [y, x]
+e = ECG([1, 1], '11-21_15-46-17')  # [y, x]
 e.plot_ecg([i for i in range(len(e.model_array_list))], e.ecg(), "ecg")
