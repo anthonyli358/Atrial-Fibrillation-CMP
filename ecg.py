@@ -20,6 +20,7 @@ class ECG:
         :param path: The path for data to read and view
         """
         self.centre = centre  # 0 based
+        self.probe_height = probe_height
         self.path = path
 
         # Import the model_array from HFD5 format
@@ -31,10 +32,10 @@ class ECG:
         self.voltage_array_list = [array[0, :, :].astype(dtype=float) * (
             110 / self.refractory_period) - 90 for array in self.model_array_list]
         (y, x) = self.voltage_array_list[0].shape
-        y1 = round(y / 2)
-        x1 = round(x / 2)
-        self.voltage_array_list = [np.roll(array, y1 - self.centre[0], axis=0) for array in self.voltage_array_list]
-        self.voltage_array_list = [np.roll(array, x1 - self.centre[1], axis=1) for array in self.voltage_array_list]
+        self.y1 = round(y / 2)
+        self.x1 = round(x / 2)
+        self.voltage_array_list = [np.roll(array, self.y1 - self.centre[0], axis=0) for array in self.voltage_array_list]
+        self.voltage_array_list = [np.roll(array, self.x1 - self.centre[1], axis=1) for array in self.voltage_array_list]
 
         create_dir('{}/ecg'.format(self.path))
 
@@ -45,25 +46,22 @@ class ECG:
 
         # TODO: SELECT SURFACE (3D)
 
-        y_pos_diff = np.array([i for i in range(voltage_array.shape[0])]) - self.centre[0]
-        x_pos_diff = np.array([i for i in range(voltage_array.shape[1])]) - self.centre[1]
-        y_diff = np.insert(np.diff(voltage_array, axis=0), 0, voltage_array[0, :] - voltage_array[-1, :], axis=0)
-        x_diff = np.insert(np.diff(voltage_array, axis=1), 0, voltage_array[:, 0] - voltage_array[:, -1], axis=0)
+        rows = voltage_array.shape[0]
+        columns = voltage_array.shape[1]
 
-        voltage = np.sum((x_pos_diff * x_diff) + (y_pos_diff * y_diff.transpose()).transpose()) /
+        # TODO: X AND Y POS_DIFF ALWAYS THE SAME
 
-        # TODO: FORM MATRIX FROM X_POS, YPOS
-        # TODO: THEANO?
+        y_pos_diff = np.array([i for i in range(rows)]) - self.y1
+        y_pos_diff_transpose = y_pos_diff.reshape(rows, 1)
+        x_pos_diff = np.array([i for i in range(columns)]) - self.x1
+        y_volt_diff = np.insert(np.diff(voltage_array, axis=0), 0, voltage_array[0, :] - voltage_array[-1, :], axis=0)
+        x_volt_diff = np.insert(np.diff(voltage_array, axis=1), 0, voltage_array[:, 0] - voltage_array[:, -1], axis=1)
 
-        # TODO: USE NUMPY.GRADIENT
-        # TODO: PROBE DISTANCE FROM SURFACE
+        x_pos_diff_matrix = np.tile(x_pos_diff, (rows, 1))
+        y_pos_diff_matrix = np.tile(y_pos_diff_transpose, (1, columns))
+        normalise = (x_pos_diff_matrix**2 + y_pos_diff_matrix**2 + self.probe_height**2) ** 1.5
 
-        # voltages = np.roll(self.f(excitation_matrix.astype('float')), self.roll - probe_centre[0], axis=0)
-        # x_dif = np.gradient(voltages, axis=1)
-        # y_dif = np.gradient(voltages, axis=0)
-        # x_temp = self.x_dist - probe_centre[1]
-        #
-        # return np.sum(((x_dif * x_temp) + (y_dif * self.y_dist)) / self.g(x_temp, self.y_dist))
+        voltage = np.sum(((x_pos_diff * x_volt_diff) + (y_pos_diff_transpose * y_volt_diff)) / normalise)
 
         return voltage
 
@@ -73,6 +71,10 @@ class ECG:
         :param time_steps: Number of time steps to calculate ECG for
         :param start: Start time
         """
+
+        # TODO: DECIDE CENTRE & ROLL
+        # TODO: DECIDE SURFACE TO VIEW
+
         total_time = len(self.model_array_list)
         voltage_list = np.zeros(total_time)
         if time_steps is None or time_steps > total_time:
@@ -82,7 +84,7 @@ class ECG:
             sys.stdout.write(
                 '\r' + "calculating ecg, time_step: {}/{}...".format(start + i, total_time - 1))
             sys.stdout.flush()
-            voltage_list[i] = self.voltage(i)
+            voltage_list[i] = self.voltage(self.voltage_array_list[i])
 
         return voltage_list
 
@@ -94,11 +96,11 @@ class ECG:
         plt.plot(x, y, label="{}".format(label))
         plt.xlabel("Time")
         plt.ylabel("Voltage (V)")
-        plt.title("ECG")
+        plt.title("ECG at {}".format(self.centre))
         plt.legend(loc=0, fontsize=12, frameon=True)
-        plt.savefig('data/{}/ecg/ecg.png'.format(self.path))
+        plt.savefig('data/{}/ecg/ecg_{}.png'.format(self.path, self.centre))
         plt.close()
 
 
-e = ECG([1, 1], '11-21_15-46-17')  # [y, x]
+e = ECG([1, 1], 3, '11-21_15-46-17')  # [y, x]
 e.plot_ecg([i for i in range(len(e.model_array_list))], e.ecg(), "ecg")

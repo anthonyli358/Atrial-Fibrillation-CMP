@@ -78,7 +78,7 @@ class Viewer:
             gs = gridspec.GridSpec(1, 2, height_ratios=[np.shape(model_array_list)[1], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
-            ims = [[ax1.imshow(frame[2, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
+            ims = [[ax1.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
                     ax2.imshow(frame[:, :, cross_pos], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
                     ax1.axvline(x=cross_pos, color='r', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
@@ -86,7 +86,7 @@ class Viewer:
         # TODO: 2ND PLOT HAS NO HEIGHT
 
         else:
-            ims = [[plt.imshow(frame[:, :, 0], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
+            ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
                    for frame in model_array_list]
 
         ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
