@@ -19,26 +19,44 @@ import glob
 # data = data.reshape(200,100,5)
 # ########## Correction Code #########
 
-data = np.load('Phase_Spaces/Fixed_Data1.npy')
-
-plt.figure()
-plt.imshow(data[:,:,2], extent=(0,0.99,0.995,0))
-plt.figure()
-plt.imshow(data[:,:,4], extent=(0,0.99,0.995,0))
-plt.figure()
-plt.imshow(data[:,:,3], extent=(0,0.99,0.995,0))
-
+# data = np.load('Phase_Spaces/Fixed_Data1.npy')
 #
+# plt.figure()
+# plt.imshow(data[:,:,2], extent=(0,0.99,0.995,0))
+# plt.figure()
+# plt.imshow(data[:,:,4], extent=(0,0.99,0.995,0))
+# plt.figure()
+# plt.imshow(data[:,:,3], extent=(0,0.99,0.995,0))
+
+
 # # Data Extraction
 # data = []
-# for i in glob.glob('phase_space_11_11_21*.npy')+glob.glob('phase_space_11_11_22*.npy'):
+# for i in glob.glob('data_file_1_200_200*.npy'):
 #     data.append(np.load(i))
 # comb = []
-# for i in data[1:]:
+# for i in data[:]:
 #     comb.extend(i)
 # # Data Extraction
+# comb = np.array(comb)
+# comb = comb[np.lexsort((comb[:,1],comb[:,0]))]    # Sort Data
+# print(comb[::100])
+# comb = np.reshape(comb, (100,100,5))
 
-comb=np.load('Phase_Spaces/Data2.npy')
+# comb = np.load('3D_Data.npy')
+# plt.figure()
+# plt.imshow(comb[:,:,2], extent=(0,1,.99,0))
+# plt.colorbar()
+# plt.xlabel('yz_linkage')
+# plt.ylabel('x_linkage')
+# plt.title('3D Phase Space')
+#
+# plt.figure()
+# plt.plot(comb[99,:,1], comb[50,:,2])
+# plt.xlabel('yz_linkage')
+# plt.ylabel('Mean Risk of Atrial Fibrillation')
+
+
+comb=np.load('Phase_Spaces/3D_Data.npy')
 plt.figure()
 plt.imshow(comb[:,:,2], extent=(0,1,1,0))
 plt.colorbar()

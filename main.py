@@ -70,13 +70,13 @@ def risk_sim(substrate,settings):
 # Risc_Recording_Code
 # -------------------
 results = []
-runs = 24
+runs = 16
 results.append([config.settings['structure']['size'], config.settings['structure']['refractory_period'],
                 config.settings['structure']['dysfunction_parameter'], config.settings['structure']['dysfunction_probability']
                 ])
 config.settings['structure']['x_coupling'] = 0.85
-for x_coupling in np.linspace(0.0,0.2,20, endpoint=False):
-    for yz_coupling in np.linspace(0.0, 1, 100, endpoint=False):
+for x_coupling in np.linspace(0.0,0.2,10, endpoint=False):
+    for yz_coupling in np.linspace(0.0, 1, 50, endpoint=False):
         fracs = []
         conducting = []
         config.settings['structure']['x_coupling'] = x_coupling
@@ -99,7 +99,7 @@ for x_coupling in np.linspace(0.0,0.2,20, endpoint=False):
         # print('Average = {}\nStandard deviation = {}'.format(np.average(fracs), np.std(fracs)))
 data = np.array(results[1:])
 identifier = datetime.datetime.now().strftime('%y-%m-%d_%H-%M-%S')
-save_file = 'data_file_1_200_200-{}.npy'.format(identifier)
+save_file = 'data_file_2_200_200-{}.npy'.format(identifier)
 np.save(save_file, data)
 
 # plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
