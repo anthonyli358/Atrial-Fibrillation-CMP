@@ -28,14 +28,10 @@ class ECG:
             self.model_array_list = model_data_file['array_list'][:]
         self.refractory_period = max(self.model_array_list.flatten())
 
-        # TODO: IS ROLL WORKING
-        self.voltage_array_list = [array[0, :, :].astype(dtype=float) * (
-            110 / self.refractory_period) - 90 for array in self.model_array_list]
+        self.voltage_array_list = [array[0, :, :].astype(int) for array in self.model_array_list]
         (y, x) = self.voltage_array_list[0].shape
         self.y1 = round(y / 2)
-        self.x1 = round(x / 2)
         self.voltage_array_list = [np.roll(array, self.y1 - self.centre[0], axis=0) for array in self.voltage_array_list]
-        self.voltage_array_list = [np.roll(array, self.x1 - self.centre[1], axis=1) for array in self.voltage_array_list]
 
         create_dir('{}/ecg'.format(self.path))
 
@@ -53,13 +49,15 @@ class ECG:
 
         y_pos_diff = np.array([i for i in range(rows)]) - self.y1
         y_pos_diff_transpose = y_pos_diff.reshape(rows, 1)
-        x_pos_diff = np.array([i for i in range(columns)]) - self.x1
-        y_volt_diff = np.insert(np.diff(voltage_array, axis=0), 0, voltage_array[0, :] - voltage_array[-1, :], axis=0)
-        x_volt_diff = np.insert(np.diff(voltage_array, axis=1), 0, voltage_array[:, 0] - voltage_array[:, -1], axis=1)
-
+        x_pos_diff = np.array([i for i in range(columns)]) - self.centre[1]
         x_pos_diff_matrix = np.tile(x_pos_diff, (rows, 1))
         y_pos_diff_matrix = np.tile(y_pos_diff_transpose, (1, columns))
-        normalise = (x_pos_diff_matrix**2 + y_pos_diff_matrix**2 + self.probe_height**2) ** 1.5
+        normalise = (x_pos_diff_matrix ** 2 + y_pos_diff_matrix ** 2 + self.probe_height ** 2) ** 1.5
+
+        y_volt_diff = np.insert(np.diff(voltage_array, axis=0), 0, voltage_array[0, :] - voltage_array[-1, :], axis=0
+                                ) * 93 / 50
+        x_volt_diff = np.insert(np.diff(voltage_array, axis=1), 0, voltage_array[:, 0], axis=1
+                                ) * 93 / 50
 
         voltage = np.sum(((x_pos_diff * x_volt_diff) + (y_pos_diff_transpose * y_volt_diff)) / normalise)
 
@@ -98,9 +96,10 @@ class ECG:
         plt.ylabel("Voltage (V)")
         plt.title("ECG at {}".format(self.centre))
         plt.legend(loc=0, fontsize=12, frameon=True)
+        plt.margins(x=0)
         plt.savefig('data/{}/ecg/ecg_{}.png'.format(self.path, self.centre))
         plt.close()
 
 
-e = ECG([1, 1], 3, '11-21_15-46-17')  # [y, x]
+e = ECG([50, 50], 3, '11-21_15-46-17')  # [y, x]
 e.plot_ecg([i for i in range(len(e.model_array_list))], e.ecg(), "ecg")

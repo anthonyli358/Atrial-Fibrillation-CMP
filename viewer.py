@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
+from mpl_toolkits.mplot3d import Axes3D
 from time import time
 
 from utility_methods import *
@@ -48,6 +49,7 @@ class Viewer:
             plt.xlabel("Time")
             plt.ylabel("Number of Cells")
             plt.legend(loc=0, fontsize=12, frameon=True)
+            plt.margins(x=0)
             plt.savefig('data/{}/model_statistics/{}.png'.format(self.path, key))
             plt.close()
 
@@ -57,10 +59,11 @@ class Viewer:
         plt.xlabel("Time")
         plt.ylabel("Fraction of Cells")
         plt.legend(loc=0, fontsize=12, frameon=True)
+        plt.margins(x=0)
         plt.savefig('data/{}/model_statistics/overall.png'.format(self.path))
         plt.close()
 
-    def animate_model_array(self, save=False, cross_view=False, cross_pos=None):
+    def animate_model_array(self, save=False, cross_view=False, cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
 
         # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
@@ -72,18 +75,22 @@ class Viewer:
             model_array_list = model_data_file['array_list'][:]
 
         refractory_period = max(model_array_list.flatten())
+        if remove_refractory:
+            for array in model_array_list:
+                excited = array == refractory_period
+                array[~excited] = 0
 
         fig = plt.figure(1)
         if cross_view:
-            gs = gridspec.GridSpec(1, 2, height_ratios=[np.shape(model_array_list)[1], np.shape(model_array_list)[1]])
+            gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
             ims = [[ax1.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
-                    ax2.imshow(frame[:, :, cross_pos], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
+                    ax2.imshow(np.transpose(frame[:, :, 80]), animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
                     ax1.axvline(x=cross_pos, color='r', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
 
-        # TODO: 2ND PLOT HAS NO HEIGHT
+        # TODO: 2ND PLOT X AXIS
 
         else:
             ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
@@ -104,7 +111,6 @@ class Viewer:
 
             # TODO: ANIMATE A SPECIFIC TIME SEGMENT
             # TODO: CROSS VIEW
-            # TODO: COLOURBAR
 
     def plot_model_array(self, time_steps=None, start=0):
         """
@@ -116,6 +122,8 @@ class Viewer:
         print("reading model array...")
 
         create_dir('{}/model_array'.format(self.path))
+
+        # TODO: CROSS VIEW
 
         # Import the model_array from HFD5 format
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
@@ -133,6 +141,7 @@ class Viewer:
 
         # TODO: VARIABLE FIGSIZE AND FONTSIZE - GET MODEL ARRAY SIZE FROM DATA
         # TODO: GRAPH STYLING
+        # TODO: ADD AXIS LABELS.ETC
 
         # Plot the data for each time step
         for i in range(time_steps):
@@ -145,5 +154,31 @@ class Viewer:
             plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
             plt.cla()
 
+    def plot_d3(self):
+
+        print("reading model array...")
+
+        create_dir('{}/model_array'.format(self.path))
+
+        # Import the model_array from HFD5 format
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            model_array_list = model_data_file['array_list'][:]
+        refractory_period = max(model_array_list.flatten())
+
+        test = np.ones(model_array_list[100].shape, dtype=bool)
+        colours = (model_array_list[100] / refractory_period).astype(str)
+
+        fig = plt.figure()
+        fig.set_alpha(0.3)
+        ax = fig.gca(projection='3d')
+        ax.voxels(test, facecolors=colours)
+        plt.show()
+
+        # TODO: SCALING AXIS
+        # TODO: REMOVE CUBE OUTLINES
+        # TODO: PYQT GRAPH
+
+
 # TODO: @STATICMETHOD FOR PLOTTING
 # TODO: LOAD DATA ON INITIALISATION
+# TODO: COLOURBAR
