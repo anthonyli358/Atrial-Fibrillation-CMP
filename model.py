@@ -33,7 +33,6 @@ class Model:
 
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
-        self.failed = np.zeros(size, dtype=bool)
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
         self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                           p=[x_coupling, 1 - x_coupling])
@@ -60,9 +59,10 @@ class Model:
         Iterate model forward one time step.
         :return: Activation Array
         """
+        self.failed = np.zeros(self.size, dtype=bool)
+
         # Roll excited values to get arrays of possible excitations
         excited_from_above = np.roll(self.excited & self.y_linkage, 1, axis=1)
-
         excited_from_below = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=0), -1, axis=1)
 
         excited_from_rear = np.roll(self.excited & self.x_linkage, 1, axis=2)
@@ -82,9 +82,8 @@ class Model:
                      excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
 
         # Check if dysfunctional cells fail to excite
-        # TODO: COULD OPTIMISE BY SAVING THE (RESTING & EXCITABLE & DYSFUNCTIONAL) INDEX ARRAY INSTEAD OF RECALCULATING
-        self.failed[excitable & self.dysfunctional] = np.random.random(
-            len(self.failed[excitable & self.dysfunctional])) < self.dysfunction_probability
+        self.failed[excitable & self.dysfunctional] = np.random.random(len(self.failed[excitable & self.dysfunctional]
+                                                                           )) < self.dysfunction_probability
 
         # Time +1: Reduce excitation and excite resting and excitable (not failed) cells.
         self.model_array[~self.resting] -= 1
@@ -121,10 +120,8 @@ class Model:
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
 
-# ToDo: FAILED ARRAY OUTPUT IS WRONG (DOESN'T RESET)
-# TODO: TURN COPY PASTE FUNCTIONS INTO UTILITY METHODS (CREATE DIRECTORY)
 # TODO: MAIN
-# TODO: ECG
 # ToDo: OPTIMISE
 # TODO: COMMENT AND ORGANISE ALL MODULES
 # ToDo: UNIT TESTS
+# TODO: UPDATE README WITH HOW TO USE

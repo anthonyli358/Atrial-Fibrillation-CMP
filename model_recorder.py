@@ -1,15 +1,14 @@
 import datetime
 import h5py
 import numpy as np
-import os
 import pandas as pd
-
 from functools import reduce
 from operator import mul
 from shutil import move
 from tempfile import mkstemp
 
 import config as cfg
+from utility_methods import *
 
 
 class ModelRecorder:
@@ -29,9 +28,7 @@ class ModelRecorder:
         self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1, dtype='int32') for k in
                                 ['excited', 'resting', 'refractory', 'failed']}
 
-        # Create output directories if they don't exist
-        if not os.path.exists(os.path.join('data', self.path, 'data_files')):
-            os.makedirs(os.path.join('data', self.path, 'data_files'))
+        create_dir('{}/data_files'.format(self.path))
 
         # Create a copy of the config file with parameters of initialisation
         fd, new_path = mkstemp()
@@ -40,7 +37,7 @@ class ModelRecorder:
                 for line in old_file:
                     new_file.write(line.replace('seed=None', 'seed={}'.format(model.seed)))
         os.close(fd)  # prevent file descriptor leakage
-        move(new_path, os.path.join('data', self.path, 'config.py'))  # move new file
+        move(new_path, 'data/{}/config.py'.format(self.path))  # move new file
 
     def update_model_stat_dict(self):
         """Update statistic lists for the current model iteration."""
