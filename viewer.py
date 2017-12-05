@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import seaborn as sns
 import sys
+from mayavi import mlab
 
 from matplotlib import pyplot as plt
 
@@ -178,6 +179,20 @@ class Viewer:
         # TODO: REMOVE CUBE OUTLINES
         # TODO: PYQT GRAPH
 
+    def mayavitest(self):
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            model_array_list = np.swapaxes(model_data_file['array_list'][:],1,3)  # Different axes convention
+        view = mlab.contour3d(model_array_list[220])
+        mlab.axes()
+
+        @mlab.animate(delay=10)
+        def anim():
+
+            for scalars in model_array_list:
+                view.mlab_source.scalars = scalars
+                yield
+        a = anim()
+        mlab.show()
 
 # TODO: @STATICMETHOD FOR PLOTTING
 # TODO: LOAD DATA ON INITIALISATION
