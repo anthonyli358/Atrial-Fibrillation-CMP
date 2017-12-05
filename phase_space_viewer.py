@@ -19,19 +19,11 @@ import glob
 # data = data.reshape(200,100,5)
 # ########## Correction Code #########
 
-# data = np.load('Phase_Spaces/Fixed_Data1.npy')
-#
-# plt.figure()
-# plt.imshow(data[:,:,2], extent=(0,0.99,0.995,0))
-# plt.figure()
-# plt.imshow(data[:,:,4], extent=(0,0.99,0.995,0))
-# plt.figure()
-# plt.imshow(data[:,:,3], extent=(0,0.99,0.995,0))
 
 
 # # Data Extraction
 # data = []
-# for i in glob.glob('data_file_2_200_200*.npy'):
+# for i in glob.glob('data_file_16_200_200*.npy'):
 #     data.append(np.load(i))
 # comb = []
 # for i in data[:]:
@@ -42,7 +34,7 @@ import glob
 # comb = comb[np.lexsort((comb[:,1],comb[:,0]))]    # Sort Data
 # print(comb[::100])
 # comb = np.reshape(comb, (50,50,5))
-# np.save('2_200_200_fixed.npy', comb)
+# # np.save('16_200_200.npy', comb)
 
 # comb = np.load('3D_Data.npy')
 # plt.figure()
@@ -58,17 +50,45 @@ import glob
 # plt.ylabel('Mean Risk of Atrial Fibrillation')
 
 
-comb=np.load('Phase_Spaces/Data2.npy')
+comb=np.load('Phase_Spaces/16_200_200.npy')
 plt.figure()
 plt.imshow(comb[:,:,2], extent=(0,1,1,0))
 plt.colorbar()
+plt.xlabel('yz_linkage')
+plt.ylabel('x_linkage')
+plt.title('Risk')
+
 plt.figure()
 plt.imshow(comb[:,:,4], extent=(0,1,1,0))
 plt.colorbar()
+plt.xlabel('yz_linkage')
+plt.ylabel('x_linkage')
+plt.title('Transmission')
+
 plt.figure()
 plt.imshow(comb[:,:,3], extent=(0,1,1,0))
 plt.colorbar()
+plt.xlabel('yz_linkage')
+plt.ylabel('x_linkage')
+plt.title('Risk Deviation')
 
+plt.figure()
+
+# names = glob.glob('Phase_Spaces/*_200_200.npy')
+names = ['Phase_Spaces\\1_200_200.npy', 'Phase_Spaces\\2_200_200.npy',
+         'Phase_Spaces\\4_200_200.npy', 'Phase_Spaces\\8_200_200.npy',
+         'Phase_Spaces\\16_200_200.npy', ]
+print(names)
+compilation = []
+for i in names:
+    compilation.append(np.load(i)[:,:,2])
+
+for num, i in enumerate(compilation):
+    plt.subplot(100+len(names) * 10  + 1+num)
+    plt.title(names[num][13:-4])
+    plt.imshow(i, extent =(0,1,1,0))
+
+plt.show()
 
 
 plt.show()
