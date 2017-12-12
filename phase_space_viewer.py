@@ -23,7 +23,7 @@ import glob
 
 # # Data Extraction
 # data = []
-# for i in glob.glob('data_file_16_200_200*.npy'):
+# for i in glob.glob('data_file_32_200_200*.npy'):
 #     data.append(np.load(i))
 # comb = []
 # for i in data[:]:
@@ -34,7 +34,7 @@ import glob
 # comb = comb[np.lexsort((comb[:,1],comb[:,0]))]    # Sort Data
 # print(comb[::100])
 # comb = np.reshape(comb, (50,50,5))
-# # np.save('16_200_200.npy', comb)
+# # np.save('Phase_Spaces/32_200_200.npy', comb)
 
 # comb = np.load('3D_Data.npy')
 # plt.figure()
@@ -77,7 +77,7 @@ plt.figure()
 # names = glob.glob('Phase_Spaces/*_200_200.npy')
 names = ['Phase_Spaces\\1_200_200.npy', 'Phase_Spaces\\2_200_200.npy',
          'Phase_Spaces\\4_200_200.npy', 'Phase_Spaces\\8_200_200.npy',
-         'Phase_Spaces\\16_200_200.npy', ]
+         'Phase_Spaces\\16_200_200.npy', 'Phase_Spaces/32_200_200.npy']
 print(names)
 compilation = []
 for i in names:
