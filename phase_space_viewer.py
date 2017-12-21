@@ -72,23 +72,23 @@ plt.xlabel('yz_linkage')
 plt.ylabel('x_linkage')
 plt.title('Risk Deviation')
 
-plt.figure()
+fig = plt.figure()
 
 # names = glob.glob('Phase_Spaces/*_200_200.npy')
 names = ['Phase_Spaces\\1_200_200.npy', 'Phase_Spaces\\2_200_200.npy',
          'Phase_Spaces\\4_200_200.npy', 'Phase_Spaces\\8_200_200.npy',
-         'Phase_Spaces\\16_200_200.npy', 'Phase_Spaces/32_200_200.npy']
+         'Phase_Spaces\\16_200_200.npy', 'Phase_Spaces\\32_200_200.npy']
 print(names)
 compilation = []
 for i in names:
     compilation.append(np.load(i)[:,:,2])
 
 for num, i in enumerate(compilation):
-    plt.subplot(100+len(names) * 10  + 1+num)
-    plt.title(names[num][13:-4])
-    plt.imshow(i, extent =(0,1,1,0))
+    ax = fig.add_subplot(100+len(names) * 10  + 1+num)
+    ax.set_title(names[num][13:-4])
+    ax.imshow(i, extent =(0,1,1,0))
 
-plt.show()
+fig.show()
 
 
 plt.show()

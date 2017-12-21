@@ -77,9 +77,15 @@ class Viewer:
         # if len(np.shape(model_array_list[0])) == 3:
 
         fig = plt.figure()
+        # image = plt.imshow(model_array_list[0, 0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)
+        #
+        # def func(t):
+        #     return image.set_data(model_array_list[t, 0, :, :])
+        # ani = animation.FuncAnimation(fig, func, interval=20)
+
         ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
                for frame in model_array_list]
-        ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
+        ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500,)
 
         plt.show()
 
