@@ -75,9 +75,9 @@ plt.title('Risk Deviation')
 fig = plt.figure()
 
 # names = glob.glob('Phase_Spaces/*_200_200.npy')
-names = ['Phase_Spaces\\1_200_200.npy', 'Phase_Spaces\\2_200_200.npy',
-         'Phase_Spaces\\4_200_200.npy', 'Phase_Spaces\\8_200_200.npy',
-         'Phase_Spaces\\16_200_200.npy', 'Phase_Spaces\\32_200_200.npy']
+names = ['Phase_Spaces/1_200_200.npy', 'Phase_Spaces/2_200_200.npy',
+         'Phase_Spaces/4_200_200.npy', 'Phase_Spaces/8_200_200.npy',
+         'Phase_Spaces/16_200_200.npy', 'Phase_Spaces/32_200_200.npy']
 print(names)
 compilation = []
 for i in names:

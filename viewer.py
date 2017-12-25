@@ -76,17 +76,22 @@ class Viewer:
 
         # if len(np.shape(model_array_list[0])) == 3:
 
-        fig = plt.figure()
-        # image = plt.imshow(model_array_list[0, 0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)
-        #
-        # def func(t):
-        #     return image.set_data(model_array_list[t, 0, :, :])
-        # ani = animation.FuncAnimation(fig, func, interval=20)
+        fig, ax = plt.subplots()
+        image = ax.imshow(model_array_list[0, 0], animated=True, cmap='Greys_r', vmin=0,
+                          vmax=refractory_period, origin='lower')
 
-        ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
-               for frame in model_array_list]
+        def func(t):
+            image.set_array(model_array_list[t, 0])
+            ax.set_title(t)
+            return image,
+
         global ani
-        ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500,)
+        ani = animation.FuncAnimation(fig, func, interval=5, frames = len(model_array_list), blit=True)
+
+        # ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
+        #        for frame in model_array_list]
+        # global ani
+        # ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500,)
 
         # plt.show()
 
@@ -113,7 +118,6 @@ class Viewer:
             #             ax1.axvline(x=cross_pos, color='cyan', zorder=10, animated=True, linestyle='--')]
             #            for frame in results]
             #
-            # else:
 
     def plot_model_array(self, time_steps=None, start=0):
         """

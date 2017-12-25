@@ -33,6 +33,7 @@ class Model:
 
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
+        self.excount = np.zeros(size, dtype='uint32')
         self.failed = np.zeros(size, dtype=bool)
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
         self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
@@ -82,7 +83,6 @@ class Model:
                      excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
 
         # Check if dysfunctional cells fail to excite
-        # TODO: COULD OPTIMISE BY SAVING THE (RESTING & EXCITABLE & DYSFUNCTIONAL) INDEX ARRAY INSTEAD OF RECALCULATING
         self.failed[excitable & self.dysfunctional] = np.random.random(
             len(self.failed[excitable & self.dysfunctional])) < self.dysfunction_probability
 
@@ -94,6 +94,7 @@ class Model:
         # Update excited and resting arrays
         self.excited = self.model_array == self.refractory_period
         self.resting = self.model_array == 0
+        self.excount += np.uint32(self.excited)
 
         return self.model_array
     
