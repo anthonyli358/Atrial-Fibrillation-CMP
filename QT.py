@@ -27,9 +27,9 @@ class AFInterface(QtWidgets.QMainWindow):
         self.settings['play'] = True
         self.settings['step'] = False
         self.settings['view'] = 'activation'
+        self.setWindowIcon(QtGui.QIcon('icons8-heart-with-pulse-50.png'))
         self.anim = Animation(self)
         self.setCentralWidget(self.anim)
-        self.setWindowIcon(QtGui.QIcon('icons8-heart-with-pulse-50.png'))
 
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
@@ -65,13 +65,6 @@ class AFInterface(QtWidgets.QMainWindow):
 
         self.show()
 
-    # def plot(self):
-    #     data = [np.random.random() for i in range(10)]
-    #     ax = self.figure.add_subplot(111)
-    #     ax.plot(data)
-    #
-    #     self.canvas.draw()
-
     def toggle_pause(self):
 
         self.settings['play'] ^= True  # Toggle play setting
@@ -89,8 +82,9 @@ class AFInterface(QtWidgets.QMainWindow):
     def reset(self):
         if not config.settings['structure']['seed']:
             self.settings['structure']['seed'] = None
-        self.anim = Animation(self)
-        self.setCentralWidget(self.anim)
+        self.anim.close_event()  # Ends Current animation
+        self.anim = Animation(self)  # Overrites animation with new one
+        self.setCentralWidget(self.anim)  # Replaces animation with new one
 
     def advance(self):
         self.settings['step'] = True
@@ -255,7 +249,6 @@ class makeCanvas(FigureCanvas):
 
         self.toolbar = NavigationToolbar(self, self)
 
-
     def compute_initial_figure(self):
         pass
 
@@ -353,6 +346,7 @@ class Animation(makeCanvas):
                     advanced = True  # let substrate iterate
                     t += 1
                 yield (t, advanced)
+
 
         self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False)
 
