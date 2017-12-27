@@ -20,4 +20,5 @@ settings = dict(
         interval=1,  # length of each frame in milliseconds
     ),
     crosspos=50,
+    crosspos2=50
 )

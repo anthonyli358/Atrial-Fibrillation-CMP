@@ -47,7 +47,7 @@ class AFInterface(QtWidgets.QMainWindow):
         playAct.setCheckable(True)
         playAct.setChecked(self.settings['play'])
         playAct.triggered.connect(self.toggle_pause)
-        playAct.setShortcut('space')
+        playAct.setShortcut('space')  # Pressing space bar will toggle pause
         chartAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-heat-map-50.png'), 'chart', self)
         chartAct.triggered.connect(self.show_phase)
         settAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-settings-50.png'), 'settings', self)
@@ -56,6 +56,7 @@ class AFInterface(QtWidgets.QMainWindow):
         resetAct.triggered.connect(self.reset)
         advAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-advance-50.png'), 'advance', self)
         advAct.triggered.connect(self.advance)
+        advAct.setShortcut('return')
         self.toolbar.addActions([playAct, chartAct, settAct, resetAct, advAct])
         self.toolbar.setMaximumHeight(25)
 
@@ -180,22 +181,39 @@ class Config(QtWidgets.QWidget):
         viewopts.currentTextChanged.connect(self.updateview)
         anim_form.addRow(QtWidgets.QLabel('Animation Style'), viewopts)
 
-        crosspos_slider = QtWidgets.QSlider(Qt.Horizontal)
-        crosspos_spin = QtWidgets.QSpinBox()
+        cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
+        cross_pos_spin = QtWidgets.QSpinBox()
 
-        crosspos_slider.setValue(self.settings['crosspos'])
-        crosspos_spin.setValue(self.settings['crosspos'])
-        crosspos_slider.setRange(0, self.settings['structure']['size'][1]-1)
-        crosspos_spin.setRange(0, self.settings['structure']['size'][1]-1)
-        crosspos_slider.valueChanged.connect(crosspos_spin.setValue)  # Connect slider to spin boc
-        crosspos_spin.valueChanged.connect(crosspos_slider.setValue)  # Connect spin box to slider
-        crosspos_slider.valueChanged.connect(self.updatecrosspos)  # Connect slider to position updater
-        crosspos_spin.valueChanged.connect(self.updatecrosspos)  # Connect spin box to position updater
+        cross_pos_slider.setValue(self.settings['crosspos'])
+        cross_pos_spin.setValue(self.settings['crosspos'])
+        cross_pos_slider.setRange(0, self.settings['structure']['size'][1]-1)
+        cross_pos_spin.setRange(0, self.settings['structure']['size'][1]-1)
+        cross_pos_slider.valueChanged.connect(cross_pos_spin.setValue)  # Connect slider to spin boc
+        cross_pos_spin.valueChanged.connect(cross_pos_slider.setValue)  # Connect spin box to slider
+        cross_pos_slider.valueChanged.connect(self.updatecrosspos)  # Connect slider to position updater
+        cross_pos_spin.valueChanged.connect(self.updatecrosspos)  # Connect spin box to position updater
 
-        crosspos = QtWidgets.QHBoxLayout()
-        crosspos.addWidget(crosspos_spin)
-        crosspos.addWidget(crosspos_slider)
-        anim_form.addRow(QtWidgets.QLabel('Cross view position'), crosspos)
+        cross_pos = QtWidgets.QHBoxLayout()
+        cross_pos.addWidget(cross_pos_spin)
+        cross_pos.addWidget(cross_pos_slider)
+        anim_form.addRow(QtWidgets.QLabel('Cross view position'), cross_pos)
+
+        cross_pos2_slider = QtWidgets.QSlider(Qt.Horizontal)
+        cross_pos2_spin = QtWidgets.QSpinBox()
+
+        cross_pos2_slider.setValue(self.settings['crosspos'])
+        cross_pos2_spin.setValue(self.settings['crosspos'])
+        cross_pos2_slider.setRange(0, self.settings['structure']['size'][1]-1)
+        cross_pos2_spin.setRange(0, self.settings['structure']['size'][1]-1)
+        cross_pos2_slider.valueChanged.connect(cross_pos2_spin.setValue)  # Connect slider to spin boc
+        cross_pos2_spin.valueChanged.connect(cross_pos2_slider.setValue)  # Connect spin box to slider
+        cross_pos2_slider.valueChanged.connect(self.updatecrosspos2)  # Connect slider to position updater
+        cross_pos2_spin.valueChanged.connect(self.updatecrosspos2)  # Connect spin box to position updater
+
+        cross_pos2 = QtWidgets.QHBoxLayout()
+        cross_pos2.addWidget(cross_pos2_spin)
+        cross_pos2.addWidget(cross_pos2_slider)
+        anim_form.addRow(QtWidgets.QLabel('Cross view 2 position'), cross_pos2)
 
         anim_box = QtWidgets.QGroupBox()
         anim_box.setTitle('Animation Settings')
@@ -238,6 +256,9 @@ class Config(QtWidgets.QWidget):
     def updatecrosspos(self, val):
         self.settings['crosspos'] = val
 
+    def updatecrosspos2(self, val):
+        self.settings['crosspos2'] = val
+
 
 class makeCanvas(FigureCanvas):
     """Parent class of all Canvases. Initiate a figure with a toolbar."""
@@ -275,15 +296,23 @@ class makePhases(makeCanvas):
 class Animation(makeCanvas):
     """Window with real-time Atrial Fibrillation animation."""
     def compute_initial_figure(self):
+
         self.substrate = model.Model(**self.settings['structure'])
 
-        gs = GridSpec(1, 2, width_ratios=self.settings['structure']['size'][-2::-1])
+        gs = GridSpec(2, 2,
+                      width_ratios=self.settings['structure']['size'][-2::-1],
+                      height_ratios=self.settings['structure']['size'][-2::-1])
 
         self.ax1 = self.figure.add_subplot(gs[0])
-        line = self.ax1.axvline(x=self.settings['crosspos'],
-                                color='cyan',
-                                linestyle='--'
-                                )
+        clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)
+        linev = self.ax1.axvline(x=self.settings['crosspos'],
+                                 color='cyan',
+                                 linestyle='--'
+                                 )
+        lineh = self.ax1.axhline(y=self.settings['crosspos2'],
+                                 color='cyan',
+                                 linestyle='--'
+                                 )
         image = self.ax1.imshow(self.substrate.model_array[0],
                                 animated=True,
                                 cmap='Oranges_r',
@@ -322,6 +351,18 @@ class Animation(makeCanvas):
                                           0, self.settings['structure']['size'][1])
                                   )
 
+        self.ax3 = self.figure.add_subplot(gs[2])
+        crossim2 = self.ax3.imshow(self.substrate.model_array[:, self.settings['crosspos'], :],
+                                   animated=True,
+                                   vmin=0,
+                                   vmax=self.settings['structure']['refractory_period'],
+                                   origin='lower',
+                                   cmap='Greys_r',
+                                   interpolation='nearest',
+                                   extent=(0, self.settings['structure']['size'][2],
+                                           0, self.settings['structure']['size'][0])
+                                   )
+
         def func(framedata):
             t, play = framedata
             """Function to iterate animation over"""
@@ -331,10 +372,12 @@ class Animation(makeCanvas):
             if play:
                 self.substrate.iterate()
             arr = self.get_anim_array()
-            return [line.set_xdata(self.settings['crosspos']),
+            return [linev.set_xdata(self.settings['crosspos']),
+                    lineh.set_ydata(self.settings['crosspos2']),
                     image.set_data(arr[0]),
                     image2.set_data(arr[-1]),
                     crossim.set_data(np.swapaxes(arr[:,:,self.settings['crosspos']], 0,1)),
+                    crossim2.set_data(arr[:, self.settings['crosspos2'], :])
                     ]
 
         def frames():
@@ -347,8 +390,13 @@ class Animation(makeCanvas):
                     t += 1
                 yield (t, advanced)
 
-
         self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False)
+
+    def onclick(self, event):
+        self.settings['crosspos'] = int(event.xdata)
+        self.settings['crosspos2'] = int(event.ydata)
+
+
 
     def get_anim_array(self):
         method = self.settings['view']
