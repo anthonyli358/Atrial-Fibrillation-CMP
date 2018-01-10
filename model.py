@@ -48,7 +48,7 @@ class Model:
         """
         Activate the pacemaker cells at the sinoatrial node (very left of the model).
         """
-        self.model_array[:, :, 0] = self.refractory_period
+        # self.model_array[:, :, 0] = self.refractory_period
 
         # Update excited and resting arrays
         self.excited = self.model_array == self.refractory_period  # condition for being excited

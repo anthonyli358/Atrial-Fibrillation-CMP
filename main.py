@@ -69,7 +69,7 @@ model_recorder.output_model_array_list()
 
 model_viewer = Viewer(model_recorder.path)
 model_viewer.plot_model_stats()
-# model_viewer.animate_model_array()
+model_viewer.animate_model_array()
 
 
 # print("ANIMATING RESULTS")

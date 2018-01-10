@@ -4,12 +4,15 @@ import os
 import pandas as pd
 import seaborn as sns
 import sys
+import scipy.ndimage.filters as filters
+import scipy.ndimage.morphology as morphology
 
 from matplotlib import pyplot as plt
 
 plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
+from matplotlib import patches
 from mpl_toolkits.mplot3d import Axes3D
 from time import time
 
@@ -63,7 +66,73 @@ class Viewer:
         plt.savefig('data/{}/model_statistics/overall.png'.format(self.path))
         plt.close()
 
-    def animate_model_array(self, save=False, cross_view=False, cross_pos=None, remove_refractory=False):
+    def detect_local_maxima(self, arr):
+        # https://stackoverflow.com/questions/3684484/peak-detection-in-a-2d-array/3689710#3689710
+        """
+        Takes an array and detects the troughs using the local maximum filter.
+        Returns a boolean mask of the troughs (i.e. 1 when
+        the pixel's value is the neighborhood maximum, 0 otherwise)
+        """
+        # define an connected neighborhood
+        # http://www.scipy.org/doc/api_docs/SciPy.ndimage.morphology.html#generate_binary_structure
+        neighborhood = morphology.generate_binary_structure(len(arr.shape), 2)
+        # apply the local minimum filter; all locations of minimum value
+        # in their neighborhood are set to 1
+        # http://www.scipy.org/doc/api_docs/SciPy.ndimage.filters.html#minimum_filter
+        local_max = (filters.maximum_filter(arr, footprint=neighborhood) == arr)
+        # local_min is a mask that contains the peaks we are
+        # looking for, but also the background.
+        # In order to isolate the peaks we must remove the background from the mask.
+        #
+        # we create the mask of the background
+        background = (arr == 0)
+        #
+        # a little technicality: we must erode the background in order to
+        # successfully subtract it from local_min, otherwise a line will
+        # appear along the background border (artifact of the local minimum filter)
+        # http://www.scipy.org/doc/api_docs/SciPy.ndimage.morphology.html#binary_erosion
+        eroded_background = morphology.binary_erosion(
+            background, structure=neighborhood, border_value=1)
+        #
+        # we obtain the final mask, containing only peaks,
+        # by removing the background from the local_min mask
+        detected_maxima = local_max ^ eroded_background
+        return np.where(detected_maxima)
+
+    def time_since_last_excitation(self, slice):
+
+        print("reading & animating model array...")
+
+        # Import the model_array from HFD5 format
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            model_array_list = model_data_file['array_list'][:]
+
+        # TODO: MOVE TO PATHLENGTH CLASS
+
+        rest_time_array = np.zeros(model_array_list[0].shape)
+        truth_array = np.zeros(model_array_list[0].shape)
+        list = []
+        list2 = []
+
+        for array in model_array_list[0:2000]:
+            excited = array == 50
+
+            rest_time_array[excited] += 1
+            list.append(rest_time_array.copy())
+
+            # truth_array[rest_time_array[self.detect_local_maxima(rest_time_array)]] = 1
+            # list2.append(truth_array)
+
+            # update_max = rest_time_array > rest_time_array_max
+            # rest_time_array_max[excited & update_max] = rest_time_array[excited & update_max]
+            # rest_time_array[excited] = 0
+            # Remove non-fibrillation due to pacemaker period
+            # rest_time_array_max[rest_time_array_max <= 50] = 0
+            # rest_time_array_max[rest_time_array_max >= 220] = 0
+
+        return list
+
+    def animate_model_array(self, highlight=None, save=False, cross_view=False, cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
 
         # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
@@ -77,24 +146,25 @@ class Viewer:
         refractory_period = max(model_array_list.flatten())
         if remove_refractory:
             for array in model_array_list:
-                excited = array == refractory_period
+                excited = array >= 40
                 array[~excited] = 0
+                array[excited] = (array[excited] - 40) * 3 + 20
 
         fig = plt.figure(1)
         if cross_view:
             gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
-            ims = [[ax1.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
-                    ax2.imshow(np.transpose(frame[:, :, 80]), animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
+            ims = [[ax1.imshow(frame[24, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
+                    ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
                     ax1.axvline(x=cross_pos, color='r', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
 
         # TODO: 2ND PLOT X AXIS
 
         else:
-            ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
-                   for frame in model_array_list]
+            ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r')]
+                   for frame in highlight]
 
         ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
         plt.show()
@@ -112,12 +182,14 @@ class Viewer:
             # TODO: ANIMATE A SPECIFIC TIME SEGMENT
             # TODO: CROSS VIEW
 
-    def plot_model_array(self, time_steps=None, start=0):
+    def plot_model_array(self, highlight, time_steps=None, start=0):
         """
         Read the HDF5 data file and view the model array for a range of time steps.
         :param time_steps: Number of time steps to plot
         :param start: Start time
         """
+
+        # highlight_min = highlight == np.min(highlight[np.nonzero(highlight)])
 
         print("reading model array...")
 
@@ -150,7 +222,7 @@ class Viewer:
             sys.stdout.flush()
             ax.axis('off')
             plt.title("time={}".format(start + i), fontsize=40)
-            plt.imshow(model_array_list[start + i][0, :, :], cmap='Greys_r', vmin=0, vmax=refractory_period)
+            plt.imshow(highlight[i][0, :, :], cmap='Greys_r', vmin=0, vmax=2)
             plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
             plt.cla()
 
