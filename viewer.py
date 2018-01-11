@@ -79,7 +79,7 @@ class Viewer:
         # apply the local maxmimum filter; all locations of minimum value
         # in their neighborhood are set to 1
         # http://www.scipy.org/doc/api_docs/SciPy.ndimage.filters.html#minimum_filter
-        local_max = (filters.maximum_filter(arr, footprint=neighborhood) == arr)
+        local_max = (filters.maximum_filter(arr, footprint=neighborhood, mode='constant') == arr)
         # local_min is a mask that contains the peaks we are
         # looking for, but also the background.
         # In order to isolate the peaks we must remove the background from the mask.
@@ -118,29 +118,26 @@ class Viewer:
         # TODO: MOVE TO PATHLENGTH CLASS
 
         rest_time_array = np.zeros(model_array_list[0].shape)
+        time_array = np.zeros(model_array_list[0].shape)
+        truth_array = np.zeros(model_array_list[0].shape)
         list = []
-        list2 = []
 
         for array in model_array_list[0:2000]:
-            truth_array = np.zeros(model_array_list[0].shape)
             excited = array == 50
 
-            rest_time_array[excited] += 1
-            list.append(rest_time_array.copy() / rest_time_array.max())
+            rest_time_array[~excited] += 1
+            same = time_array == rest_time_array
+            not_same = time_array != rest_time_array
 
-            truth_array[self.detect_local_maxima(rest_time_array)] = 1
-            list2.append(truth_array)
+            truth_array[excited & same] = 1
+            truth_array[excited & not_same] = 0
 
-        new_list = [np.round(list[i] * list2[i], 0) for i in range(len(list2))]
+            time_array[excited] = rest_time_array[excited]
+            rest_time_array[excited] = 0
 
-        # new_list = self.moving_average(list2, n=50)
-        # new_list = [np.round(array, 0) for array in new_list]
-        print(new_list)
+            list.append(truth_array.copy())
 
-        # TODO: REMOVE WAVELETS: change maxima method? - check number of adjacent squares
-        # TODO: SINGLE LINE
-
-        return new_list
+        return list
 
     def animate_model_array(self, highlight=None, save=False, cross_view=False, cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
