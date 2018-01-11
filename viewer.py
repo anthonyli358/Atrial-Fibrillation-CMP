@@ -76,7 +76,7 @@ class Viewer:
         # define an connected neighborhood
         # http://www.scipy.org/doc/api_docs/SciPy.ndimage.morphology.html#generate_binary_structure
         neighborhood = morphology.generate_binary_structure(len(arr.shape), 2)
-        # apply the local minimum filter; all locations of minimum value
+        # apply the local maxmimum filter; all locations of minimum value
         # in their neighborhood are set to 1
         # http://www.scipy.org/doc/api_docs/SciPy.ndimage.filters.html#minimum_filter
         local_max = (filters.maximum_filter(arr, footprint=neighborhood) == arr)
@@ -97,7 +97,15 @@ class Viewer:
         # we obtain the final mask, containing only peaks,
         # by removing the background from the local_min mask
         detected_maxima = local_max ^ eroded_background
+
         return np.where(detected_maxima)
+
+    def moving_average(self, data, n=3):
+        smoothed_data = []
+        for i in range(n, len(data) - n):
+            smoothed_data.append(sum(data[i - n:i + n]) / (2 * n + 1))
+
+        return smoothed_data
 
     def time_since_last_excitation(self, slice):
 
@@ -110,27 +118,29 @@ class Viewer:
         # TODO: MOVE TO PATHLENGTH CLASS
 
         rest_time_array = np.zeros(model_array_list[0].shape)
-        truth_array = np.zeros(model_array_list[0].shape)
         list = []
         list2 = []
 
         for array in model_array_list[0:2000]:
+            truth_array = np.zeros(model_array_list[0].shape)
             excited = array == 50
 
             rest_time_array[excited] += 1
-            list.append(rest_time_array.copy())
+            list.append(rest_time_array.copy() / rest_time_array.max())
 
-            # truth_array[rest_time_array[self.detect_local_maxima(rest_time_array)]] = 1
-            # list2.append(truth_array)
+            truth_array[self.detect_local_maxima(rest_time_array)] = 1
+            list2.append(truth_array)
 
-            # update_max = rest_time_array > rest_time_array_max
-            # rest_time_array_max[excited & update_max] = rest_time_array[excited & update_max]
-            # rest_time_array[excited] = 0
-            # Remove non-fibrillation due to pacemaker period
-            # rest_time_array_max[rest_time_array_max <= 50] = 0
-            # rest_time_array_max[rest_time_array_max >= 220] = 0
+        new_list = [np.round(list[i] * list2[i], 0) for i in range(len(list2))]
 
-        return list
+        # new_list = self.moving_average(list2, n=50)
+        # new_list = [np.round(array, 0) for array in new_list]
+        print(new_list)
+
+        # TODO: REMOVE WAVELETS: change maxima method? - check number of adjacent squares
+        # TODO: SINGLE LINE
+
+        return new_list
 
     def animate_model_array(self, highlight=None, save=False, cross_view=False, cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
