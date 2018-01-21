@@ -8,6 +8,7 @@ from matplotlib.figure import Figure
 from matplotlib.animation import FuncAnimation
 from matplotlib.gridspec import GridSpec
 import numpy as np
+from pprint import pprint  # to get readable print output for dicts
 
 from time import sleep
 
@@ -20,6 +21,7 @@ class AFInterface(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.settings = config.settings
+        self.config = Config(self)
         self.initUI()
 
     def initUI(self):
@@ -31,35 +33,39 @@ class AFInterface(QtWidgets.QMainWindow):
         self.anim = Animation(self)
         self.setCentralWidget(self.anim)
 
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
-        settAct = QtWidgets.QAction('Open &Config', self)
+        # Defining UI actions
+        settAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-settings-50.png'), 'settings', self)
         settAct.triggered.connect(self.show_config)
-        fileMenu.addAction(settAct)
 
-        viewMenu = menubar.addMenu('&View')
-        phaseAct = QtWidgets.QAction('View &Phase spaces', self)
+        phaseAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-heat-map-50.png'), 'View &Phase spaces', self)
         phaseAct.triggered.connect(self.show_phase)
-        viewMenu.addAction(phaseAct)
 
-        self.toolbar = self.addToolBar('Play')
         playAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-play-50.png'), 'play', self)
         playAct.setCheckable(True)
         playAct.setChecked(self.settings['play'])
         playAct.triggered.connect(self.toggle_pause)
         playAct.setShortcut('space')  # Pressing space bar will toggle pause
-        chartAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-heat-map-50.png'), 'chart', self)
-        chartAct.triggered.connect(self.show_phase)
-        settAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-settings-50.png'), 'settings', self)
-        settAct.triggered.connect(self.show_config)
+
         resetAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-reset-50.png'), 'reset', self)
         resetAct.triggered.connect(self.reset)
+
         advAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-advance-50.png'), 'advance', self)
         advAct.triggered.connect(self.advance)
         advAct.setShortcut('return')
-        self.toolbar.addActions([playAct, chartAct, settAct, resetAct, advAct])
-        self.toolbar.setMaximumHeight(25)
 
+        # Creating menu bar
+        menubar = self.menuBar()
+
+        fileMenu = menubar.addMenu('&File')
+        fileMenu.addAction(settAct)
+
+        viewMenu = menubar.addMenu('&View')
+        viewMenu.addAction(phaseAct)
+
+        # Adding animation toolbar
+        self.toolbar = self.addToolBar('Animation')
+        self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct])
+        self.toolbar.setMaximumHeight(25)
 
         self.setGeometry(300,100,300,400)
         self.setWindowTitle('AF Viewer')
@@ -71,9 +77,8 @@ class AFInterface(QtWidgets.QMainWindow):
         self.settings['play'] ^= True  # Toggle play setting
 
     def show_config(self):
-        self.popup = Config(self)
-        self.popup.setWindowTitle('Config')
-        self.popup.show()
+        # self.config = Config(self)
+        self.config.show()
 
     def show_phase(self):
         self.popup = makePhases(self)
@@ -84,11 +89,14 @@ class AFInterface(QtWidgets.QMainWindow):
         if not config.settings['structure']['seed']:
             self.settings['structure']['seed'] = None
         self.anim.close_event()  # Ends Current animation
-        self.anim = Animation(self)  # Overrites animation with new one
+        self.anim = Animation(self)  # Overwrites animation with new one
         self.setCentralWidget(self.anim)  # Replaces animation with new one
+        print('\n\n New Settings \n')
+        pprint(self.settings)
 
     def advance(self):
         self.settings['step'] = True
+
 
 
 
@@ -106,7 +114,6 @@ class Config(QtWidgets.QWidget):
 
     def initUI(self):
 
-        config_form = QtWidgets.QFormLayout()
 
         x_dim = QtWidgets.QSpinBox()
         y_dim = QtWidgets.QSpinBox()
@@ -128,7 +135,6 @@ class Config(QtWidgets.QWidget):
         xyz_dim.addWidget(QtWidgets.QLabel('z:'))
         xyz_dim.addWidget(z_dim)
 
-        config_form.addRow(QtWidgets.QLabel('Dimensions'), xyz_dim)
 
         x_linkage = QtWidgets.QDoubleSpinBox()
         y_linkage = QtWidgets.QDoubleSpinBox()
@@ -157,70 +163,77 @@ class Config(QtWidgets.QWidget):
         xyz_linkage.addWidget(QtWidgets.QLabel('z:'))
         xyz_linkage.addWidget(z_linkage)
 
-        config_form.addRow(QtWidgets.QLabel('Linkage'), xyz_linkage)
-
         refractoryBox = QtWidgets.QSpinBox()
         refractoryBox.setRange(1, 999)
         refractoryBox.setValue(self.settings['structure']['refractory_period'])
         refractoryBox.valueChanged.connect(self.update_refractory)
-        config_form.addRow(QtWidgets.QLabel('Refractory Period'), refractoryBox)
 
         reset_button = QtWidgets.QPushButton()
         reset_button.setText('Reset with these settings')
         reset_button.pressed.connect(self.parent.reset)
 
-        config_form.addWidget(reset_button)
+
+
+
+
+        viewopts = QtWidgets.QComboBox()
+        viewopts.addItems(['activation', 'count', 'direction'])
+        viewopts.currentTextChanged.connect(self.updateview)
+
+        v_cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
+        v_cross_pos_spin = QtWidgets.QSpinBox()
+
+        v_cross_pos_slider.setValue(self.settings['v_cross_pos'])
+        v_cross_pos_spin.setValue(self.settings['v_cross_pos'])
+        v_cross_pos_slider.setRange(0, self.settings['structure']['size'][1]-1)
+        v_cross_pos_spin.setRange(0, self.settings['structure']['size'][1]-1)
+        v_cross_pos_slider.valueChanged.connect(v_cross_pos_spin.setValue)  # Connect slider to spin boc
+        v_cross_pos_spin.valueChanged.connect(v_cross_pos_slider.setValue)  # Connect spin box to slider
+        v_cross_pos_slider.valueChanged.connect(self.update_v_cross_pos)  # Connect slider to position updater
+        v_cross_pos_spin.valueChanged.connect(self.update_v_cross_pos)  # Connect spin box to position updater
+
+
+        h_cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
+        h_cross_pos_spin = QtWidgets.QSpinBox()
+
+        h_cross_pos_slider.setValue(self.settings['h_cross_pos'])
+        h_cross_pos_spin.setValue(self.settings['h_cross_pos'])
+        h_cross_pos_slider.setRange(0, self.settings['structure']['size'][2]-1)
+        h_cross_pos_spin.setRange(0, self.settings['structure']['size'][2]-1)
+        h_cross_pos_slider.valueChanged.connect(h_cross_pos_spin.setValue)  # Connect slider to spin boc
+        h_cross_pos_spin.valueChanged.connect(h_cross_pos_slider.setValue)  # Connect spin box to slider
+        h_cross_pos_slider.valueChanged.connect(self.update_h_cross_pos)  # Connect slider to position updater
+        h_cross_pos_spin.valueChanged.connect(self.update_h_cross_pos)  # Connect spin box to position updater
+
+        cross_pos = QtWidgets.QHBoxLayout()
+        cross_pos.addWidget(v_cross_pos_spin)
+        cross_pos.addWidget(v_cross_pos_slider)
+        cross_pos2 = QtWidgets.QHBoxLayout()
+        cross_pos2.addWidget(h_cross_pos_spin)
+        cross_pos2.addWidget(h_cross_pos_slider)
+
 
         config_box = QtWidgets.QGroupBox()
         config_box.setTitle('Substrate Configuration Settings')
+
+        config_form = QtWidgets.QFormLayout()
+        config_form.addRow(QtWidgets.QLabel('Dimensions'), xyz_dim)
+        config_form.addRow(QtWidgets.QLabel('Linkage'), xyz_linkage)
+        config_form.addRow(QtWidgets.QLabel('Refractory Period'), refractoryBox)
+        config_form.addWidget(reset_button)
+
         config_box.setLayout(config_form)
-
-        anim_form = QtWidgets.QFormLayout()
-        viewopts = QtWidgets.QComboBox()
-        viewopts.addItems(['activation', 'count'])
-        viewopts.currentTextChanged.connect(self.updateview)
-        anim_form.addRow(QtWidgets.QLabel('Animation Style'), viewopts)
-
-        cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
-        cross_pos_spin = QtWidgets.QSpinBox()
-
-        cross_pos_slider.setValue(self.settings['crosspos'])
-        cross_pos_spin.setValue(self.settings['crosspos'])
-        cross_pos_slider.setRange(0, self.settings['structure']['size'][1]-1)
-        cross_pos_spin.setRange(0, self.settings['structure']['size'][1]-1)
-        cross_pos_slider.valueChanged.connect(cross_pos_spin.setValue)  # Connect slider to spin boc
-        cross_pos_spin.valueChanged.connect(cross_pos_slider.setValue)  # Connect spin box to slider
-        cross_pos_slider.valueChanged.connect(self.updatecrosspos)  # Connect slider to position updater
-        cross_pos_spin.valueChanged.connect(self.updatecrosspos)  # Connect spin box to position updater
-
-        cross_pos = QtWidgets.QHBoxLayout()
-        cross_pos.addWidget(cross_pos_spin)
-        cross_pos.addWidget(cross_pos_slider)
-        anim_form.addRow(QtWidgets.QLabel('Cross view position'), cross_pos)
-
-        cross_pos2_slider = QtWidgets.QSlider(Qt.Horizontal)
-        cross_pos2_spin = QtWidgets.QSpinBox()
-
-        cross_pos2_slider.setValue(self.settings['crosspos'])
-        cross_pos2_spin.setValue(self.settings['crosspos'])
-        cross_pos2_slider.setRange(0, self.settings['structure']['size'][1]-1)
-        cross_pos2_spin.setRange(0, self.settings['structure']['size'][1]-1)
-        cross_pos2_slider.valueChanged.connect(cross_pos2_spin.setValue)  # Connect slider to spin boc
-        cross_pos2_spin.valueChanged.connect(cross_pos2_slider.setValue)  # Connect spin box to slider
-        cross_pos2_slider.valueChanged.connect(self.updatecrosspos2)  # Connect slider to position updater
-        cross_pos2_spin.valueChanged.connect(self.updatecrosspos2)  # Connect spin box to position updater
-
-        cross_pos2 = QtWidgets.QHBoxLayout()
-        cross_pos2.addWidget(cross_pos2_spin)
-        cross_pos2.addWidget(cross_pos2_slider)
-        anim_form.addRow(QtWidgets.QLabel('Cross view 2 position'), cross_pos2)
 
         anim_box = QtWidgets.QGroupBox()
         anim_box.setTitle('Animation Settings')
+
+        anim_form = QtWidgets.QFormLayout()
+        anim_form.addRow(QtWidgets.QLabel('Animation Style'), viewopts)
+        anim_form.addRow(QtWidgets.QLabel('Vertical cross view position'), cross_pos)
+        anim_form.addRow(QtWidgets.QLabel('Horizontal cross view position'), cross_pos2)
         anim_box.setLayout(anim_form)
 
         box_list = QtWidgets.QVBoxLayout()
-
         box_list.addWidget(config_box)
         box_list.addWidget(anim_box)
 
@@ -253,16 +266,17 @@ class Config(QtWidgets.QWidget):
     def updateview(self, val):
         self.settings['view'] = val
 
-    def updatecrosspos(self, val):
-        self.settings['crosspos'] = val
+    def update_v_cross_pos(self, val):
+        self.settings['v_cross_pos'] = val
 
-    def updatecrosspos2(self, val):
-        self.settings['crosspos2'] = val
+    def update_h_cross_pos(self, val):
+        self.settings['h_cross_pos'] = val
 
 
 class makeCanvas(FigureCanvas):
     """Parent class of all Canvases. Initiate a figure with a toolbar."""
     def __init__(self, parent):
+        self.parent = parent
         self.figure = Figure(dpi=50)
         super().__init__(self.figure)
         self.settings = parent.settings
@@ -305,11 +319,11 @@ class Animation(makeCanvas):
 
         self.ax1 = self.figure.add_subplot(gs[0])
         clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)
-        linev = self.ax1.axvline(x=self.settings['crosspos'],
+        linev = self.ax1.axvline(x=self.settings['v_cross_pos'],
                                  color='cyan',
                                  linestyle='--'
                                  )
-        lineh = self.ax1.axhline(y=self.settings['crosspos2'],
+        lineh = self.ax1.axhline(y=self.settings['h_cross_pos'],
                                  color='cyan',
                                  linestyle='--'
                                  )
@@ -340,7 +354,7 @@ class Animation(makeCanvas):
                                  )
 
         self.ax2 = self.figure.add_subplot(gs[1])
-        crossim = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:,:,self.settings['crosspos']], 0,1),
+        v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:,:,self.settings['v_cross_pos']], 0,1),
                                   animated=True,
                                   vmin=0,
                                   vmax=self.settings['structure']['refractory_period'],
@@ -352,7 +366,7 @@ class Animation(makeCanvas):
                                   )
 
         self.ax3 = self.figure.add_subplot(gs[2])
-        crossim2 = self.ax3.imshow(self.substrate.model_array[:, self.settings['crosspos'], :],
+        h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['h_cross_pos'], :],
                                    animated=True,
                                    vmin=0,
                                    vmax=self.settings['structure']['refractory_period'],
@@ -368,16 +382,17 @@ class Animation(makeCanvas):
             """Function to iterate animation over"""
             if t % self.settings['sim']['pacemaker_period'] == 0:
                 self.substrate.activate_pacemaker()
-            self.ax1.set_title('seed={}, t={}'.format(self.substrate.seed, t))
             if play:
                 self.substrate.iterate()
             arr = self.get_anim_array()
-            return [linev.set_xdata(self.settings['crosspos']),
-                    lineh.set_ydata(self.settings['crosspos2']),
+
+            self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, t, self.substrate.maxpos))
+            return [linev.set_xdata(self.settings['v_cross_pos']),
+                    lineh.set_ydata(self.settings['h_cross_pos']),
                     image.set_data(arr[0]),
                     image2.set_data(arr[-1]),
-                    crossim.set_data(np.swapaxes(arr[:,:,self.settings['crosspos']], 0,1)),
-                    crossim2.set_data(arr[:, self.settings['crosspos2'], :])
+                    v_cross_view.set_data(np.swapaxes(arr[:,:,self.settings['v_cross_pos']], 0,1)),
+                    h_cross_view.set_data(arr[:, self.settings['h_cross_pos'], :])
                     ]
 
         def frames():
@@ -393,8 +408,16 @@ class Animation(makeCanvas):
         self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False)
 
     def onclick(self, event):
-        self.settings['crosspos'] = int(event.xdata)
-        self.settings['crosspos2'] = int(event.ydata)
+        if event.xdata:
+            # self.settings['v_cross_pos'] = int(event.xdata)
+            # self.settings['h_cross_pos'] = int(event.ydata)
+            self.parent.config.update_v_cross_pos(int(event.xdata))
+            self.parent.config.update_h_cross_pos(int(event.ydata))
+
+
+
+
+
 
 
 
@@ -404,6 +427,8 @@ class Animation(makeCanvas):
             return self.substrate.model_array
         if method == 'count':
             return self.substrate.excount % 3 / 3 * self.settings['structure']['refractory_period']
+        if method == 'direction':
+            return (5+ self.substrate.direction)/10 * self.settings['structure']['refractory_period']
 
 
 

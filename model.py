@@ -29,11 +29,14 @@ class Model:
         self.dysfunction_probability = dysfunction_probability
         self.time = time
         self.seed = seed if seed is not None else datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
+        self.direction = np.zeros(size, dtype='int8')
         np.random.seed(int(sub('[^0-9]', '', self.seed)))
 
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
         self.excount = np.zeros(size, dtype='uint32')
+        self._max = 0
+        self.maxpos = [0, 0, 0]
         self.failed = np.zeros(size, dtype=bool)
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
         self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
@@ -73,14 +76,20 @@ class Model:
         excited_from_fwrd[:, :, -1] = np.bool_(False)
 
         excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=0)
-        excited_from_inside[0, :, :] = np.bool(False)
+        excited_from_inside[0, :, :] = np.bool_(False)
 
         excited_from_outside = np.roll(self.excited & np.roll(self.z_linkage, 1, axis=2), -1, axis=0)
-        excited_from_outside[-1, :, :] = np.bool(False)
+        excited_from_outside[-1, :, :] = np.bool_(False)
 
         # Create array of excitable cells
+
         excitable = (excited_from_above | excited_from_below | excited_from_rear |
                      excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
+
+        self.direction[excitable] = (1 * (excited_from_above.astype('int8') - excited_from_below.astype('int8')) +
+                                     2 * (excited_from_rear.astype('int8') - excited_from_fwrd.astype('int8')) +
+                                     4 * (excited_from_inside.astype('int8') - excited_from_outside.astype('int8'))
+                                     )[excitable]
 
         # Check if dysfunctional cells fail to excite
         self.failed[excitable & self.dysfunctional] = np.random.random(
@@ -95,6 +104,11 @@ class Model:
         self.excited = self.model_array == self.refractory_period
         self.resting = self.model_array == 0
         self.excount += np.uint32(self.excited)
+
+        itermax = np.max(self.excount)
+        if itermax != self._max:  # When a new level of excitation happens find position of excitation
+            self._max = itermax
+            self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
 
         return self.model_array
     
@@ -121,6 +135,7 @@ class Model:
                        rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
+
 
 # ToDo: FAILED ARRAY OUTPUT IS WRONG (DOESN'T RESET)
 # TODO: TURN COPY PASTE FUNCTIONS INTO UTILITY METHODS (CREATE DIRECTORY)
