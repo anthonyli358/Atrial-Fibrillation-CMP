@@ -122,9 +122,10 @@ class Viewer:
         truth_array = np.zeros(model_array_list[0].shape)
         list = []
 
-        for array in model_array_list[0:2000]:
+        for array in model_array_list[1000:2000]:
             excited = array == 50
 
+            # repeat excitation period
             rest_time_array[~excited] += 1
             same = time_array == rest_time_array
             not_same = time_array != rest_time_array
@@ -136,6 +137,16 @@ class Viewer:
             rest_time_array[excited] = 0
 
             list.append(truth_array.copy())
+
+        # reduce to initial rotor (by pathlength)
+        periods = [np.unique(i) for i in list]
+
+        for i in range(len(list) - 1, 1, -1):
+            for j in periods:
+                current = np.where(list[i] == j)
+                new = np.where(list[i - 1] == j)
+                if abs(len(current) - len(new)) <= 1:
+                    list[i - 1][current] = list[i][new]
 
         return list
 
