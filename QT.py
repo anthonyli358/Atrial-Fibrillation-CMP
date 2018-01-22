@@ -168,6 +168,21 @@ class Config(QtWidgets.QWidget):
         refractoryBox.setValue(self.settings['structure']['refractory_period'])
         refractoryBox.valueChanged.connect(self.update_refractory)
 
+        dysfunction = QtWidgets.QDoubleSpinBox()
+        dysfunction.setDecimals(3)
+        dysfunction.setRange(0, 1)
+        dysfunction.setSingleStep(0.005)
+        dysfunction.setValue(self.settings['structure']['dysfunction_parameter'])
+        dysfunction.valueChanged.connect(self.update_dysfunctional_param)
+
+        dysfunction_p = QtWidgets.QDoubleSpinBox()
+        dysfunction_p.setDecimals(3)
+        dysfunction_p.setRange(0, 1)
+        dysfunction_p.setSingleStep(0.005)
+        dysfunction_p.setValue(self.settings['structure']['dysfunction_probability'])
+        dysfunction_p.valueChanged.connect(self.update_dysfunctional_prob)
+
+
         reset_button = QtWidgets.QPushButton()
         reset_button.setText('Reset with these settings')
         reset_button.pressed.connect(self.parent.reset)
@@ -220,6 +235,8 @@ class Config(QtWidgets.QWidget):
         config_form.addRow(QtWidgets.QLabel('Dimensions'), xyz_dim)
         config_form.addRow(QtWidgets.QLabel('Linkage'), xyz_linkage)
         config_form.addRow(QtWidgets.QLabel('Refractory Period'), refractoryBox)
+        config_form.addRow(QtWidgets.QLabel('Dysfunctional cells'), dysfunction)
+        config_form.addRow(QtWidgets.QLabel('Dysfunctional Probability'), dysfunction_p)
         config_form.addWidget(reset_button)
 
         config_box.setLayout(config_form)
@@ -261,6 +278,12 @@ class Config(QtWidgets.QWidget):
 
     def update_refractory(self, val):
         self.settings['structure']['refractory_period'] = val
+
+    def update_dysfunctional_param(self, val):
+        self.settings['structure']['dysfunction_parameter'] = val
+
+    def update_dysfunctional_prob(self, val):
+        self.settings['structure']['dysfunction_probability'] = val
 
 
     def updateview(self, val):
@@ -329,7 +352,7 @@ class Animation(makeCanvas):
                                  )
         image = self.ax1.imshow(self.substrate.model_array[0],
                                 animated=True,
-                                cmap='Oranges_r',
+                                cmap='Greys_r',
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin = 'lower',
