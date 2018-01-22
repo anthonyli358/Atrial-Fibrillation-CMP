@@ -139,14 +139,28 @@ class Viewer:
             list.append(truth_array.copy())
 
         # reduce to initial rotor (by pathlength)
-        periods = [np.unique(i) for i in list]
+        periods = [np.unique(i.flatten()) for i in list]
 
+        rotor_list = []
         for i in range(len(list) - 1, 1, -1):
             for j in periods:
+                rotors = []
                 current = np.where(list[i] == j)
                 new = np.where(list[i - 1] == j)
                 if abs(len(current) - len(new)) <= 1:
-                    list[i - 1][current] = list[i][new]
+                    rotors.append(current)
+                rotor_list.append(rotors)
+
+        rotor_list.reverse()
+        for i in range(len(list) - 1, 1, -1):
+            for r in rotor_list[i]:
+                list[i - 1][r] = list[i][r]
+
+        for i in range(len(list) - 1, 1, -1):
+            for r in rotor_list[i]:
+                mask = np.ones(list[i].shape, dtype=bool)  # np.ones_like(a,dtype=bool)
+                mask[r] = False
+                list[i - 1][mask] = 0
 
         return list
 
