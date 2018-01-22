@@ -70,26 +70,6 @@ def main():
     model_viewer.animate_model_array()
 
 
-print("RUNNING SIMULATION")
-
-results = simulation(substrate, model_recorder, **config.settings['sim'], )
-
-runtime = time.time() - start
-print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
-
-model_recorder.output_model_stat_dict()
-model_recorder.output_model_array_list()
-
-# np.save('rotor_formation(0.18,0.1,0.1)x', results)
-
-model_viewer = Viewer(model_recorder.path)
-model_viewer.plot_model_stats()
-# model_viewer.animate_model_array()
-
-
-# print("ANIMATING RESULTS")
-# Viewer.animate(results, config.settings['structure']['refractory_period'], cross_view=True, cross_pos=80)  # Cut through
-
 # -------------------
 # Risc_Recording_Code
 # -------------------

@@ -13,7 +13,6 @@ from pprint import pprint  # to get readable print output for dicts
 from time import sleep
 
 import model
-import main
 import config
 
 class AFInterface(QtWidgets.QMainWindow):
