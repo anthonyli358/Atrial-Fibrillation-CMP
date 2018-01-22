@@ -12,6 +12,7 @@ from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
 from mpl_toolkits.mplot3d import Axes3D
 from time import time
+import numpy as np
 
 from utility_methods import *
 
@@ -37,17 +38,20 @@ class Viewer:
 
         # Import the pandas stat_data_frame from HDF5 format
         stat_data_frame = pd.read_hdf('data/{}/data_files/stat_data_frame'.format(self.path), 'stat_data_frame')
-        size = stat_data_frame.loc[0].sum()  # sum values at time=0 for model size
 
-        plotting_data_frame = stat_data_frame.copy()/size  # normalise values and change variable name for clarity
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            dimensions = np.shape(model_data_file['array_list'][0])
+        size = np.product(dimensions)  # sum values at time=0 for model size
+        area = np.product(dimensions[:-1])
+        plotting_data_frame = stat_data_frame.copy()  # Change variable name for clarity
 
         # Plot statistics
         for key in stat_data_frame.columns.values.tolist():
             plt.figure()
             sns.set_style('ticks')
-            stat_data_frame[key].plot(title="{} Cells".format(key).title())
+            (plotting_data_frame[key]/(size if key != 'excited' else area)).plot(title="{} Cells".format(key).title())
             plt.xlabel("Time")
-            plt.ylabel("Number of Cells")
+            plt.ylabel("Fraction of Cells" if key !='excited' else "Number of Excited Cells / Ideal Number of Excited Cells")
             plt.legend(loc=0, fontsize=12, frameon=True)
             plt.margins(x=0)
             plt.savefig('data/{}/model_statistics/{}.png'.format(self.path, key))
@@ -90,16 +94,25 @@ class Viewer:
                     ax1.axvline(x=cross_pos, color='r', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
 
-        # TODO: 2ND PLOT X AXIS
+        fig, ax = plt.subplots()
+        image = ax.imshow(model_array_list[0, 0], animated=True, cmap='Greys_r', vmin=0,
+                          vmax=refractory_period, origin='lower')
 
-        else:
-            ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
-                   for frame in model_array_list]
+        def func(t):
+            image.set_array(model_array_list[t, 0])
+            ax.set_title(t)
+            return image,
 
-        ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
-        plt.show()
+        global ani
+        ani = animation.FuncAnimation(fig, func, interval=5, frames = len(model_array_list), blit=True)
 
-        # TODO: SAVING DOESN'T WORK
+        # ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period)]
+        #        for frame in model_array_list]
+        # global ani
+        # ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500,)
+
+        # plt.show()
+
         if save:
             create_dir('{}/model_array'.format(self.path))
 

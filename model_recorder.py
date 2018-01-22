@@ -25,7 +25,7 @@ class ModelRecorder:
         self.path = model.seed if cfg.settings['structure']['seed'] is None else datetime.datetime.now().strftime(
             '%y-%m-%d_%H-%M-%S')
         self.model_array_list = []
-        self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1, dtype='int32') for k in
+        self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1, dtype='uint16') for k in
                                 ['excited', 'resting', 'refractory', 'failed']}
 
         create_dir('{}/data_files'.format(self.path))
@@ -41,6 +41,7 @@ class ModelRecorder:
 
     def update_model_stat_dict(self):
         """Update statistic lists for the current model iteration."""
+
 
         stat_keys = ['excited', 'resting', 'refractory', 'failed']  # define manually as model_stats_dict not ordered
         stat_values = [np.sum(self.model.excited),
@@ -71,4 +72,4 @@ class ModelRecorder:
         print("outputting model array list...")
 
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'w') as model_data_file:
-            model_data_file.create_dataset('array_list', data=self.model_array_list, dtype='uint8')
+            model_data_file.create_dataset('array_list', data=self.model_array_list, dtype='uint16')
