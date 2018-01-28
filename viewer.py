@@ -17,6 +17,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from time import time
 
 from utility_methods import *
+from direction import Direction
 
 
 class Viewer:
@@ -66,81 +67,30 @@ class Viewer:
         plt.savefig('data/{}/model_statistics/overall.png'.format(self.path))
         plt.close()
 
-    def detect_local_maxima(self, arr):
-        # https://stackoverflow.com/questions/3684484/peak-detection-in-a-2d-array/3689710#3689710
-        """
-        Takes an array and detects the troughs using the local maximum filter.
-        Returns a boolean mask of the troughs (i.e. 1 when
-        the pixel's value is the neighborhood maximum, 0 otherwise)
-        """
-        # define an connected neighborhood
-        # http://www.scipy.org/doc/api_docs/SciPy.ndimage.morphology.html#generate_binary_structure
-        neighborhood = morphology.generate_binary_structure(len(arr.shape), 2)
-        # apply the local maxmimum filter; all locations of minimum value
-        # in their neighborhood are set to 1
-        # http://www.scipy.org/doc/api_docs/SciPy.ndimage.filters.html#minimum_filter
-        local_max = (filters.maximum_filter(arr, footprint=neighborhood) == arr)
-        # local_min is a mask that contains the peaks we are
-        # looking for, but also the background.
-        # In order to isolate the peaks we must remove the background from the mask.
-        #
-        # we create the mask of the background
-        background = (arr == 0)
-        #
-        # a little technicality: we must erode the background in order to
-        # successfully subtract it from local_min, otherwise a line will
-        # appear along the background border (artifact of the local minimum filter)
-        # http://www.scipy.org/doc/api_docs/SciPy.ndimage.morphology.html#binary_erosion
-        eroded_background = morphology.binary_erosion(
-            background, structure=neighborhood, border_value=1)
-        #
-        # we obtain the final mask, containing only peaks,
-        # by removing the background from the local_min mask
-        detected_maxima = local_max ^ eroded_background
-
-        return np.where(detected_maxima)
-
-    def moving_average(self, data, n=3):
-        smoothed_data = []
-        for i in range(n, len(data) - n):
-            smoothed_data.append(sum(data[i - n:i + n]) / (2 * n + 1))
-
-        return smoothed_data
-
-    def time_since_last_excitation(self, slice):
-
-        print("reading & animating model array...")
+    def circuit_search(self, current_point, start_time):
+        """Use extensive search algorithm to find rotor"""
 
         # Import the model_array from HFD5 format
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
             model_array_list = model_data_file['array_list'][:]
 
-        # TODO: MOVE TO PATHLENGTH CLASS
+        # Start at a time where start point is excited
+        while model_array_list[start_time][current_point] != 50:
+            start_time += 1
 
-        rest_time_array = np.zeros(model_array_list[0].shape)
-        list = []
-        list2 = []
+        path = []  # can't use set() as unordered
+        trial_direction = np.array((0, 0, 0))
+        for i in range(150):
+            while model_array_list[start_time - i][current_point + trial_direction] != 50:
+                trial_direction = Direction.random()
+            current_point += trial_direction
 
-        for array in model_array_list[0:2000]:
-            truth_array = np.zeros(model_array_list[0].shape)
-            excited = array == 50
+            if current_point in path:
+                # remove all indices before repeat
+                return path[next(i for i in range(len(path)) if path[i] == current_point):]
+            path.append(current_point)
 
-            rest_time_array[excited] += 1
-            list.append(rest_time_array.copy() / rest_time_array.max())
-
-            truth_array[self.detect_local_maxima(rest_time_array)] = 1
-            list2.append(truth_array)
-
-        new_list = [np.round(list[i] * list2[i], 0) for i in range(len(list2))]
-
-        # new_list = self.moving_average(list2, n=50)
-        # new_list = [np.round(array, 0) for array in new_list]
-        print(new_list)
-
-        # TODO: REMOVE WAVELETS: change maxima method? - check number of adjacent squares
-        # TODO: SINGLE LINE
-
-        return new_list
+        return False
 
     def animate_model_array(self, highlight=None, save=False, cross_view=False, cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
@@ -174,7 +124,7 @@ class Viewer:
 
         else:
             ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r')]
-                   for frame in highlight]
+                   for frame in model_array_list]
 
         ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
         plt.show()
