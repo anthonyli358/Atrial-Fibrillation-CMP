@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
+from matplotlib import cm
 from matplotlib import patches
 from mpl_toolkits.mplot3d import Axes3D
 from time import time
@@ -84,6 +85,7 @@ class Viewer:
         for i in range(150):
             while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
                 trial_direction = Direction.random()
+            # add tuples element wise
             current_point = tuple(map(operator.add, current_point, trial_direction))
 
             if current_point in path:
@@ -91,7 +93,7 @@ class Viewer:
                 return path[next(i for i in range(len(path)) if path[i] == current_point):]
             path.append(current_point)
 
-        # TODO: NO CIRCUIT SOUND
+        # TODO: NO CIRCUIT FOUND
         # TODO: MOVEMENT NOT VALID
 
         return False
@@ -106,18 +108,23 @@ class Viewer:
         # Import the model_array from HFD5 format
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
             model_array_list = model_data_file['array_list'][:]
+        refractory_period = max(model_array_list.flatten())
+        print(refractory_period)
 
         if highlight:
             for frame in model_array_list:
                 for point in highlight:
-                    frame[point] = 50
+                    frame[point] = 51
 
-        refractory_period = max(model_array_list[0])
+        # Create cmap
+        highlight_cmap = cm.get_cmap('Greys_r')
+        highlight_cmap.set_over('red')
+
         if remove_refractory:
             for array in model_array_list:
-                excited = array >= 40
+                excited = array >= refractory_period * 0.8
                 array[~excited] = 0
-                array[excited] = (array[excited] - 40) * 3 + 20
+                array[excited] = (array[excited] - (refractory_period * 0.8)) * 3 + (refractory_period * 0.4)
 
         fig = plt.figure(1)
         if cross_view:
@@ -132,7 +139,7 @@ class Viewer:
         # TODO: 2ND PLOT X AXIS
 
         else:
-            ims = [[plt.imshow(frame[0, :, :], animated=True, cmap='Greys_r')]
+            ims = [[plt.imshow(frame[0, :, :], animated=True, vmin=0, vmax=refractory_period, cmap=highlight_cmap)]
                    for frame in model_array_list]
 
         ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
