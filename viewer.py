@@ -1,11 +1,9 @@
 import h5py
 import numpy as np
-import os
+import operator
 import pandas as pd
 import seaborn as sns
 import sys
-import scipy.ndimage.filters as filters
-import scipy.ndimage.morphology as morphology
 
 from matplotlib import pyplot as plt
 
@@ -79,16 +77,22 @@ class Viewer:
             start_time += 1
 
         path = []  # can't use set() as unordered
-        trial_direction = np.array((0, 0, 0))
+        trial_direction = (0, 0, 0)
+        print(start_time)
+        print(current_point)
+        print(model_array_list[start_time][0, 94, 44])
         for i in range(150):
-            while model_array_list[start_time - i][current_point + trial_direction] != 50:
+            while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
                 trial_direction = Direction.random()
-            current_point += trial_direction
+            current_point = tuple(map(operator.add, current_point, trial_direction))
 
             if current_point in path:
                 # remove all indices before repeat
                 return path[next(i for i in range(len(path)) if path[i] == current_point):]
             path.append(current_point)
+
+        # TODO: NO CIRCUIT SOUND
+        # TODO: MOVEMENT NOT VALID
 
         return False
 
@@ -103,7 +107,12 @@ class Viewer:
         with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
             model_array_list = model_data_file['array_list'][:]
 
-        refractory_period = max(model_array_list.flatten())
+        if highlight:
+            for frame in model_array_list:
+                for point in highlight:
+                    frame[point] = 50
+
+        refractory_period = max(model_array_list[0])
         if remove_refractory:
             for array in model_array_list:
                 excited = array >= 40
@@ -115,7 +124,7 @@ class Viewer:
             gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
-            ims = [[ax1.imshow(frame[24, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
+            ims = [[ax1.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
                     ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
                     ax1.axvline(x=cross_pos, color='r', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
