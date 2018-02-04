@@ -72,8 +72,15 @@ class Viewer:
 
         return model_array_list
 
-    @staticmethod
-    def circuit_search(model_array_list, current_point, start_time):
+    def try_direction(self, model_array_list, current_point, start_time, i, trial_direction):
+        try:
+            while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
+                trial_direction = Direction.random()
+            return trial_direction
+        except IndexError:
+            self.try_direction(model_array_list, current_point, start_time, i, trial_direction)
+
+    def circuit_search(self, model_array_list, current_point, start_time):
         """Use extensive search algorithm to find rotor."""
 
         # Start at a time where start point is excited
@@ -85,8 +92,7 @@ class Viewer:
         print(start_time)
         print(current_point)
         for i in range(400):
-            while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
-                trial_direction = Direction.random()
+            trial_direction = self.try_direction(model_array_list, current_point, start_time, i, trial_direction)
             # add tuples element wise
             current_point = tuple(map(operator.add, current_point, trial_direction))
 
@@ -95,7 +101,6 @@ class Viewer:
                 return path[next(i for i in range(len(path)) if path[i] == current_point):]
             path.append(current_point)
 
-        # TODO: NO CIRCUIT FOUND
         # TODO: MOVEMENT NOT VALID
 
         print("no path found")
@@ -109,7 +114,6 @@ class Viewer:
         print("reading & animating model array...")
 
         refractory_period = max(model_array_list.flatten())
-        print(refractory_period)
         print(highlight)
 
         if highlight:
