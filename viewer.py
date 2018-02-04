@@ -72,15 +72,8 @@ class Viewer:
 
         return model_array_list
 
-    def try_direction(self, model_array_list, current_point, start_time, i, trial_direction):
-        try:
-            while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
-                trial_direction = Direction.random()
-            return trial_direction
-        except IndexError:
-            self.try_direction(model_array_list, current_point, start_time, i, trial_direction)
-
-    def circuit_search(self, model_array_list, current_point, start_time):
+    @staticmethod
+    def circuit_search(model_array_list, current_point, start_time):
         """Use extensive search algorithm to find rotor."""
 
         # Start at a time where start point is excited
@@ -92,7 +85,14 @@ class Viewer:
         print(start_time)
         print(current_point)
         for i in range(400):
-            trial_direction = self.try_direction(model_array_list, current_point, start_time, i, trial_direction)
+            try:
+                while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
+                    trial_direction = Direction.random()
+            except IndexError:
+                valid_moves = [i for i in Direction.all_directions if i is not trial_direction]
+                trial_direction = Direction.random(valid_moves)  # change current direction
+                while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
+                    trial_direction = Direction.random(valid_moves)
             # add tuples element wise
             current_point = tuple(map(operator.add, current_point, trial_direction))
 
