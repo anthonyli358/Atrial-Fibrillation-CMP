@@ -22,8 +22,7 @@ class ModelRecorder:
         :param model: The model being recorded
         """
         self.model = model
-        self.path = model.seed if cfg.settings['structure']['seed'] is None else datetime.datetime.now().strftime(
-            '%y-%m-%d_%H-%M-%S')
+        self.path = datetime.datetime.now().strftime('%y-%m-%d_%H-%M-%S')
         self.model_array_list = []
         self.model_stat_dict = {k: np.zeros(cfg.settings['sim']['runtime'] + 1, dtype='int32') for k in
                                 ['excited', 'resting', 'refractory', 'failed']}

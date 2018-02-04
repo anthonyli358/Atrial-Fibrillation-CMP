@@ -74,7 +74,7 @@ class Viewer:
 
     @staticmethod
     def circuit_search(model_array_list, current_point, start_time):
-        """Use extensive search algorithm to find rotor"""
+        """Use extensive search algorithm to find rotor."""
 
         # Start at a time where start point is excited
         while model_array_list[start_time][current_point] != 50:
@@ -84,7 +84,7 @@ class Viewer:
         trial_direction = (0, 0, 0)
         print(start_time)
         print(current_point)
-        for i in range(150):
+        for i in range(400):
             while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
                 trial_direction = Direction.random()
             # add tuples element wise
@@ -156,8 +156,28 @@ class Viewer:
             ani.save('data/{}/model_array/_animation.mp4', writer)
             print("Saved in {:.1f}s".format(save, time() - t))
 
-            # TODO: ANIMATE A SPECIFIC TIME SEGMENT
-            # TODO: CROSS VIEW
+    def plot_circuit_3d(self, circuit):
+        """
+        Plot the circuit responsible for AF in 3D.
+        :param circuit: The circuit points to plot
+        """
+
+        create_dir('{}/model_array'.format(self.path))
+        circuit.append(circuit[0])
+
+        z = [p[0] for p in circuit]
+        y = [p[1] for p in circuit]
+        x = [p[2] for p in circuit]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot(x, y, z, color='r')
+        # ax.set_xlim(0, 200)
+        # ax.set_ylim(0, 200)
+        # ax.set_zlim(0, 10)
+        plt.savefig('data/{}/model_array/{}.png'.format(self.path, "_circuit"))
+        plt.show()
+        plt.close()
 
     def plot_model_array(self, model_array_list, time_steps=None, start=0):
         """
@@ -169,9 +189,6 @@ class Viewer:
         print("reading model array...")
 
         create_dir('{}/model_array'.format(self.path))
-
-        # TODO: CROSS VIEW
-
         total_time = len(model_array_list)
 
         if time_steps is None or time_steps > total_time:
