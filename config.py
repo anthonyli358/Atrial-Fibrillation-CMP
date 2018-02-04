@@ -5,8 +5,8 @@ settings = dict(
         dysfunction_parameter=0.05,  # fraction of dysfunctional cells
         dysfunction_probability=0.05,
         x_coupling=1.,
-        y_coupling=.1,  # probability of y linkage
-        z_coupling=.1,
+        y_coupling=.08,  # probability of y linkage
+        z_coupling=.08,
         seed=None  # 11-13_17-02-49 pretty, .61,.61
     ),
     sim=dict(
@@ -15,9 +15,5 @@ settings = dict(
     ),
 )
 
-# TODO: (ANTHONY) VIEWER ARCHITECTURE - JUST USE MAIN VIEWER (VIEW EACH DATA SET INDIVIDUALLY) CAN CHANGE LATER IF COMPLICATED
-# TODO: (ANTHONY) SURFACE IMAGING
+
 # TODO: (ANDY) NUMBER OF LAYERS INVESTIGATION
-# TODO: (BOTH) (1) HOW TO VISUALISE - 3D & TRANSPARENT + CROSS SECTIONS
-# TODO: (ANTHONY) SHORTEST PATH
-# TODO: PYQT VS MAYAVI VS MATPLOTLIB
