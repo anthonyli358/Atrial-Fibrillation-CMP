@@ -29,7 +29,7 @@ class Model:
         self.dysfunction_probability = dysfunction_probability
         self.time = time
         self.seed = seed if seed is not None else datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        self.direction = np.zeros(size, dtype='int8')
+        self.direction = np.zeros(size, dtype='uint8')
         np.random.seed(int(sub('[^0-9]', '', self.seed)))
 
         self.excited = np.zeros(size, dtype=bool)
@@ -86,9 +86,12 @@ class Model:
         excitable = (excited_from_above | excited_from_below | excited_from_rear |
                      excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
 
-        self.direction[excitable] = (1 * (excited_from_above.astype('int8') - excited_from_below.astype('int8')) +
-                                     2 * (excited_from_rear.astype('int8') - excited_from_fwrd.astype('int8')) +
-                                     4 * (excited_from_inside.astype('int8') - excited_from_outside.astype('int8'))
+        self.direction[excitable] = (1 * excited_from_above.astype('int8') +
+                                     2 * excited_from_below.astype('int8') +
+                                     4 * excited_from_rear.astype('int8') +
+                                     8 * excited_from_fwrd.astype('int8') +
+                                     16 * excited_from_inside.astype('int8') +
+                                     32 * excited_from_outside.astype('int8')
                                      )[excitable]
 
         # Check if dysfunctional cells fail to excite
