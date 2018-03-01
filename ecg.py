@@ -86,12 +86,12 @@ class ECG:
 
         return voltage_list
 
-    def plot_ecg(self, x, y, label):
+    def plot_ecg(self, x, y):
         """Plot the ECG."""
 
         plt.figure()
         sns.set_style('ticks')
-        plt.plot(x, y, label="{}".format(label))
+        plt.plot(x, y, label="ecg")
         plt.xlabel("Time")
         plt.ylabel("Voltage (V)")
         plt.title("ECG at {}".format(self.centre))
@@ -101,5 +101,5 @@ class ECG:
         plt.close()
 
 
-e = ECG([50, 50], 3, '11-21_15-46-17')  # [y, x]
-e.plot_ecg([i for i in range(len(e.model_array_list))], e.ecg(), "ecg")
+# e = ECG([50, 50], 3, '11-21_15-46-17')  # [y, x]
+# e.plot_ecg([i for i in range(len(e.model_array_list))], e.ecg(), "ecg")

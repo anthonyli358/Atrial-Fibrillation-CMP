@@ -1,6 +1,5 @@
 import h5py
 import numpy as np
-import operator
 import pandas as pd
 import seaborn as sns
 import sys
@@ -11,11 +10,9 @@ plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-stat
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
 from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 from time import time
 
 from utility_methods import *
-from direction import Direction
 
 
 class Viewer:
@@ -72,40 +69,6 @@ class Viewer:
 
         return model_array_list
 
-    @staticmethod
-    def circuit_search(model_array_list, current_point, start_time):
-        """Use extensive search algorithm to find rotor."""
-
-        # Start at a time where start point is excited
-        while model_array_list[start_time][current_point] != 50:
-            start_time += 1
-
-        path = []  # can't use set() as unordered
-        trial_direction = (0, 0, 0)
-        print(start_time)
-        print(current_point)
-        for i in range(400):
-            try:
-                while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
-                    trial_direction = Direction.random()
-            except IndexError:
-                valid_moves = [i for i in Direction.all_directions if i is not trial_direction]
-                trial_direction = Direction.random(valid_moves)  # change current direction
-                while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
-                    trial_direction = Direction.random(valid_moves)
-            # add tuples element wise
-            current_point = tuple(map(operator.add, current_point, trial_direction))
-
-            if current_point in path:
-                # remove all indices before repeat
-                return path[next(i for i in range(len(path)) if path[i] == current_point):]
-            path.append(current_point)
-
-        # TODO: MOVEMENT NOT VALID
-
-        print("no path found")
-        return False
-
     def animate_model_array(self, model_array_list, highlight=None, save=False, layer=0, cross_view=False, cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
 
@@ -136,8 +99,8 @@ class Viewer:
             gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
-            ims = [[ax1.imshow(frame[layer, :, :], animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period),
-                    ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period),
+            ims = [[ax1.imshow(frame[layer, :, :], animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period, origin='lower'),
+                    ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period, origin='lower'),
                     ax1.axvline(x=cross_pos, color='b', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
 
@@ -175,11 +138,25 @@ class Viewer:
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
+        # ax.set_aspect('equal')
+        # ax.auto_scale_xyz([0, 200], [0, 200], [0, 25])
+
+        # Create cubic bounding box to simulate equal aspect ratio
+        max_range = np.array([max(x) - min(x), max(y) - min(y), max(z) - min(z)]).max()
+        xb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].flatten() + 0.5 * (max(x) + min(x))
+        yb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][1].flatten() + 0.5 * (max(y) + min(y))
+        zb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][2].flatten() + 0.5 * (max(z) + min(z))
+        # Comment or uncomment following both lines to test the fake bounding box:
+        for xb, yb, zb in zip(xb, yb, zb):
+            ax.plot([xb], [yb], [zb], 'w')
+
         ax.plot(x, y, z, color='r')
-        # ax.set_xlim(0, 200)
-        # ax.set_ylim(0, 200)
-        # ax.set_zlim(0, 10)
-        plt.savefig('data/{}/model_array/{}.png'.format(self.path, "_circuit"))
+        ax.grid(False)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        ax.set_zlim(0, 25)
+        plt.savefig('data/{}/model_array/circuit_{}.png'.format(self.path, circuit[0]))
         plt.show()
         plt.close()
 
