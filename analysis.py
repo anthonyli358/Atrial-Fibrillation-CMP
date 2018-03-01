@@ -1,3 +1,4 @@
+import operator
 from direction import Direction
 
 
@@ -32,3 +33,9 @@ def circuit_search(model_array_list, current_point, start_time):
     print("no path found")
     return False
 
+
+def quantify_circuit(model_array_list, current_point, start_time):
+
+    type = "focal"
+
+    return type

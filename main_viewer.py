@@ -1,5 +1,3 @@
-import cProfile
-
 from analysis import *
 from ecg import ECG
 from viewer import Viewer
