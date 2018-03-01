@@ -1,7 +1,4 @@
-import datetime
 import numpy as np
-
-from re import sub
 
 
 class Model:
@@ -14,9 +11,9 @@ class Model:
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
-        :param x_coupling: The x coupling factor
-        :param y_coupling: The y coupling factor
-        :param z_coupling: The z coupling factor
+        :param x_coupling: The x yz_coupling factor
+        :param y_coupling: The y yz_coupling factor
+        :param z_coupling: The z yz_coupling factor
         :param dysfunction_parameter: The fraction of dysfunctional cells
         :param dysfunction_probability: The fraction of dysfunctional cells which fail to excite
         :param refractory_period: Cell refractory period
@@ -28,11 +25,15 @@ class Model:
         self.dysfunction_parameter = dysfunction_parameter
         self.dysfunction_probability = dysfunction_probability
         self.time = time
-        self.seed = seed if seed is not None else datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        np.random.seed(int(sub('[^0-9]', '', self.seed)))
+        self.seed = seed if seed is not None else np.random.randint(0, 2147483647)  # int32 seed value
+        np.random.seed(self.seed)
 
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
+        # self.direction = 0
+        # self.excount = np.zeros(size, dtype='uint32')
+        # self._max = 0
+        # self.maxpos = [0, 0, 0]
         self.failed = np.zeros(size, dtype=bool)
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
         self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
@@ -60,9 +61,10 @@ class Model:
         Iterate model forward one time step.
         :return: Activation Array
         """
+        self.failed = np.zeros(self.size, dtype=bool)
+
         # Roll excited values to get arrays of possible excitations
         excited_from_above = np.roll(self.excited & self.y_linkage, 1, axis=1)
-
         excited_from_below = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=0), -1, axis=1)
 
         excited_from_rear = np.roll(self.excited & self.x_linkage, 1, axis=2)
@@ -72,28 +74,39 @@ class Model:
         excited_from_fwrd[:, :, -1] = np.bool_(False)
 
         excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=0)
-        excited_from_inside[0, :, :] = np.bool(False)
+        excited_from_inside[0, :, :] = np.bool_(False)
 
         excited_from_outside = np.roll(self.excited & np.roll(self.z_linkage, 1, axis=2), -1, axis=0)
-        excited_from_outside[-1, :, :] = np.bool(False)
+        excited_from_outside[-1, :, :] = np.bool_(False)
 
         # Create array of excitable cells
+
         excitable = (excited_from_above | excited_from_below | excited_from_rear |
                      excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
 
+        # self.direction[excitable] = (1 * (excited_from_above.astype('int8') - excited_from_below.astype('int8')) +
+        #                              2 * (excited_from_rear.astype('int8') - excited_from_fwrd.astype('int8')) +
+        #                              4 * (excited_from_inside.astype('int8') - excited_from_outside.astype('int8'))
+        #                              )[excitable]
+
         # Check if dysfunctional cells fail to excite
-        # TODO: COULD OPTIMISE BY SAVING THE (RESTING & EXCITABLE & DYSFUNCTIONAL) INDEX ARRAY INSTEAD OF RECALCULATING
-        self.failed[self.resting & excitable & self.dysfunctional] = np.random.random(
-            len(self.failed[self.resting & excitable & self.dysfunctional])) < self.dysfunction_probability
+        self.failed[excitable & self.dysfunctional] = np.random.random(
+            len(self.failed[excitable & self.dysfunctional])) < self.dysfunction_probability
 
         # Time +1: Reduce excitation and excite resting and excitable (not failed) cells.
         self.model_array[~self.resting] -= 1
-        self.model_array[self.resting & excitable & ~self.failed] = self.refractory_period
+        self.model_array[excitable & ~self.failed] = self.refractory_period
         self.time += 1
 
         # Update excited and resting arrays
         self.excited = self.model_array == self.refractory_period
         self.resting = self.model_array == 0
+        # self.excount += np.uint32(self.excited)
+
+        # itermax = np.max(self.excount)
+        # if itermax != self._max:  # When a new level of excitation happens find position of excitation
+        #     self._max = itermax
+        #     self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
 
         return self.model_array
     
@@ -121,10 +134,11 @@ class Model:
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
 
+
 # ToDo: FAILED ARRAY OUTPUT IS WRONG (DOESN'T RESET)
 # TODO: TURN COPY PASTE FUNCTIONS INTO UTILITY METHODS (CREATE DIRECTORY)
 # TODO: MAIN
-# TODO: ECG
 # ToDo: OPTIMISE
 # TODO: COMMENT AND ORGANISE ALL MODULES
 # ToDo: UNIT TESTS
+# TODO: UPDATE README WITH HOW TO USE
