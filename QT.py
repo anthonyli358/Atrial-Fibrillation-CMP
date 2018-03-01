@@ -426,6 +426,8 @@ class Animation(makeCanvas):
                 self.substrate.activate_pacemaker()
             if play:
                 self.substrate.iterate()
+            if t == 300:
+                self.substrate.add_ablation(self.substrate.maxpos, 2)
             arr = self.get_anim_array()
 
             self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, t, self.substrate.maxpos))
