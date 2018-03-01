@@ -3,20 +3,16 @@ import numpy as np
 import model as af
 import config
 import cProfile
-import datetime
+
+from matplotlib import pyplot as plt
+import gc
 
 from model_recorder import ModelRecorder
 from viewer import Viewer
 
 
-
-from matplotlib import pyplot as plt
-import gc
-
-
 def simulation(substrate, recorder, runtime, pacemaker_period):
     """
-
     :param runtime: Number of timesteps in simulation.
     :type runtime: int
     :param pacemaker_period: Period of the pacemaker cells
@@ -26,48 +22,110 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     :return:
     :rtype:
     """
-
+    result = np.zeros((runtime + 1,) + substrate.size, dtype='uint8')
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
-        # if t  == 5:  # Ectopic beat
-        #     substrate.activate((0, 70,100))
-        #     substrate.model_array[0, 70, 99] = 49
-
         recorder.update_model_stat_dict()
         recorder.update_model_array_list()
-        substrate.iterate()
+        # if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
+        #     substrate.activate((70,100,-1))
+        result[t] = substrate.iterate()
+    return result
 
 
-def risk_sim(substrate,settings):
+def risk_sim(substrate, settings):
     runtime = settings['sim']['runtime']
     refractory_period = settings["structure"]["refractory_period"]
     pacemaker_period = settings['sim']['pacemaker_period']
-    sum_result = [[],[]]
+    result = np.zeros(int(runtime + 1))
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
         sub = substrate.iterate()
-        sum_result[0].append(np.count_nonzero(sub == refractory_period))
-        sum_result[1].append(np.count_nonzero(sub[:,:,-1] == refractory_period))
-    return sum_result
+        result[t] = np.count_nonzero(sub == refractory_period)
+    return result
 
 
-def main():
-    start = time.time()
-    print("GENERATING SUBSTRATE")
-    substrate = af.Model(**config.settings['structure'])
-    model_recorder = ModelRecorder(substrate)
-    print('SEED: {}'.format(substrate.seed))
-    print("RUNNING SIMULATION")
-    simulation(substrate, model_recorder, **config.settings['sim'], )
-    run = time.time() - start
-    print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(run))
-    model_recorder.output_model_stat_dict()
-    model_recorder.output_model_array_list()
-    model_viewer = Viewer(model_recorder.path)
-    model_viewer.plot_model_stats()
-    model_viewer.animate_model_array()
+start = time.time()
+print("GENERATING SUBSTRATE")
+
+substrate = af.Model(**config.settings['structure'])
+model_recorder = ModelRecorder(substrate)
+print('SEED: {}'.format(substrate.seed))
+
+print("RUNNING SIMULATION")
+
+results = simulation(substrate, model_recorder, **config.settings['sim'], )
+
+runtime = time.time() - start
+print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(runtime))
+
+model_recorder.output_model_stat_dict()
+model_recorder.output_model_array_list()
+
+# np.save('rotor_formation(0.18,0.1,0.1)x', results)
+
+model_viewer = Viewer(model_recorder.path)
+model_viewer.plot_model_stats()
+data = model_viewer.import_data()
+model_viewer.animate_model_array(data, cross_view=True, cross_pos=100)
+
+#
+# def simulation(substrate, recorder, runtime, pacemaker_period):
+#     """
+#
+#     :param runtime: Number of timesteps in simulation.
+#     :type runtime: int
+#     :param pacemaker_period: Period of the pacemaker cells
+#     :type pacemaker_period: int
+#     :param substrate: Substrate to run simulaton on
+#     :type substrate: af_model.Substrate
+#     :return:
+#     :rtype:
+#     """
+#
+#     for t in range(runtime + 1):
+#         if t % pacemaker_period == 0:
+#             substrate.activate_pacemaker()
+#         # if t  == 5:  # Ectopic beat
+#         #     substrate.activate((0, 70,100))
+#         #     substrate.model_array[0, 70, 99] = 49
+#
+#         recorder.update_model_stat_dict()
+#         recorder.update_model_array_list()
+#         substrate.iterate()
+#
+#
+# def risk_sim(substrate,settings):
+#     runtime = settings['sim']['runtime']
+#     refractory_period = settings["structure"]["refractory_period"]
+#     pacemaker_period = settings['sim']['pacemaker_period']
+#     sum_result = [[],[]]
+#     for t in range(runtime + 1):
+#         if t % pacemaker_period == 0:
+#             substrate.activate_pacemaker()
+#         sub = substrate.iterate()
+#         sum_result[0].append(np.count_nonzero(sub == refractory_period))
+#         sum_result[1].append(np.count_nonzero(sub[:,:,-1] == refractory_period))
+#     return sum_result
+#
+#
+# def main():
+#     start = time.time()
+#     print("GENERATING SUBSTRATE")
+#     substrate = af.Model(**config.settings['structure'])
+#     model_recorder = ModelRecorder(substrate)
+#     print('SEED: {}'.format(substrate.seed))
+#     print("RUNNING SIMULATION")
+#     simulation(substrate, model_recorder, **config.settings['sim'], )
+#     run = time.time() - start
+#     print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(run))
+#     model_recorder.output_model_stat_dict()
+#     model_recorder.output_model_array_list()
+#     model_viewer = Viewer(model_recorder.path)
+#     model_viewer.plot_model_stats()
+#     model_viewer.animate_model_array()
 
 
 # -------------------
@@ -109,8 +167,8 @@ def main():
 # # plt.errorbar(data[:,0], data[:,1], yerr=data[:,2]/np.sqrt(runs))
 # # plt.show()
 
-if __name__ == '__main__':
-    main()
-    plt.show()
+# if __name__ == '__main__':
+#     main()
+#     plt.show()
 
 # TODO: KILLSWITCH()
