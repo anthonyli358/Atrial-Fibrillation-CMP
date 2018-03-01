@@ -1,6 +1,5 @@
 import h5py
 import numpy as np
-import os
 import pandas as pd
 import seaborn as sns
 import sys
@@ -10,7 +9,7 @@ from matplotlib import pyplot as plt
 plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
-from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 from time import time
 import numpy as np
 
@@ -67,31 +66,46 @@ class Viewer:
         plt.savefig('data/{}/model_statistics/overall.png'.format(self.path))
         plt.close()
 
-    def animate_model_array(self, save=False, cross_view=False, cross_pos=None, remove_refractory=False):
+    def import_data(self):
+        # Import the model_array from HFD5 format
+        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+            model_array_list = model_data_file['array_list'][:]
+
+        return model_array_list
+
+    def animate_model_array(self, model_array_list, highlight=None, save=False, layer=0, cross_view=False, cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
 
         # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
 
         print("reading & animating model array...")
 
-        # Import the model_array from HFD5 format
-        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
-            model_array_list = model_data_file['array_list'][:]
-
         refractory_period = max(model_array_list.flatten())
+        print(highlight)
+
+        if highlight:
+            for frame in model_array_list:
+                for point in highlight:
+                    frame[point] = 51
+
+        # Create cmap
+        highlight_cmap = cm.get_cmap('Greys_r')
+        highlight_cmap.set_over('r')
+
         if remove_refractory:
             for array in model_array_list:
-                excited = array == refractory_period
+                excited = array >= refractory_period * 0.8
                 array[~excited] = 0
+                array[excited] = (array[excited] - (refractory_period * 0.8)) * 3 + (refractory_period * 0.4)
 
         fig = plt.figure(1)
         if cross_view:
             gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
-            ims = [[ax1.imshow(frame[0, :, :], animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
-                    ax2.imshow(np.transpose(frame[:, :, 80]), animated=True, cmap='Greys_r', vmin=0, vmax=refractory_period),
-                    ax1.axvline(x=cross_pos, color='r', zorder=10, animated=True, linestyle='--')]
+            ims = [[ax1.imshow(frame[layer, :, :], animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period, origin='lower'),
+                    ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period, origin='lower'),
+                    ax1.axvline(x=cross_pos, color='b', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
 
         fig, ax = plt.subplots()
@@ -102,6 +116,9 @@ class Viewer:
             image.set_array(model_array_list[t, 0])
             ax.set_title(t)
             return image,
+        else:
+            ims = [[plt.imshow(frame[layer, :, :], animated=True, vmin=0, vmax=refractory_period, cmap=highlight_cmap)]
+                   for frame in model_array_list]
 
         global ani
         ani = animation.FuncAnimation(fig, func, interval=5, frames = len(model_array_list), blit=True)
@@ -122,10 +139,44 @@ class Viewer:
             ani.save('data/{}/model_array/_animation.mp4', writer)
             print("Saved in {:.1f}s".format(save, time() - t))
 
-            # TODO: ANIMATE A SPECIFIC TIME SEGMENT
-            # TODO: CROSS VIEW
+    def plot_circuit_3d(self, circuit):
+        """
+        Plot the circuit responsible for AF in 3D.
+        :param circuit: The circuit points to plot
+        """
 
-    def plot_model_array(self, time_steps=None, start=0):
+        create_dir('{}/model_array'.format(self.path))
+        circuit.append(circuit[0])
+
+        z = [p[0] for p in circuit]
+        y = [p[1] for p in circuit]
+        x = [p[2] for p in circuit]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        # ax.set_aspect('equal')
+        # ax.auto_scale_xyz([0, 200], [0, 200], [0, 25])
+
+        # Create cubic bounding box to simulate equal aspect ratio
+        max_range = np.array([max(x) - min(x), max(y) - min(y), max(z) - min(z)]).max()
+        xb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].flatten() + 0.5 * (max(x) + min(x))
+        yb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][1].flatten() + 0.5 * (max(y) + min(y))
+        zb = 0.5 * max_range * np.mgrid[-1:2:2, -1:2:2, -1:2:2][2].flatten() + 0.5 * (max(z) + min(z))
+        # Comment or uncomment following both lines to test the fake bounding box:
+        for xb, yb, zb in zip(xb, yb, zb):
+            ax.plot([xb], [yb], [zb], 'w')
+
+        ax.plot(x, y, z, color='r')
+        ax.grid(False)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        ax.set_zlim(0, 25)
+        plt.savefig('data/{}/model_array/circuit_{}.png'.format(self.path, circuit[0]))
+        plt.show()
+        plt.close()
+
+    def plot_model_array(self, model_array_list, time_steps=None, start=0):
         """
         Read the HDF5 data file and view the model array for a range of time steps.
         :param time_steps: Number of time steps to plot
@@ -135,15 +186,7 @@ class Viewer:
         print("reading model array...")
 
         create_dir('{}/model_array'.format(self.path))
-
-        # TODO: CROSS VIEW
-
-        # Import the model_array from HFD5 format
-        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
-            model_array_list = model_data_file['array_list'][:]
-
         total_time = len(model_array_list)
-        refractory_period = max(model_array_list.flatten())
 
         if time_steps is None or time_steps > total_time:
             time_steps = total_time - start
@@ -163,35 +206,10 @@ class Viewer:
             sys.stdout.flush()
             ax.axis('off')
             plt.title("time={}".format(start + i), fontsize=40)
-            plt.imshow(model_array_list[start + i][0, :, :], cmap='Greys_r', vmin=0, vmax=refractory_period)
+            plt.imshow(model_array_list[i][0, :, :], cmap='Greys_r', vmin=0, vmax=2)
             plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
             plt.cla()
 
-    def plot_d3(self):
-
-        print("reading model array...")
-
-        create_dir('{}/model_array'.format(self.path))
-
-        # Import the model_array from HFD5 format
-        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
-            model_array_list = model_data_file['array_list'][:]
-        refractory_period = max(model_array_list.flatten())
-
-        test = np.ones(model_array_list[100].shape, dtype=bool)
-        colours = (model_array_list[100] / refractory_period).astype(str)
-
-        fig = plt.figure()
-        fig.set_alpha(0.3)
-        ax = fig.gca(projection='3d')
-        ax.voxels(test, facecolors=colours)
-        plt.show()
-
-        # TODO: SCALING AXIS
-        # TODO: REMOVE CUBE OUTLINES
-        # TODO: PYQT GRAPH
-
 
 # TODO: @STATICMETHOD FOR PLOTTING
-# TODO: LOAD DATA ON INITIALISATION
 # TODO: COLOURBAR

@@ -1,7 +1,4 @@
-import datetime
 import numpy as np
-
-from re import sub
 
 
 class Model:
@@ -28,9 +25,8 @@ class Model:
         self.dysfunction_parameter = dysfunction_parameter
         self.dysfunction_probability = dysfunction_probability
         self.time = time
-        self.seed = seed if seed is not None else datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        self.direction = np.zeros(size, dtype='int8')
-        np.random.seed(int(sub('[^0-9]', '', self.seed)))
+        self.seed = seed if seed is not None else np.random.randint(0, 2147483647)  # int32 seed value
+        np.random.seed(self.seed)
 
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
