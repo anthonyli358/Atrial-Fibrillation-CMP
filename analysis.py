@@ -1,5 +1,8 @@
 import operator
+import numpy as np
 from direction import Direction
+from itertools import groupby
+from utility_methods import *
 
 
 def circuit_search(model_array_list, current_point, start_time):
@@ -15,7 +18,7 @@ def circuit_search(model_array_list, current_point, start_time):
     for i in range(400):
         try:
             while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
-                # disallow circuit at discontinuous boundaries
+                # disallow circuit path through discontinuous boundaries
                 (z, y, x) = tuple(map(operator.add, current_point, trial_direction))
                 if z < 0 or x < 0:
                     raise IndexError
@@ -27,25 +30,53 @@ def circuit_search(model_array_list, current_point, start_time):
                 trial_direction = Direction.random(valid_moves)
         # add tuples element wise
         current_point = tuple(map(operator.add, current_point, trial_direction))
-        print(current_point)
+        # make negative y indices positive
+        if current_point[1] < 0:
+            current_point = (current_point[0], current_point[1] % 200, current_point[2])
 
         if current_point in path:
             # remove all indices before repeat
-            return [(z, y % 200, x) for (z, y, x) in path[
-                                                     next(i for i in range(len(path)) if path[i] == current_point):]]
+            return path[next(i for i in range(len(path)) if path[i] == current_point):]
         path.append(current_point)
 
     print("no path found")
     return False
 
 
-def circuit_quantify(circuit, start_time):
+def circuit_quantify(model_array_list, circuit, start_time):
+    """Quantify circuit based on excitation pattern."""
 
-    type = "focal"
+    circuit_type = "focal"  # focal, re-entry, rotor
 
-    cells = []
-    # # for i in fertile_lands:
-    #     min_x, min_y, max_x, max_y = i[0][0], i[0][1], i[1][0], i[1][1]
-    #     cells += [[x, y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)]
+    x_min, x_max, y_min, y_max = 0, 200, 0, 200
+    for (z, y, x) in circuit:
+        x_min = x if x_min > x else x_min
+        x_max = x if x_max < x else x_max
+        y_min = y if y_min > y else y_min
+        y_max = y if y_max < y else y_max
 
-    return type
+    # aperture boundaries
+    x_min = x_min if x_min >= 10 else 10
+    x_max = x_max if x_max <= 189 else 189
+    y_min = y_min if y_min >= 10 else 10
+    y_max = y_max if y_max <= 189 else 189
+
+    aperture_cells = np.ix_([0], [y for y in range(y_min - 10, y_max + 10)], [x for x in range(x_min - 10, x_max + 10)])
+
+    # get average position of cells for 100 previous time steps (2 x refractory period)
+    excited_average_list = []
+    for i in range(100):
+        excited = np.where(model_array_list[start_time - i][aperture_cells] == 50)
+        if len(excited[0]) > 0:
+            excited_average_list.append([average(excited[2] + x_min - 10), average(excited[1]) + y_min - 10])  # (x, y)
+
+    excited_move_list = [np.subtract(excited_average_list[i + 1], excited_average_list[i])
+                         for i in range(len(excited_average_list) - 1)]
+    excited_norm_list = [sum(i) <= 2 for i in excited_move_list]
+    consecutive_small_norm = count_max_consecutive(excited_norm_list, True)
+
+    if consecutive_small_norm > 20:
+        # re-entry
+        circuit_type = "re-entry"
+
+    return circuit_type

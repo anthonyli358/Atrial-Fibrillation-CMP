@@ -41,7 +41,6 @@ class ModelRecorder:
     def update_model_stat_dict(self):
         """Update statistic lists for the current model iteration."""
 
-
         stat_keys = ['excited', 'resting', 'refractory', 'failed']  # define manually as model_stats_dict not ordered
         stat_values = [np.sum(self.model.excited),
                        np.sum(self.model.resting),

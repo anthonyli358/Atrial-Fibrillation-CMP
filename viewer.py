@@ -111,19 +111,19 @@ class Viewer:
             ims = [[plt.imshow(frame[layer, :, :], animated=True, vmin=0, vmax=refractory_period, cmap=highlight_cmap)]
                    for frame in model_array_list]
 
-        fig, ax = plt.subplots()
-        image = ax.imshow(model_array_list[0, 0], animated=True, cmap='Greys_r', vmin=0,
-                          vmax=refractory_period, origin='lower')
+        # fig, ax = plt.subplots()
+        # image = ax.imshow(model_array_list[0, 0], animated=True, cmap='Greys_r', vmin=0,
+        #                   vmax=refractory_period, origin='lower')
 
-        def func(t):
-            image.set_array(model_array_list[t, 0])
-            ax.set_title(t)
-            return image,
+        # def func(t):
+        #     image.set_array(model_array_list[t, 0])
+        #     ax.set_title(t)
+        #     return image,
+        #
+        # global ani
+        # ani = animation.FuncAnimation(fig, func, interval=5, frames = len(model_array_list), blit=True)
 
-        global ani
-        ani = animation.FuncAnimation(fig, func, interval=5, frames = len(model_array_list), blit=True)
-
-        # ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
+        ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
         plt.show()
 
         if save:
