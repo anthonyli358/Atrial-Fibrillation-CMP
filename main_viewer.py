@@ -2,15 +2,16 @@ from analysis import *
 from ecg import ECG
 from viewer import Viewer
 
-path = 'mechanism/focal/18-02-15_15-31-00 (144, 97)'
+path = "mechanism/focal/18-02-15_15-09-29 (130, 156)"
 
 model_viewer = Viewer(path)
 data = model_viewer.import_data()
 
 # model_viewer.plot_model_stats()
-model_viewer.animate_model_array(data, layer=0)
+# model_viewer.animate_model_array(data, layer=0)
 
-# circuit = circuit_search(data, (12, 50, 97), 500)
+circuit = circuit_search(data, (12, 50, 97), 500)
+# circuit_type = circuit_quantify(data, (12, 50, 97), 500)
 # model_viewer.plot_circuit_3d(circuit)
 
 # model_ecg = ECG([137, 100], 3, path)
