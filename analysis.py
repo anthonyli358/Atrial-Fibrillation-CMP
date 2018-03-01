@@ -19,14 +19,26 @@ def circuit_search(model_array_list, current_point, start_time):
         try:
             while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
                 # disallow circuit path through discontinuous boundaries
-                print(trial_direction)
-                print(current_point)
                 (z, y, x) = tuple(map(operator.add, current_point, trial_direction))
                 if z < 0 or x < 0:
                     raise IndexError
                 trial_direction = Direction.random()
+
         except IndexError:
-            valid_moves = [i for i in Direction.all_directions if i is not trial_direction]
+            valid_moves = [i for i in Direction.all_directions if i != trial_direction]
+            # corner cases (literally)
+            # TODO: Y ALLOWED TO GO ABOVE 200 (mod it)
+            # TODO: X AND Z PATH DISALLOWED MAKES WHILE LOOP INFINITE
+            (z, y, x) = current_point
+            if z == 0:
+                valid_moves = [i for i in valid_moves if i != (-1, 0, 0)]
+            elif z == 24:
+                valid_moves = [i for i in valid_moves if i != (1, 0, 0)]
+            if x == 0:
+                valid_moves = [i for i in valid_moves if i != (0, 0, -1)]
+            elif x == 199:
+                valid_moves = [i for i in valid_moves if i != (0, 0, 1)]
+
             trial_direction = Direction.random(valid_moves)  # change current direction
             while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
                 trial_direction = Direction.random(valid_moves)
@@ -58,26 +70,28 @@ def circuit_quantify(model_array_list, circuit, start_time):
         y_max = y if y_max < y else y_max
 
     # aperture boundaries
-    x_min = 10 if x_min <= 10 else x_min
-    x_max = 189 if x_max >= 189 else x_max
-    y_min = 10 if y_min <= 10 else y_min
-    y_max = 189 if y_max >= 189 else y_max
+    # x_min = 10 if x_min <= 10 else x_min
+    # x_max = 189 if x_max >= 189 else x_max
+    # y_min = 10 if y_min <= 10 else y_min
+    # y_max = 189 if y_max >= 189 else y_max
 
-    aperture_cells = np.ix_([0], [y for y in range(y_min - 10, y_max + 10)], [x for x in range(x_min - 10, x_max + 10)])
+    aperture_cells = np.ix_([0], [y for y in range(y_min, y_max)], [x for x in range(x_min, x_max)])
 
     # get average position of cells for 100 previous time steps (2 x refractory period)
     excited_average_list = []
     for i in range(100):
         excited = np.where(model_array_list[start_time - i][aperture_cells] == 50)
         if len(excited[0]) > 0:
-            excited_average_list.append([average(excited[2] + x_min - 10), average(excited[1]) + y_min - 10])  # (x, y)
+            excited_average_list.append([average(excited[2] + x_min), average(excited[1]) + y_min])  # (x, y)
 
     excited_move_list = [np.subtract(excited_average_list[i + 1], excited_average_list[i])
                          for i in range(len(excited_average_list) - 1)]
     excited_direction = [arr_direction(i) for i in excited_move_list]
     consecutive_direction = count_max_consecutive(excited_direction)
 
-    if consecutive_direction >= 5:
+    if consecutive_direction >= 15:
         circuit_type = "re-entry"
+    # TODO: rotor
+    # TODO: incomplete re-entry
 
     return consecutive_direction

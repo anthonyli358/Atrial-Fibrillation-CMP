@@ -38,8 +38,7 @@ def count_consecutive(list, start):
         count += 1
 
     for i in range(start + 1, len(list)):
-        if list[i] == 0 or list[i] == (
-                    list[start] + 1) % 9 or list[i] == (list[start] - 1) % 9 or list[i] == list[start]:
+        if list[i] == 0 or list[i] == list[start]:
             count += 1
         else:
             return count

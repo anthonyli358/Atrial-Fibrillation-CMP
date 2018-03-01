@@ -10,6 +10,7 @@ plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-stat
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
 from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 from time import time
 
 from utility_methods import *
