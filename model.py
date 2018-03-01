@@ -30,9 +30,10 @@ class Model:
 
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
-        self.excount = np.zeros(size, dtype='uint32')
-        self._max = 0
-        self.maxpos = [0, 0, 0]
+        # self.direction = 0
+        # self.excount = np.zeros(size, dtype='uint32')
+        # self._max = 0
+        # self.maxpos = [0, 0, 0]
         self.failed = np.zeros(size, dtype=bool)
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
         self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
@@ -83,10 +84,10 @@ class Model:
         excitable = (excited_from_above | excited_from_below | excited_from_rear |
                      excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
 
-        self.direction[excitable] = (1 * (excited_from_above.astype('int8') - excited_from_below.astype('int8')) +
-                                     2 * (excited_from_rear.astype('int8') - excited_from_fwrd.astype('int8')) +
-                                     4 * (excited_from_inside.astype('int8') - excited_from_outside.astype('int8'))
-                                     )[excitable]
+        # self.direction[excitable] = (1 * (excited_from_above.astype('int8') - excited_from_below.astype('int8')) +
+        #                              2 * (excited_from_rear.astype('int8') - excited_from_fwrd.astype('int8')) +
+        #                              4 * (excited_from_inside.astype('int8') - excited_from_outside.astype('int8'))
+        #                              )[excitable]
 
         # Check if dysfunctional cells fail to excite
         self.failed[excitable & self.dysfunctional] = np.random.random(
@@ -100,12 +101,12 @@ class Model:
         # Update excited and resting arrays
         self.excited = self.model_array == self.refractory_period
         self.resting = self.model_array == 0
-        self.excount += np.uint32(self.excited)
+        # self.excount += np.uint32(self.excited)
 
-        itermax = np.max(self.excount)
-        if itermax != self._max:  # When a new level of excitation happens find position of excitation
-            self._max = itermax
-            self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
+        # itermax = np.max(self.excount)
+        # if itermax != self._max:  # When a new level of excitation happens find position of excitation
+        #     self._max = itermax
+        #     self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
 
         return self.model_array
     
