@@ -19,6 +19,8 @@ def circuit_search(model_array_list, current_point, start_time):
         try:
             while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
                 # disallow circuit path through discontinuous boundaries
+                print(trial_direction)
+                print(current_point)
                 (z, y, x) = tuple(map(operator.add, current_point, trial_direction))
                 if z < 0 or x < 0:
                     raise IndexError
@@ -48,7 +50,7 @@ def circuit_quantify(model_array_list, circuit, start_time):
 
     circuit_type = "focal"  # focal, re-entry, rotor
 
-    x_min, x_max, y_min, y_max = 0, 200, 0, 200
+    x_min, x_max, y_min, y_max = 199, 0, 199, 0
     for (z, y, x) in circuit:
         x_min = x if x_min > x else x_min
         x_max = x if x_max < x else x_max
@@ -56,10 +58,10 @@ def circuit_quantify(model_array_list, circuit, start_time):
         y_max = y if y_max < y else y_max
 
     # aperture boundaries
-    x_min = x_min if x_min >= 10 else 10
-    x_max = x_max if x_max <= 189 else 189
-    y_min = y_min if y_min >= 10 else 10
-    y_max = y_max if y_max <= 189 else 189
+    x_min = 10 if x_min <= 10 else x_min
+    x_max = 189 if x_max >= 189 else x_max
+    y_min = 10 if y_min <= 10 else y_min
+    y_max = 189 if y_max >= 189 else y_max
 
     aperture_cells = np.ix_([0], [y for y in range(y_min - 10, y_max + 10)], [x for x in range(x_min - 10, x_max + 10)])
 
@@ -72,11 +74,10 @@ def circuit_quantify(model_array_list, circuit, start_time):
 
     excited_move_list = [np.subtract(excited_average_list[i + 1], excited_average_list[i])
                          for i in range(len(excited_average_list) - 1)]
-    excited_norm_list = [sum(i) <= 2 for i in excited_move_list]
-    consecutive_small_norm = count_max_consecutive(excited_norm_list, True)
+    excited_direction = [arr_direction(i) for i in excited_move_list]
+    consecutive_direction = count_max_consecutive(excited_direction)
 
-    if consecutive_small_norm > 20:
-        # re-entry
+    if consecutive_direction >= 5:
         circuit_type = "re-entry"
 
-    return circuit_type
+    return consecutive_direction

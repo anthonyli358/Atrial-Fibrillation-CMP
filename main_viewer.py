@@ -11,7 +11,6 @@ data = model_viewer.import_data()
 # model_viewer.animate_model_array(data, layer=0)
 
 circuit = circuit_search(data, (12, 50, 97), 500)
-print(circuit)
 circuit_type = circuit_quantify(data, circuit, 500)
 print(circuit_type)
 # model_viewer.plot_circuit_3d(circuit)
