@@ -1,7 +1,6 @@
 import operator
 import numpy as np
 from direction import Direction
-from itertools import groupby
 from utility_methods import *
 
 
@@ -29,6 +28,7 @@ def circuit_search(model_array_list, current_point, start_time):
             # corner cases (literally)
             # TODO: Y ALLOWED TO GO ABOVE 200 (mod it)
             # TODO: X AND Z PATH DISALLOWED MAKES WHILE LOOP INFINITE
+            # 18-02-05_10-24-24
             (z, y, x) = current_point
             if z == 0:
                 valid_moves = [i for i in valid_moves if i != (-1, 0, 0)]
@@ -69,17 +69,11 @@ def circuit_quantify(model_array_list, circuit, start_time):
         y_min = y if y_min > y else y_min
         y_max = y if y_max < y else y_max
 
-    # aperture boundaries
-    # x_min = 10 if x_min <= 10 else x_min
-    # x_max = 189 if x_max >= 189 else x_max
-    # y_min = 10 if y_min <= 10 else y_min
-    # y_max = 189 if y_max >= 189 else y_max
-
+    # noise too high for larger aperture when linkage < 1
     aperture_cells = np.ix_([0], [y for y in range(y_min, y_max)], [x for x in range(x_min, x_max)])
 
-    # get average position of cells for 100 previous time steps (2 x refractory period)
     excited_average_list = []
-    for i in range(100):
+    for i in range(150):  # 3 x refractory period
         excited = np.where(model_array_list[start_time - i][aperture_cells] == 50)
         if len(excited[0]) > 0:
             excited_average_list.append([average(excited[2] + x_min), average(excited[1]) + y_min])  # (x, y)
@@ -89,9 +83,14 @@ def circuit_quantify(model_array_list, circuit, start_time):
     excited_direction = [arr_direction(i) for i in excited_move_list]
     consecutive_direction = count_max_consecutive(excited_direction)
 
-    if consecutive_direction >= 15:
+    if consecutive_direction >= 10:
         circuit_type = "re-entry"
     # TODO: rotor
     # TODO: incomplete re-entry
+
+    print(excited_move_list)
+
+    # plt.plot(*zip(*excited_average_list))
+    # plt.show()
 
     return consecutive_direction

@@ -19,11 +19,11 @@ def arr_direction(arr):
         return 2
     elif arr[0] > 0 and arr[1] == 0:
         return 3
-    elif arr[0] > 0 > arr[1]:
+    elif arr[0] > 0 and arr[1] < 0:
         return 4
     elif arr[0] == 0 and arr[1] < 0:
         return 5
-    elif arr[0] < 0  and arr[1] < 0:
+    elif arr[0] < 0 and arr[1] < 0:
         return 6
     elif arr[0] < 0 and arr[1] == 0:
         return 7
