@@ -7,7 +7,23 @@ def create_dir(dir_name):
 
 
 def average(list):
-    return int(sum(list) / len(list))
+    return sum(list) / len(list)
+
+
+def weighted_average(list_of_lists):
+    # avoid empty list errors
+    return sum(len(list) * average(list) for list in list_of_lists if len(list) > 0) / sum(
+        len(list) for list in list_of_lists if len(list > 0))
+
+
+def weighted_moving_average(list_of_lists, w=5):
+    smoothed_data = []
+    for i in range(w, len(list_of_lists) - w):
+        # avoid all lists in list_of_lists being empty
+        if sum(len(list) for list in list_of_lists[i - w:i + w]) > 0:
+            smoothed_data.append(weighted_average(list_of_lists[i - w:i + w]))
+
+    return smoothed_data
 
 
 def arr_direction(arr):

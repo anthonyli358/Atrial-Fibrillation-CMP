@@ -2,6 +2,7 @@ import operator
 import numpy as np
 from direction import Direction
 from utility_methods import *
+import matplotlib.pyplot as plt
 
 
 def circuit_search(model_array_list, current_point, start_time):
@@ -69,28 +70,37 @@ def circuit_quantify(model_array_list, circuit, start_time):
         y_min = y if y_min > y else y_min
         y_max = y if y_max < y else y_max
 
+    # aperture boundaries
+    x_min = 10 if x_min <= 10 else x_min
+    x_max = 189 if x_max >= 189 else x_max
+    y_min = 10 if y_min <= 10 else y_min
+    y_max = 189 if y_max >= 189 else y_max
+
     # noise too high for larger aperture when linkage < 1
-    aperture_cells = np.ix_([0], [y for y in range(y_min, y_max)], [x for x in range(x_min, x_max)])
+    aperture_cells = np.ix_([0], [y for y in range(y_min - 10, y_max + 10)], [x for x in range(x_min - 10, x_max + 10)])
 
     excited_average_list = []
     for i in range(150):  # 3 x refractory period
         excited = np.where(model_array_list[start_time - i][aperture_cells] == 50)
-        if len(excited[0]) > 0:
-            excited_average_list.append([average(excited[2] + x_min), average(excited[1]) + y_min])  # (x, y)
+        excited_average_list.append([excited[2] + x_min - 10, excited[1] + y_min - 10])  # (x, y)
 
-    excited_move_list = [np.subtract(excited_average_list[i + 1], excited_average_list[i])
-                         for i in range(len(excited_average_list) - 1)]
-    excited_direction = [arr_direction(i) for i in excited_move_list]
-    consecutive_direction = count_max_consecutive(excited_direction)
+    excited_average_list_x = weighted_moving_average([xy_list[0] for xy_list in excited_average_list])
+    excited_average_list_y = weighted_moving_average([xy_list[1] for xy_list in excited_average_list])
+    excited_moving_average_list = [
+        [x, y] for x in excited_average_list_x for y in excited_average_list_y]
+    excited_move_list = [np.subtract(excited_moving_average_list[i + 1], excited_moving_average_list[i])
+                         for i in range(len(excited_moving_average_list) - 1)]
+    # excited_direction = [arr_direction(i) for i in excited_move_list]
+    # consecutive_direction = count_max_consecutive(excited_direction)
 
-    if consecutive_direction >= 10:
-        circuit_type = "re-entry"
+    # if consecutive_direction >= 10:
+    #     circuit_type = "re-entry"
+    # TODO: % singular excited move
     # TODO: rotor
     # TODO: incomplete re-entry
 
-    print(excited_move_list)
+    plt.plot(*zip(*excited_move_list))
+    # plt.plot(excited_moving_average_list)
+    plt.show()
 
-    # plt.plot(*zip(*excited_average_list))
-    # plt.show()
-
-    return consecutive_direction
+    return excited_moving_average_list

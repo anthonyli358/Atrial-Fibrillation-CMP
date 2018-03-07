@@ -103,13 +103,16 @@ class Viewer:
             gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
-            ims = [[ax1.imshow(frame[layer, :, :], animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period, origin='lower'),
-                    ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap=highlight_cmap, vmin=0, vmax=refractory_period, origin='lower'),
+            ims = [[ax1.imshow(frame[layer, :, :],
+                               animated=True, vmin=0, vmax=refractory_period, origin='lower', cmap=highlight_cmap),
+                    ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap=highlight_cmap,
+                               vmin=0, vmax=refractory_period, origin='lower'),
                     ax1.axvline(x=cross_pos, color='b', zorder=10, animated=True, linestyle='--')]
                    for frame in model_array_list]
 
         else:
-            ims = [[plt.imshow(frame[layer, :, :], animated=True, vmin=0, vmax=refractory_period, cmap=highlight_cmap)]
+            ims = [[plt.imshow(frame[layer, :, :],
+                               animated=True, vmin=0, vmax=refractory_period, origin='lower', cmap=highlight_cmap)]
                    for frame in model_array_list]
 
         # fig, ax = plt.subplots()

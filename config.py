@@ -7,7 +7,7 @@ settings = dict(
         x_coupling=.9,
         y_coupling=.12,  # probability of y linkage
         z_coupling=.12,
-        seed=None  # 11-13_17-02-49 pretty, .61,.61
+        seed=None
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period

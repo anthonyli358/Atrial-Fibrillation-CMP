@@ -69,7 +69,7 @@ model_recorder.output_model_array_list()
 model_viewer = Viewer(model_recorder.path)
 model_viewer.plot_model_stats()
 data = model_viewer.import_data()
-model_viewer.animate_model_array(data, cross_view=True, cross_pos=100)
+model_viewer.animate_model_array(data)
 
 #
 # def simulation(substrate, recorder, runtime, pacemaker_period):
