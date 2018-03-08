@@ -4,9 +4,9 @@ settings = dict(
         refractory_period=50,
         dysfunction_parameter=0.05,  # fraction of dysfunctional cells
         dysfunction_probability=0.05,
-        x_coupling=.9,
-        y_coupling=.12,  # probability of y linkage
-        z_coupling=.12,
+        x_coupling=1.,
+        y_coupling=.08,  # probability of y linkage
+        z_coupling=.08,
         seed=None
     ),
     sim=dict(

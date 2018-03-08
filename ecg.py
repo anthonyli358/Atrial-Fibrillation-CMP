@@ -40,8 +40,6 @@ class ECG:
         Get the ECG voltage for the current time step.
         """
 
-        # TODO: SELECT SURFACE (3D)
-
         rows = voltage_array.shape[0]
         columns = voltage_array.shape[1]
 
@@ -71,7 +69,6 @@ class ECG:
         """
 
         # TODO: DECIDE CENTRE & ROLL
-        # TODO: DECIDE SURFACE TO VIEW
 
         total_time = len(self.model_array_list)
         voltage_list = np.zeros(total_time)

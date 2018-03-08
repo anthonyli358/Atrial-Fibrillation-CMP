@@ -12,42 +12,55 @@ def circuit_search(model_array_list, current_point, start_time):
     while model_array_list[start_time][current_point] != 50:
         start_time += 1
 
-    path = []  # can't use set() as unordered
-    trial_direction = (0, 0, 0)
+    path = [current_point]  # can't use set() as unordered
+    trial_direction = (1, 0, 0)
     print(current_point, start_time)
-    for i in range(400):
+    for i in range(1, 400):
         try:
-            while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
-                # disallow circuit path through discontinuous boundaries
-                (z, y, x) = tuple(map(operator.add, current_point, trial_direction))
-                if z < 0 or x < 0:
-                    raise IndexError
-                trial_direction = Direction.random()
+            # make y continuous
+            (z, y, x) = current_point
+            if y == 199 and model_array_list[start_time - i][(current_point[0], 0, current_point[2])] == 50:
+                trial_direction = (0, 1, 0)
+            else:
+                remaining_moves = list(Direction.all_directions)
+                while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
+                    # disallow circuit path through discontinuous boundaries
+                    (z, y, x) = tuple(map(operator.add, current_point, trial_direction))
+                    if z < 0 or x < 0:
+                        raise IndexError
+                    # if no remaining moves then excitations caused by pacemaker
+                    remaining_moves.remove(trial_direction)
+                    if len(remaining_moves) == 0:
+                        raise Exception("Traced pacemaker excitations, select a time with atrial fibrillation!")
+                    trial_direction = Direction.random(remaining_moves)
 
         except IndexError:
-            valid_moves = [i for i in Direction.all_directions if i != trial_direction]
-            # corner cases (literally)
-            # TODO: Y ALLOWED TO GO ABOVE 200 (mod it)
-            # TODO: X AND Z PATH DISALLOWED MAKES WHILE LOOP INFINITE
-            # 18-02-05_10-24-24
+            remaining_moves = list(Direction.all_directions)
+            remaining_moves.remove(trial_direction)
+            # corner cases (literally), may have already been removed as the trial_direction
             (z, y, x) = current_point
             if z == 0:
-                valid_moves = [i for i in valid_moves if i != (-1, 0, 0)]
+                remaining_moves = [i for i in remaining_moves if i != (-1, 0, 0)]
             elif z == 24:
-                valid_moves = [i for i in valid_moves if i != (1, 0, 0)]
+                remaining_moves = [i for i in remaining_moves if i != (1, 0, 0)]
             if x == 0:
-                valid_moves = [i for i in valid_moves if i != (0, 0, -1)]
+                remaining_moves = [i for i in remaining_moves if i != (0, 0, -1)]
             elif x == 199:
-                valid_moves = [i for i in valid_moves if i != (0, 0, 1)]
+                remaining_moves = [i for i in remaining_moves if i != (0, 0, 1)]
 
-            trial_direction = Direction.random(valid_moves)  # change current direction
+            trial_direction = Direction.random(remaining_moves)  # change current direction
             while model_array_list[start_time - i][tuple(map(operator.add, current_point, trial_direction))] != 50:
-                trial_direction = Direction.random(valid_moves)
+                # if no remaining moves then excitations caused by pacemaker
+                remaining_moves.remove(trial_direction)
+                if len(remaining_moves) == 0:
+                    raise Exception("Traced pacemaker excitations, select a time with atrial fibrillation!")
+                trial_direction = Direction.random(remaining_moves)
+
         # add tuples element wise
         current_point = tuple(map(operator.add, current_point, trial_direction))
-        # make negative y indices positive
-        if current_point[1] < 0:
-            current_point = (current_point[0], current_point[1] % 200, current_point[2])
+        # fix y indices, checking better than always creating a new tuple
+        if current_point[1] < 0 or current_point[1] > 199:
+            current_point = (current_point[0], current_point[1] % 199, current_point[2])
 
         if current_point in path:
             # remove all indices before repeat
@@ -70,7 +83,7 @@ def circuit_quantify(model_array_list, circuit, start_time):
         y_min = y if y_min > y else y_min
         y_max = y if y_max < y else y_max
 
-    # noise too high for larger aperture when linkage < 1
+    # noise too high for larger aperture due to randomness
     aperture_cells = np.ix_([0], [y for y in range(y_min, y_max)], [x for x in range(x_min, x_max)])
 
     excited_average_list = []
@@ -83,14 +96,14 @@ def circuit_quantify(model_array_list, circuit, start_time):
                          for i in range(len(excited_average_list) - 1)]
     percent_singular = count_singular(excited_move_list) / len(excited_move_list)
 
-    # if consecutive_direction >= 10:
-    #     circuit_type = "re-entry"
+    if percent_singular >= 0.9:
+        circuit_type = "re-entry"
     # TODO: % singular excited move
     # TODO: rotor
     # TODO: incomplete re-entry
 
-    # plt.plot(*zip(*excited_move_list))
-    # plt.plot(excited_moving_average_list)
+    # plt.plot(*zip(*excited_average_list))
+    # plt.plot(excited_average_list)
     # plt.show()
 
     return percent_singular

@@ -3,7 +3,7 @@ from ecg import ECG
 from viewer import Viewer
 
 
-path = "mechanism/re-entry/18-02-05_10-36-09"
+path = "mechanism/re-entry/18-03-08_20-24-36 (85, 136)"
 
 model_viewer = Viewer(path)
 data = model_viewer.import_data()
@@ -11,7 +11,7 @@ data = model_viewer.import_data()
 # model_viewer.plot_model_stats()
 # model_viewer.animate_model_array(data, layer=0)
 
-circuit = circuit_search(data, (12, 136, 113), 500)
+circuit = circuit_search(data, (12, 136, 85), 500)
 circuit_type = circuit_quantify(data, circuit, 500)
 print(circuit_type)
 # model_viewer.plot_circuit_3d(circuit)
