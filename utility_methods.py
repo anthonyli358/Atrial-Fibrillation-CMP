@@ -68,3 +68,13 @@ def count_max_consecutive(list):
         max_count = max(count_consecutive(list, i), max_count)
 
     return max_count
+
+
+def count_singular(list):
+    count = 0
+    singular = [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]
+    for i in list:
+        if i in singular:
+            count += 1
+
+    return count
