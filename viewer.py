@@ -77,16 +77,27 @@ class Viewer:
         """Read the HDF5 data file and animate the model array."""
 
         # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
+        # TODO: TIME=i IN TITLE
 
-        print("reading & animating model array...")
+        print("animating model array...")
 
         refractory_period = max(model_array_list.flatten())
         print(highlight)
 
         if highlight:
-            for frame in model_array_list:
-                for point in highlight:
-                    frame[point] = 51
+            print("highlighting circuit cells...")
+            # create possible views
+            (xy_view, xz_view, yz_view) = (model_array_list.copy() for _ in range(3))
+            for point in highlight:
+                # frame[point] = 51
+                # 'cell transparency' to always see circuit shape
+                xy_view[0][:, point[1], point[2]] = 51
+                xz_view[0][point[0], :, point[2]] = 51
+                yz_view[0][point[0], point[1], :] = 51
+            for i in range(len(model_array_list)):
+                xy_view[i][xy_view[0] == 51] = 51
+                xz_view[i][xz_view[0] == 51] = 51
+                yz_view[i][yz_view[0] == 51] = 51
 
         # Create cmap
         highlight_cmap = cm.get_cmap('Greys_r')
@@ -103,17 +114,22 @@ class Viewer:
             gs = gridspec.GridSpec(1, 2, width_ratios=[np.shape(model_array_list)[3], np.shape(model_array_list)[1]])
             ax1 = plt.subplot(gs[0])
             ax2 = plt.subplot(gs[1])
-            ims = [[ax1.imshow(frame[layer, :, :],
+            view1 = xy_view if highlight else model_array_list
+            view2 = yz_view if highlight else model_array_list
+            ims = [[ax1.imshow(view1[i][layer, :, :],
                                animated=True, vmin=0, vmax=refractory_period, origin='lower', cmap=highlight_cmap),
-                    ax2.imshow(np.transpose(frame[:, :, cross_pos]), animated=True, cmap=highlight_cmap,
+                    ax2.imshow(np.transpose(view2[i][:, :, cross_pos]), animated=True, cmap=highlight_cmap,
                                vmin=0, vmax=refractory_period, origin='lower'),
-                    ax1.axvline(x=cross_pos, color='b', zorder=10, animated=True, linestyle='--')]
-                   for frame in model_array_list]
+                    ax1.axvline(x=cross_pos, color='b', zorder=10, animated=True, linestyle='--'),
+                    ax1.text(100, 220, "time=".format(i), size=plt.rcParams["axes.titlesize"])]
+                   for i in range(len(model_array_list))]
 
         else:
-            ims = [[plt.imshow(frame[layer, :, :],
-                               animated=True, vmin=0, vmax=refractory_period, origin='lower', cmap=highlight_cmap)]
-                   for frame in model_array_list]
+            view = xy_view if highlight else model_array_list
+            ims = [[plt.imshow(view[i][layer, :, :],
+                               animated=True, vmin=0, vmax=refractory_period, origin='lower', cmap=highlight_cmap),
+                    plt.text(100, 220, "time=".format(i), size=plt.rcParams["axes.titlesize"])]
+                   for i in range(len(model_array_list))]
 
         # fig, ax = plt.subplots()
         # image = ax.imshow(model_array_list[0, 0], animated=True, cmap='Greys_r', vmin=0,
@@ -125,7 +141,7 @@ class Viewer:
         #     return image,
         #
         # global ani
-        # ani = animation.FuncAnimation(fig, func, interval=5, frames = len(model_array_list), blit=True)
+        # ani = animation.FuncAnimation(fig, func, interval=5, frames=len(model_array_list), blit=True)
 
         ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
         plt.show()
