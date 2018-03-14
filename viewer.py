@@ -212,20 +212,25 @@ class Viewer:
         plt.subplots_adjust(top=0.95, bottom=0.02, left=0.02, right=0.98)
 
         # TODO: VARIABLE FIGSIZE AND FONTSIZE - GET MODEL ARRAY SIZE FROM DATA
-        # TODO: GRAPH STYLING
-        # TODO: ADD AXIS LABELS.ETC
 
         # Plot the data for each time step
         for i in range(time_steps):
             sys.stdout.write(
                 '\r' + "reading & plotting model array, time_step: {}/{}...".format(start + i, total_time - 1))
             sys.stdout.flush()
-            ax.axis('off')
-            plt.title("time={}".format(start + i), fontsize=40)
-            plt.imshow(model_array_list[i][0, :, :], cmap='Greys_r', vmin=0, vmax=2)
+            # ax.axis('off')
+            plt.title("time={}".format(start + i), fontsize=80)
+            ax.xaxis.set_ticks([50, 100, 150])
+            ax.yaxis.set_ticks([50, 100, 150])
+            plt.xlabel("x", fontsize=80)
+            plt.ylabel("y", fontsize=80, rotation=0, labelpad=30)
+            plt.tick_params(axis='both', which='major', labelsize=50)
+            plt.imshow(model_array_list[i][0, :, :], cmap='Greys_r', vmin=0, vmax=50, origin='lower')
+            cbar = plt.colorbar()
+            cbar.ax.tick_params(labelsize=50)
+            plt.tight_layout()
             plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
+            cbar.remove()
             plt.cla()
 
-
-# TODO: @STATICMETHOD FOR PLOTTING
 # TODO: COLOURBAR

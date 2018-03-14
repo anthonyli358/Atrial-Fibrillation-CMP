@@ -92,6 +92,14 @@ def circuit_quantify(model_array_list, circuit, start_time):
         if len(excited[0]) > 0:
             excited_average_list.append([average(excited[2] + x_min), average(excited[1]) + y_min])  # (x, y)
 
+    excited_average_list_x = weighted_moving_average([xy_list[0] for xy_list in excited_average_list])
+    excited_average_list_y = weighted_moving_average([xy_list[1] for xy_list in excited_average_list])
+    excited_moving_average_list = [
+        [excited_average_list_x[i], excited_average_list_y[i]] for i in range(len(excited_average_list_x))]
+    excited_move_list = [np.subtract(excited_moving_average_list[i + 1], excited_moving_average_list[i])
+                         for i in range(len(excited_moving_average_list) - 1)]
+    # excited_direction = [arr_direction(i) for i in excited_move_list]
+    # consecutive_direction = count_max_consecutive(excited_direction)
     excited_move_list = [np.round(np.subtract(excited_average_list[i + 1], excited_average_list[i])).tolist()
                          for i in range(len(excited_average_list) - 1)]
     percent_singular = count_singular(excited_move_list) / len(excited_move_list)
@@ -102,8 +110,11 @@ def circuit_quantify(model_array_list, circuit, start_time):
     # TODO: rotor
     # TODO: incomplete re-entry
 
-    # plt.plot(*zip(*excited_average_list))
-    # plt.plot(excited_average_list)
-    # plt.show()
+    print(len(excited_moving_average_list))
+    c = np.arange(len(excited_moving_average_list))
+    plt.scatter(*zip(*excited_moving_average_list), c=c)
+    # plt.plot(excited_moving_average_list)
+    plt.colorbar()
+    plt.show()
 
     return percent_singular
