@@ -3,18 +3,13 @@ from ecg import ECG
 from viewer import Viewer
 
 
-path = "mechanism/incomplete-re-entry/18-03-09_12-56-43"
+path = "mechanism/incomplete-re-entry/18-02-05_10-36-09"
 
 model_viewer = Viewer(path)
 data = model_viewer.import_data()
 
-circuit = circuit_search(data, (12, 136, 85), 800)
-circuit_type = circuit_quantify(data, circuit, 800)
-# print(circuit_type)
-# model_viewer.plot_circuit_3d(circuit)
-
 # model_viewer.plot_model_stats()
-model_viewer.plot_model_array(data)
+# model_viewer.plot_model_array(data)
 # model_viewer.animate_model_array(data, layer=0)
 
 circuit = circuit_search(data, (12, 136, 113), 500)
