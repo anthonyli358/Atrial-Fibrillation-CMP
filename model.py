@@ -121,7 +121,7 @@ class Model:
         y = range(self.size[1])
         x = range(self.size[2])
         Z, Y, X = np.meshgrid(z, y, x, indexing='ij')
-        Xp, Yp, Zp = X-coordinate[2], Y-coordinate[1], Z - coordinate[0]
+        Xp, Yp, Zp = X-coordinate[2], Y-coordinate[1], Z
         dist_sq = np.square(Xp*0.5) + np.square(Yp*0.1) + np.square(Zp*0.1)
         self.destroyed = dist_sq < radius**2
 

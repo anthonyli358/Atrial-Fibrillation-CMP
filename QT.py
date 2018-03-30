@@ -338,12 +338,13 @@ class Animation(makeCanvas):
     """Window with real-time Atrial Fibrillation animation."""
     def compute_initial_figure(self):
         size = self.settings['structure']['size']
+        self.hist = []
 
         self.substrate = model.Model(**self.settings['structure'])
 
         gs = GridSpec(3, 2,
                       width_ratios=[1, size[0]/size[1]],
-                      height_ratios=[1, 1, size[0]/size[2]])
+                      height_ratios=[1, size[0]/size[2], 1])
 
         self.ax0 = self.figure.add_subplot(gs[0])
         im = self.ax0.imshow(self.substrate.model_array[self.settings['w_cross_pos']],
@@ -358,7 +359,7 @@ class Animation(makeCanvas):
                              interpolation='nearest',
                              )
 
-        self.ax1 = self.figure.add_subplot(gs[2])
+        self.ax1 = self.figure.add_subplot(gs[4])
         clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)
         linev = self.ax1.axvline(x=self.settings['v_cross_pos'],
                                  color='cyan',
@@ -394,7 +395,7 @@ class Animation(makeCanvas):
 
                                  )
 
-        self.ax2 = self.figure.add_subplot(gs[3])
+        self.ax2 = self.figure.add_subplot(gs[5])
         v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :, self.settings['v_cross_pos']],
                                                    0, 1),
                                        animated=True,
@@ -407,7 +408,7 @@ class Animation(makeCanvas):
                                                0, self.settings['structure']['size'][1])
                                        )
 
-        self.ax3 = self.figure.add_subplot(gs[4])
+        self.ax3 = self.figure.add_subplot(gs[2])
         h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['h_cross_pos'], :],
                                        animated=True,
                                        vmin=0,
@@ -426,8 +427,9 @@ class Animation(makeCanvas):
                 self.substrate.activate_pacemaker()
             if play:
                 self.substrate.iterate()
-            if t == 300:
-                self.substrate.add_ablation(self.substrate.maxpos, 2)
+                self.hist.append(np.copy(self.get_anim_array()))
+            # if t == 300:
+            #     self.substrate.add_ablation(self.substrate.maxpos, 2)
             arr = self.get_anim_array()
 
             self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, t, self.substrate.maxpos))

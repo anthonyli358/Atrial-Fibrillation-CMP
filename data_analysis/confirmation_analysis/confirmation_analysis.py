@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import glob
 
 files = {}
-for file_name in glob.glob('data/0.*.txt'):
+for file_name in glob.glob('data/data_analysis/confirmation_analysis/0.*.txt'):
     files[float(file_name[5:-4])]= np.genfromtxt(file_name, delimiter=',', unpack=True,
                                                  skip_header=1,skip_footer=2)[0]
 
