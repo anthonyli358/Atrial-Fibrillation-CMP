@@ -52,8 +52,7 @@ def rotor_position():
             print(_, positions[-1])
         else:
             print(_)
-    plt.hist(positions[0], 25, (0, 25), True)
-    plt.hist(positions[0], 25, (25, 0), True)
+    plt.hist(positions[:][0], 25, (0, 25), True)
     return positions
 
 
@@ -115,12 +114,8 @@ def risk_recording_code():
 
 
 if __name__ == '__main__':
-    data = np.load('90,12,12_distribution.npy')
-    print(np.shape(data))
-    zs = data[:,0]
-    fix = np.append(zs,24-zs)
-    a,b,c = plt.hist(fix, 25, (0,25), density=True)
-    print(1-2*(a[0]+a[1]))
+    result = rotor_position()
+    plt.show()
 
 
 # TODO: KILLSWITCH()

@@ -44,6 +44,8 @@ class Model:
                                           p=[y_coupling, 1 - y_coupling])
         self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
                                           p=[z_coupling, 1 - z_coupling])
+        self.x_linkage[:, :, -1] = False  # No links from end
+        self.z_linkage[-1, :, :] = False
         self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.failed = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
@@ -65,34 +67,33 @@ class Model:
         :return: Activation Array
         """
         self.failed = np.zeros(self.size, dtype=bool)
-
         # Roll excited values to get arrays of possible excitations
-        excited_from_above = np.roll(self.excited & self.y_linkage, 1, axis=1)
-        excited_from_below = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=0), -1, axis=1)
 
-        excited_from_rear = np.roll(self.excited & self.x_linkage, 1, axis=2)
-        excited_from_rear[:, :, 0] = np.bool_(False)  # eliminates wrapping boundary, use numpy bool just in case
+        excited_from_pos_z = np.roll(self.excited & self.z_linkage, 1, axis=0)
 
-        excited_from_fwrd = np.roll(self.excited & np.roll(self.x_linkage, 1, axis=0), -1, axis=2)
-        excited_from_fwrd[:, :, -1] = np.bool_(False)
+        excited_from_neg_z = np.roll(self.excited & np.roll(self.z_linkage, 1, axis=0), -1, axis=0)
 
-        excited_from_inside = np.roll(self.excited & self.z_linkage, 1, axis=0)
-        excited_from_inside[0, :, :] = np.bool_(False)
+        excited_from_neg_y = np.roll(self.excited & self.y_linkage, 1, axis=1)
 
-        excited_from_outside = np.roll(self.excited & np.roll(self.z_linkage, 1, axis=2), -1, axis=0)
-        excited_from_outside[-1, :, :] = np.bool_(False)
+        excited_from_pos_y = np.roll(self.excited & np.roll(self.y_linkage, 1, axis=1), -1, axis=1)
+
+        excited_from_neg_x = np.roll(self.excited & self.x_linkage, 1, axis=2)
+
+        excited_from_pos_x = np.roll(self.excited & np.roll(self.x_linkage, 1, axis=2), -1, axis=2)
+
+
 
         # Create array of excitable cells
 
-        excitable = (excited_from_above | excited_from_below | excited_from_rear |
-                     excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting & ~ self.destroyed
+        excitable = (excited_from_neg_y | excited_from_pos_y | excited_from_neg_x |
+                     excited_from_pos_x | excited_from_pos_z | excited_from_neg_z) & self.resting & ~ self.destroyed
 
-        self.direction[excitable] = (1 * excited_from_above.astype('int8') +
-                                     2 * excited_from_below.astype('int8') +
-                                     4 * excited_from_rear.astype('int8') +
-                                     8 * excited_from_fwrd.astype('int8') +
-                                     16 * excited_from_inside.astype('int8') +
-                                     32 * excited_from_outside.astype('int8')
+        self.direction[excitable] = (1 * excited_from_neg_y.astype('int8') +
+                                     2 * excited_from_pos_y.astype('int8') +
+                                     4 * excited_from_neg_x.astype('int8') +
+                                     8 * excited_from_pos_x.astype('int8') +
+                                     16 * excited_from_pos_z.astype('int8') +
+                                     32 * excited_from_neg_z.astype('int8')
                                      )[excitable]
 
         # Check if dysfunctional cells fail to excite
