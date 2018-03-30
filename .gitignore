@@ -8,3 +8,9 @@ test.py
 
 # Folders
 data/
+
+viva_recordings/
+
+dist_data/
+
+plotting\.py

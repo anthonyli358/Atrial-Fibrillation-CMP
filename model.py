@@ -29,7 +29,7 @@ class Model:
         self.dysfunction_probability = dysfunction_probability
         self.time = time
         self.seed = seed if seed is not None else datetime.datetime.now().strftime('%m-%d_%H-%M-%S')
-        self.direction = np.zeros(size, dtype='int8')
+        self.direction = np.zeros(size, dtype='uint8')
         np.random.seed(int(sub('[^0-9]', '', self.seed)))
 
         self.excited = np.zeros(size, dtype=bool)
@@ -37,7 +37,6 @@ class Model:
         self.excount = np.zeros(size, dtype='uint32')
         self._max = 0
         self.maxpos = [0, 0, 0]
-        self.failed = np.zeros(size, dtype=bool)
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
         self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                           p=[x_coupling, 1 - x_coupling])
@@ -48,6 +47,7 @@ class Model:
         self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.failed = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
+        self.destroyed = np.zeros(size, dtype=bool)
 
     def activate_pacemaker(self):
         """
@@ -85,11 +85,14 @@ class Model:
         # Create array of excitable cells
 
         excitable = (excited_from_above | excited_from_below | excited_from_rear |
-                     excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting
+                     excited_from_fwrd | excited_from_inside | excited_from_outside) & self.resting & ~ self.destroyed
 
-        self.direction[excitable] = (1 * (excited_from_above.astype('int8') - excited_from_below.astype('int8')) +
-                                     2 * (excited_from_rear.astype('int8') - excited_from_fwrd.astype('int8')) +
-                                     4 * (excited_from_inside.astype('int8') - excited_from_outside.astype('int8'))
+        self.direction[excitable] = (1 * excited_from_above.astype('int8') +
+                                     2 * excited_from_below.astype('int8') +
+                                     4 * excited_from_rear.astype('int8') +
+                                     8 * excited_from_fwrd.astype('int8') +
+                                     16 * excited_from_inside.astype('int8') +
+                                     32 * excited_from_outside.astype('int8')
                                      )[excitable]
 
         # Check if dysfunctional cells fail to excite
@@ -112,6 +115,17 @@ class Model:
             self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
 
         return self.model_array
+
+    def add_ablation(self, coordinate, radius):
+        """Destroy tissue within radius(mm) of coordinates"""
+        z = range(self.size[0])
+        y = range(self.size[1])
+        x = range(self.size[2])
+        Z, Y, X = np.meshgrid(z, y, x, indexing='ij')
+        Xp, Yp, Zp = X-coordinate[2], Y-coordinate[1], Z
+        dist_sq = np.square(Xp*0.5) + np.square(Yp*0.1) + np.square(Zp*0.1)
+        self.destroyed = dist_sq < radius**2
+
     
     def activate(self, coordinate):
         """
