@@ -5,6 +5,9 @@ import config
 import datetime
 import matplotlib.pyplot as plt
 
+from matplotlib import pyplot as plt
+import gc
+
 from model_recorder import ModelRecorder
 from viewer import Viewer
 
@@ -14,13 +17,12 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
-        # if t  == 5:  # Ectopic beat
-        #     substrate.activate((0, 70,100))
-        #     substrate.model_array[0, 70, 99] = 49
-
         recorder.update_model_stat_dict()
         recorder.update_model_array_list()
-        substrate.iterate()
+        # if t % (substrate.refractory_period+15) == 0:  # Ectopic beat
+        #     substrate.activate((70,100,-1))
+        result[t] = substrate.iterate()
+    return result
 
 
 def risk_sim(substrate, settings):
@@ -72,6 +74,9 @@ def main():
     model_viewer.plot_model_stats()
     model_viewer.animate_model_array()
 
+substrate = af.Model(**config.settings['structure'])
+model_recorder = ModelRecorder(substrate)
+print('SEED: {}'.format(substrate.seed))
 
 def risk_recording_code():
     results = []
