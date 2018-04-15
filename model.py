@@ -1,7 +1,4 @@
-import datetime
 import numpy as np
-
-from re import sub
 
 
 class Model:
@@ -108,12 +105,12 @@ class Model:
         # Update excited and resting arrays
         self.excited = self.model_array == self.refractory_period
         self.resting = self.model_array == 0
-        self.excount += np.uint32(self.excited)
+        # self.excount += np.uint32(self.excited)
 
-        itermax = np.max(self.excount)
-        if itermax != self._max:  # When a new level of excitation happens find position of excitation
-            self._max = itermax
-            self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
+        # itermax = np.max(self.excount)
+        # if itermax != self._max:  # When a new level of excitation happens find position of excitation
+        #     self._max = itermax
+        #     self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
 
         return self.model_array
 
