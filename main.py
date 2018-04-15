@@ -113,9 +113,42 @@ def risk_recording_code():
     # plt.show()
 
 
+
+def risk_pos(x, yz):
+    positions = []
+    risks = []
+    strut_sett = config.settings['structure']
+    strut_sett['x_coupling'] = x
+    strut_sett['y_coupling'] = yz
+    strut_sett['z_coupling'] = yz
+
+    for _ in range(1000):
+        substrate = af.Model(**strut_sett)
+        t = 0
+        risk = 0
+        breakpoint = None
+        while t <= 1200:
+            if t % 200 == 0:
+                substrate.activate_pacemaker()
+            substrate.iterate()
+            if substrate.maxpos[-1] > 1 and not breakpoint:
+                breakpoint = substrate.maxpos
+            if substrate.maxpos[-1] > 1 and t > 200:
+                risk += 1
+            t += 1
+        positions.append(breakpoint)
+        risks.append(risk)
+        print(_, risk, breakpoint)
+    return np.array([positions, risks])
+
+
 if __name__ == '__main__':
-    result = rotor_position()
-    plt.show()
+    for yz in [0.11]:
+        for x in np.arange(0.98, 1, 0.01):
+            name = 'record/' + str(x) + ',' + str(yz) + '.npy'
+            print('===========', name)
+            result = risk_pos(x, yz)
+            np.save(name, result)
 
 
 # TODO: KILLSWITCH()
