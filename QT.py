@@ -304,7 +304,7 @@ class makeCanvas(FigureCanvas):
     """Parent class of all Canvases. Initiate a figure with a toolbar."""
     def __init__(self, parent):
         self.parent = parent
-        self.figure = Figure(dpi=50)
+        self.figure = Figure()
         super().__init__(self.figure)
         self.settings = parent.settings
         self.compute_initial_figure()
