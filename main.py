@@ -143,8 +143,8 @@ def risk_pos(x, yz):
 
 
 if __name__ == '__main__':
-    for yz in [0.11]:
-        for x in np.arange(0.98, 1, 0.01):
+    for yz in [0.11,0.12]:
+        for x in np.arange(0.8, .85, 0.01):
             name = 'record/' + str(x) + ',' + str(yz) + '.npy'
             print('===========', name)
             result = risk_pos(x, yz)
