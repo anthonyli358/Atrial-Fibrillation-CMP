@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+
 files = {}
-for y in np.arange(0.02,0.30,0.01):
+for y in np.arange(0.02, 0.30, 0.01):
     try:
         file_name = '{}.txt'.format(str(y))
         files[y] = np.genfromtxt(file_name, delimiter=',', unpack=True,
-                                skip_header=1,skip_footer=2)[0]
+                                 skip_header=1, skip_footer=2)[0]
     except:
         pass
 
@@ -28,8 +29,9 @@ for y in np.arange(0.02,0.30,0.01):
 # print(data)
 # plt.plot(data[:, 0], data[:, 1:], )
 
-nu,p,err = np.genfromtxt('summary.txt', delimiter=',', unpack=True)
-nu2,p2,err2 = np.genfromtxt('risk_curve_data.txt', delimiter=',', unpack=True)
+nu, p, err = np.genfromtxt('summary.txt', delimiter=',', unpack=True)
+nu2, p2, err2 = np.genfromtxt('risk_curve_data.txt', delimiter=',', unpack=True)
+theor = [1 - (1 - ((1 - x1) ** 50)) ** (0.05 * 200 ** 2) for x1 in nu]
 
 # plt.errorbar(nu,p,yerr=err/np.sqrt(48), fmt='k.', capsize=3, label='Model Implementation')
 # plt.errorbar(nu2,p2,yerr=err2, fmt='b.', capsize=3, label='Previous CMP Data ')
@@ -40,7 +42,7 @@ plt.errorbar(nu, p, yerr=err / np.sqrt(48), fmt='k.', color='r', capsize=3, labe
 plt.plot(nu, theor, color='b', label="Theoretical")
 plt.xlabel(r"Fraction of transverse connections $\nu$")
 plt.ylabel("Mean time in AF / AF risk probability")
-plt.legend(loc=0, fontsize=12)
+plt.legend(loc=0, fontsize=15)
 plt.show()
 
 plt.show()
