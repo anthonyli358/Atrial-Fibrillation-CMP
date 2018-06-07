@@ -7,6 +7,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from matplotlib.animation import FuncAnimation
 from matplotlib.gridspec import GridSpec
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 from pprint import pprint  # to get readable print output for dicts
 
@@ -346,7 +347,7 @@ class Animation(makeCanvas):
                       width_ratios=[1, size[0]/size[1]],
                       height_ratios=[1, size[0]/size[2], 1])
 
-        self.ax0 = self.figure.add_subplot(gs[0])
+        self.ax0 = self.figure.add_subplot(gs[4])
         im = self.ax0.imshow(self.substrate.model_array[self.settings['w_cross_pos']],
                              animated=True,
                              cmap='Greys_r',
@@ -358,36 +359,54 @@ class Animation(makeCanvas):
                                      0, self.settings['structure']['size'][1]),
                              interpolation='nearest',
                              )
+        linev = self.ax0.axvline(x=self.settings['v_cross_pos'],
+                                 color='cyan',
+                                 linestyle='--'
+                                 )
+        lineh = self.ax0.axhline(y=self.settings['h_cross_pos'],
+                                 color='cyan',
+                                 linestyle='--'
+                                 )
 
-        self.ax1 = self.figure.add_subplot(gs[4])
+        self.ax1 = self.figure.add_subplot(gs[0])
         clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)
-        linev = self.ax1.axvline(x=self.settings['v_cross_pos'],
-                                 color='cyan',
-                                 linestyle='--'
-                                 )
-        lineh = self.ax1.axhline(y=self.settings['h_cross_pos'],
-                                 color='cyan',
-                                 linestyle='--'
-                                 )
-        image = self.ax1.imshow(self.substrate.model_array[0],
+
+        cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
+        cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
+        cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
+
+        image = self.ax1.imshow(self.substrate.model_array[-1],
                                 animated=True,
-                                cmap='Greys_r',
+                                cmap=cm1,
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin='lower',
-                                alpha=1,
+                                # alpha=.33,
                                 extent=(0, self.settings['structure']['size'][2],
                                         0, self.settings['structure']['size'][1]),
                                 interpolation='nearest',
-                                zorder=1,
+                                zorder=3,
                                 )
-        image2 = self.ax1.imshow(self.substrate.model_array[-1],
+        image2 = self.ax1.imshow(self.substrate.model_array[-2],
                                  animated=True,
-                                 cmap='Greys_r',
+                                 cmap=cm2,
                                  vmin=0,
                                  vmax=self.settings['structure']['refractory_period'],
                                  origin='lower',
-                                 alpha=0.5,
+                                 # alpha=0.66,
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=2
+
+                                 )
+        image3 = self.ax1.imshow(self.substrate.model_array[-3],
+                                 animated=True,
+                                 cmap=cm3,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 # alpha=1,
                                  extent=(0, self.settings['structure']['size'][2],
                                          0, self.settings['structure']['size'][1]),
                                  interpolation='nearest',
@@ -430,14 +449,17 @@ class Animation(makeCanvas):
                 self.hist.append(np.copy(self.get_anim_array()))
             # if t == 300:
             #     self.substrate.add_ablation(self.substrate.maxpos, 2)
+            if t == 1:
+                self.substrate.add_ablation((0,100,100), 2)
             arr = self.get_anim_array()
 
             self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, t, self.substrate.maxpos))
             return [linev.set_xdata(self.settings['v_cross_pos']),
                     lineh.set_ydata(self.settings['h_cross_pos']),
                     im.set_data(arr[self.settings['w_cross_pos']]),
-                    image.set_data(arr[0]),
-                    image2.set_data(arr[-1]),
+                    image.set_data(arr[-1]),
+                    image2.set_data(arr[-2]),
+                    image3.set_data(arr[-3]),
                     v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['v_cross_pos']], 0, 1)),
                     h_cross_view.set_data(arr[:, self.settings['h_cross_pos'], :])
                     ]

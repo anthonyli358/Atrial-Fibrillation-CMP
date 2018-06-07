@@ -126,25 +126,31 @@ def oneplot():
 
 
 def curveplot():
-    yzs = np.arange(0, 1, 0.01)
-    xs = np.arange(0, 1.0, 0.01)
+    yzs = np.arange(0.06, 0.121, 0.01)
+    xs = np.arange(0.8, 1.001, 0.01)
     X, Y = np.meshgrid(xs, yzs)
     aves = np.zeros(np.shape(X))
     stds = np.zeros(np.shape(X))
     for i, yz in enumerate(yzs):
         for j, x in enumerate(xs):
             try:
-                pos, frac = np.load('roughrecord/{},{}.npy'.format(str(x), str(yz)))
+                pos, frac = np.load('record/{},{}.npy'.format(str(x), str(yz)))
                 frac = np.array(frac, dtype='int16')
                 aves[i, j] = np.average(frac)
                 stds[i, j] = np.std(frac)
             except:
                 pass
 
+    aves = np.transpose(aves) / 1000
+    stds = np.transpose(stds) / 1000
     plt.figure()
-    plt.imshow(aves, vmin=0, vmax=1000, extent=(0, 1, 0, 1), origin='lower')
+    plt.imshow(aves, vmin=0, vmax=1, extent=(0.07, .12, 0.8, 1.0), origin='lower',
+               cmap='Greys')
+    plt.colorbar()
     plt.figure()
-    plt.imshow(stds, vmin=0, extent=(0, 1, 0, 1), origin='lower')
+    plt.imshow(stds, vmin=0, extent=(0.07, .12, 0.8, 1.0), origin='lower',
+               cmap='Greys')
+    plt.colorbar()
     plt.show()
 
 
@@ -166,7 +172,7 @@ def xriskcurve():
     aves = []
     stds = []
     for x in xs:
-        pos, frac = np.load('record/{},0.12.npy'.format(str(x)))
+        pos, frac = np.load('record/{},0.07.npy'.format(str(x)))
         frac = np.array(frac, dtype='int16')
         aves.append(np.average(frac))
         stds.append(np.std(frac))
@@ -175,5 +181,5 @@ def xriskcurve():
     plt.errorbar(xs, aves, stds)
 
 
-curveplot()
+distplot()
 plt.show()

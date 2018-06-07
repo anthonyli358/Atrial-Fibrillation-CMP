@@ -5,8 +5,8 @@ settings = dict(
         dysfunction_parameter=0.05,  # fraction of dysfunctional cells
         dysfunction_probability=0.05,
         x_coupling=.9,
-        y_coupling=.11,  # probability of y linkage
-        z_coupling=.11,
+        y_coupling=.08,  # probability of y linkage
+        z_coupling=.08,
         seed=None # 11-13_17-02-49 pretty, .61,.61
     ),
     sim=dict(
