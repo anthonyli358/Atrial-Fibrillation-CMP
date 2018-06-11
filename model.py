@@ -11,13 +11,13 @@ class Model:
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
-        :param x_coupling: The x yz_coupling factor
-        :param yz_coupling: The y yz_coupling factor
+        :param refractory_period: Cell refractory period
         :param dysfunction_parameter: The fraction of dysfunctional cells
         :param dysfunction_probability: The fraction of dysfunctional cells which fail to excite
-        :param refractory_period: Cell refractory period
-        :param time: Current time step
+        :param x_coupling: The x yz_coupling factor
+        :param yz_coupling: The y yz_coupling factor
         :param seed: Model randomisation seed
+        :param time: Current time step
         """
         self.size = size
         self.refractory_period = refractory_period
@@ -123,7 +123,9 @@ class Model:
         return self.model_array
 
     def add_ablation(self, coordinate, radius):
-        """Destroy tissue within radius(mm) of coordinates"""
+        """
+        Destroy tissue within radius(mm) of coordinates.
+        """
         z = range(self.size[0])
         y = range(self.size[1])
         x = range(self.size[2])
@@ -131,28 +133,20 @@ class Model:
         Xp, Yp, Zp = X-coordinate[2], Y-coordinate[1], Z
         dist_sq = np.square(Xp*0.5) + np.square(Yp*0.1) + np.square(Zp*0.1)
         self.destroyed = dist_sq < radius**2
-
     
     def activate(self, coordinate):
         """
-        Activate specified cell
-        :param coordinate:
-        :type coordinate:
-        :return:
-        :rtype:
+        Activate specified cell.
+        :param coordinate: Coordinate of cell to activate
         """
         self.model_array[tuple(coordinate)] = self.refractory_period
 
-    def one_d_create_rotor(self, rotor_coord):
+    def one_d_create_circuit(self, circuit_coord):
         """
-        Create a rotor at the specified coordinate
-
-        :param rotor_coord:
-        :type rotor_coord:
-        :return:
-        :rtype:
+        Create a circuit at the specified coordinate.
+        :param circuit_coord: First activated cell (starting point) of the circuit
         """
-        self.y_linkage[0, rotor_coord[0] - 1:rotor_coord[0] + 1,
-                       rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
-        self.model_array[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
-        self.model_array[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
+        self.y_linkage[0, circuit_coord[0] - 1:circuit_coord[0] + 1,
+                       circuit_coord[1]: int(circuit_coord[1] + self.refractory_period / 2 + 1)] = 0
+        self.model_array[0, circuit_coord[0], circuit_coord[1] + 3] = self.refractory_period
+        self.model_array[0, circuit_coord[0], circuit_coord[1] + 4] = self.refractory_period - 1
