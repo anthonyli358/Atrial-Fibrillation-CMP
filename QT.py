@@ -440,8 +440,9 @@ class Animation(makeCanvas):
                                        )
 
         def func(framedata):
+            """Function to iterate animation over, All active changes here"""
             t, play = framedata
-            """Function to iterate animation over"""
+
             if t % self.settings['sim']['pacemaker_period'] == 0:
                 self.substrate.activate_pacemaker()
             if play:
