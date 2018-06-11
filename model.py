@@ -88,8 +88,6 @@ class Model:
 
         excited_from_pos_x = np.roll(self.excited & np.roll(self.x_linkage, 1, axis=2), -1, axis=2)
 
-
-
         # Create array of excitable cells
 
         excitable = (excited_from_neg_y | excited_from_pos_y | excited_from_neg_x |
@@ -158,12 +156,3 @@ class Model:
                        rotor_coord[1]: int(rotor_coord[1] + self.refractory_period / 2 + 1)] = 0
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 3] = self.refractory_period
         self.model_array[0, rotor_coord[0], rotor_coord[1] + 4] = self.refractory_period - 1
-
-
-# ToDo: FAILED ARRAY OUTPUT IS WRONG (DOESN'T RESET)
-# TODO: TURN COPY PASTE FUNCTIONS INTO UTILITY METHODS (CREATE DIRECTORY)
-# TODO: MAIN
-# ToDo: OPTIMISE
-# TODO: COMMENT AND ORGANISE ALL MODULES
-# ToDo: UNIT TESTS
-# TODO: UPDATE README WITH HOW TO USE

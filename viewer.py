@@ -6,7 +6,7 @@ import sys
 
 from matplotlib import pyplot as plt
 
-plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
+# plt.rcParams['animation.ffmpeg_path'] = "data/ffmpeg-20170807-1bef008-win64-static/bin/ffmpeg.exe"
 from matplotlib import animation  # must be defined after defining ffmpeg line
 from matplotlib import gridspec
 from matplotlib import cm
@@ -77,9 +77,6 @@ class Viewer:
                             cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
 
-        # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
-        # TODO: TIME=i IN TITLE
-
         print("animating model array...")
 
         refractory_period = max(model_array_list.flatten())
@@ -131,18 +128,6 @@ class Viewer:
                                animated=True, vmin=0, vmax=refractory_period, origin='lower', cmap=highlight_cmap),
                     plt.text(100, 220, "time=".format(i), size=plt.rcParams["axes.titlesize"])]
                    for i in range(len(model_array_list))]
-
-        # fig, ax = plt.subplots()
-        # image = ax.imshow(model_array_list[0, 0], animated=True, cmap='Greys_r', vmin=0,
-        #                   vmax=refractory_period, origin='lower')
-
-        # def func(t):
-        #     image.set_array(model_array_list[t, 0])
-        #     ax.set_title(t)
-        #     return image,
-        #
-        # global ani
-        # ani = animation.FuncAnimation(fig, func, interval=5, frames=len(model_array_list), blit=True)
 
         ani = animation.ArtistAnimation(fig, ims, interval=20, blit=True, repeat_delay=500)
         plt.show()
@@ -232,8 +217,6 @@ class Viewer:
         # World plotting axis initialisation
         ax = plt.figure(figsize=(20, 20)).add_subplot(1, 1, 1)
         plt.subplots_adjust(top=0.95, bottom=0.02, left=0.02, right=0.98)
-
-        # TODO: VARIABLE FIGSIZE AND FONTSIZE - GET MODEL ARRAY SIZE FROM DATA
 
         # Plot the data for each time step
         for i in range(time_steps):

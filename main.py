@@ -3,17 +3,14 @@ import numpy as np
 import model as af
 import config
 import datetime
-import matplotlib.pyplot as plt
 
 from matplotlib import pyplot as plt
-import gc
 
 from model_recorder import ModelRecorder
 from viewer import Viewer
 
 
 def simulation(substrate, recorder, runtime, pacemaker_period):
-
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
@@ -74,9 +71,11 @@ def main():
     model_viewer.plot_model_stats()
     model_viewer.animate_model_array()
 
+
 substrate = af.Model(**config.settings['structure'])
 model_recorder = ModelRecorder(substrate)
 print('SEED: {}'.format(substrate.seed))
+
 
 def risk_recording_code():
     results = []
@@ -97,7 +96,7 @@ def risk_recording_code():
                 config.settings['structure']['z_coupling'] = yz_coupling
                 substrate = af.Model(**config.settings["structure"])
                 result, conduction = risk_sim(substrate, config.settings)
-                frac = np.sum(result[220:] > 1.5*np.product(config.settings['structure']['size'][:-1])) / len(result)
+                frac = np.sum(result[220:] > 1.5 * np.product(config.settings['structure']['size'][:-1])) / len(result)
                 if np.any(conduction):
                     conducting.append(True)
                 else:
@@ -118,7 +117,6 @@ def risk_recording_code():
     # plt.show()
 
 
-
 def risk_pos(x, yz):
     positions = []
     risks = []
@@ -126,10 +124,6 @@ def risk_pos(x, yz):
     strut_sett['x_coupling'] = x
     strut_sett['y_coupling'] = yz
     strut_sett['z_coupling'] = yz
-model_viewer = Viewer(model_recorder.path)
-model_viewer.plot_model_stats()
-data = model_viewer.import_data()
-model_viewer.animate_model_array(data)
 
     for _ in range(1000):
         substrate = af.Model(**strut_sett)
@@ -148,16 +142,21 @@ model_viewer.animate_model_array(data)
         positions.append(breakpoint)
         risks.append(risk)
         print(_, risk, breakpoint)
+
     return np.array([positions, risks])
 
 
 if __name__ == '__main__':
-    for yz in [0.11,0.12]:
+    for yz in [0.11, 0.12]:
         for x in np.arange(0.8, .85, 0.01):
             name = 'record/' + str(x) + ',' + str(yz) + '.npy'
             print('===========', name)
             result = risk_pos(x, yz)
             np.save(name, result)
 
+# model_viewer = Viewer(model_recorder.path)
+# model_viewer.plot_model_stats()
+# data = model_viewer.import_data()
+# model_viewer.animate_model_array(data)
 
 # TODO: KILLSWITCH()

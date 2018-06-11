@@ -1,9 +1,9 @@
 import operator
 import numpy as np
+import matplotlib.pyplot as plt
 from direction import Direction
 from ecg import ECG
 from utility_methods import *
-import matplotlib.pyplot as plt
 
 
 def circuit_search(model_array_list, current_point, start_time):

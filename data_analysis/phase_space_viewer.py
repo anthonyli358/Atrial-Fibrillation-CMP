@@ -19,8 +19,6 @@ import glob
 # data = data.reshape(200,100,5)
 # ########## Correction Code #########
 
-
-
 # # Data Extraction
 # data = []
 # for i in glob.glob('data_file_32_200_200*.npy'):
@@ -49,24 +47,23 @@ import glob
 # plt.xlabel('yz_linkage')
 # plt.ylabel('Mean Risk of Atrial Fibrillation')
 
-
-comb=np.load('Phase_Spaces/16_200_200.npy')
+comb = np.load('Phase_Spaces/16_200_200.npy')
 plt.figure()
-plt.imshow(comb[:,:,2], extent=(0,1,1,0))
+plt.imshow(comb[:, :, 2], extent=(0, 1, 1, 0))
 plt.colorbar()
 plt.xlabel('yz_linkage')
 plt.ylabel('x_linkage')
 plt.title('Risk')
 
 plt.figure()
-plt.imshow(comb[:,:,4], extent=(0,1,1,0))
+plt.imshow(comb[:, :, 4], extent=(0, 1, 1, 0))
 plt.colorbar()
 plt.xlabel('yz_linkage')
 plt.ylabel('x_linkage')
 plt.title('Transmission')
 
 plt.figure()
-plt.imshow(comb[:,:,3], extent=(0,1,1,0))
+plt.imshow(comb[:, :, 3], extent=(0, 1, 1, 0))
 plt.colorbar()
 plt.xlabel('yz_linkage')
 plt.ylabel('x_linkage')
@@ -80,15 +77,15 @@ names = ['Phase_Spaces/1_200_200.npy', 'Phase_Spaces/2_200_200.npy',
          'Phase_Spaces/16_200_200.npy', 'Phase_Spaces/32_200_200.npy']
 print(names)
 compilation = []
+
 for i in names:
-    compilation.append(np.load(i)[:,:,2])
+    compilation.append(np.load(i)[:, :, 2])
 
 for num, i in enumerate(compilation):
-    ax = fig.add_subplot(100+len(names) * 10  + 1+num)
+    ax = fig.add_subplot(100 + len(names) * 10 + 1 + num)
     ax.set_title(names[num][13:-4])
-    ax.imshow(i, extent =(0,1,1,0))
+    ax.imshow(i, extent=(0, 1, 1, 0))
 
 fig.show()
-
 
 plt.show()

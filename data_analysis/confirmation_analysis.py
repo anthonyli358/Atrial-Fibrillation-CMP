@@ -5,7 +5,7 @@ import glob
 files = {}
 for y in np.arange(0.02, 0.30, 0.01):
     try:
-        file_name = '{}.txt'.format(str(y))
+        file_name = 'confirmation_analysis/{}.txt'.format(str(y))
         files[y] = np.genfromtxt(file_name, delimiter=',', unpack=True,
                                  skip_header=1, skip_footer=2)[0]
     except:
@@ -43,6 +43,5 @@ plt.plot(nu, theor, color='b', label="Theoretical")
 plt.xlabel(r"Fraction of transverse connections $\nu$")
 plt.ylabel("Mean time in AF / AF risk probability")
 plt.legend(loc=0, fontsize=15)
-plt.show()
 
 plt.show()
