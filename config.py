@@ -6,7 +6,8 @@ settings = dict(
         dysfunction_probability=0.05,   # epsilon, probability of dysfunctional cell failing
         x_coupling=0.6,  # nu_x, probability of x linkage
         yz_coupling=1,  # nu_yz, probability of y and z linkage
-        seed=None
+        seed=None,
+        anglevars=[20,45,.5],
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period

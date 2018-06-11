@@ -379,7 +379,7 @@ class Animation(makeCanvas):
 
         image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
                                 animated=True,
-                                cmap=cm1,
+                                cmap='Greys_r',
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin='lower',
@@ -388,28 +388,28 @@ class Animation(makeCanvas):
                                 interpolation='nearest',
                                 zorder=3,
                                 )
-        image2 = self.ax1.imshow(self.substrate.model_array[-2],
-                                 animated=True,
-                                 cmap=cm2,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=2
-                                 )
-        image3 = self.ax1.imshow(self.substrate.model_array[-3],
-                                 animated=True,
-                                 cmap=cm3,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=1
-                                 )
+        # image2 = self.ax1.imshow(self.substrate.model_array[-2],
+        #                          animated=True,
+        #                          cmap=cm2,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=2
+        #                          )
+        # image3 = self.ax1.imshow(self.substrate.model_array[-3],
+        #                          animated=True,
+        #                          cmap=cm3,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=1
+        #                          )
 
         self.ax2 = self.figure.add_subplot(gs[5])  # Plot the x axis cut through
         v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :, self.settings['QTviewer']['x_cross_pos']],
@@ -458,8 +458,8 @@ class Animation(makeCanvas):
                     lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                     im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
                     image.set_data(arr[-1]),
-                    image2.set_data(arr[-2]),
-                    image3.set_data(arr[-3]),
+                    # image2.set_data(arr[-2]),
+                    # image3.set_data(arr[-3]),
                     v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                     h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
