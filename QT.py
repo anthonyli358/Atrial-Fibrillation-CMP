@@ -291,13 +291,13 @@ class Config(QtWidgets.QWidget):
         self.settings['view'] = val
 
     def update_v_cross_pos(self, val):
-        self.settings['x_cross_pos'] = val
+        self.settings['QTviewer']['x_cross_pos'] = val
 
     def update_h_cross_pos(self, val):
-        self.settings['y_cross_pos'] = val
+        self.settings['QTviewer']['y_cross_pos'] = val
 
     def update_w_cross_pos(self, val):
-        self.settings['z_cross_pos'] = val
+        self.settings['QTviewer']['z_cross_pos'] = val
 
 
 class makeCanvas(FigureCanvas):
@@ -372,10 +372,10 @@ class Animation(makeCanvas):
         self.ax1 = self.figure.add_subplot(gs[0])
         clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)  # Clicking changes the cut through positions
 
-        # # Transparent colourmaps if needed
-        # cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
-        # cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
-        # cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
+        # Transparent colourmaps if needed
+        cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
+        cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
+        cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
 
         image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
                                 animated=True,
