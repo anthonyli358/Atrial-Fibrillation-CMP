@@ -121,9 +121,8 @@ def risk_pos(x, yz):
     positions = []
     risks = []
     strut_sett = config.settings['structure']
-    strut_sett['x_coupling'] = x
-    strut_sett['y_coupling'] = yz
-    strut_sett['z_coupling'] = yz
+    strut_sett['x_coupling'] = [x]
+    strut_sett['yz_coupling'] = [yz]
 
     for _ in range(1000):
         substrate = af.Model(**strut_sett)
@@ -152,7 +151,7 @@ if __name__ == '__main__':
             name = 'record/' + str(x) + ',' + str(yz) + '.npy'
             print('===========', name)
             result = risk_pos(x, yz)
-            np.save(name, result)
+            # np.save(name, result)
 
 # model_viewer = Viewer(model_recorder.path)
 # model_viewer.plot_model_stats()

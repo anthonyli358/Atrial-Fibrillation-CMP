@@ -34,23 +34,23 @@ class Model:
         self.maxpos = [0, 0, 0]
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
 
-        x_coupling_grid = np.linspace(x_coupling[0],x_coupling[1], size[0])
-        yz_coupling_grid = np.linspace(yz_coupling[0], yz_coupling[1], size[0])
+        # x_coupling_grid = np.linspace(x_coupling[0],x_coupling[-1], size[0])
+        # yz_coupling_grid = np.linspace(yz_coupling[0], yz_coupling[-1], size[0])
+        #
+        # x_ran = np.random.random(size)
+        # y_ran = np.random.random(size)
+        # z_ran = np.random.random(size)
 
-        x_ran = np.random.random(size)
-        y_ran = np.random.random(size)
-        z_ran = np.random.random(size)
+        # self.x_linkage = np.apply_along_axis(np.less, 0, x_ran, x_coupling_grid)
+        # self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
+        # self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
 
-        self.x_linkage = np.apply_along_axis(np.less, 0, x_ran, x_coupling_grid)
-        self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
-        self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
-
-        # self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
-        #                                   p=[x_coupling, 1 - x_coupling])
-        # self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of transverse linkages
-        #                                   p=[yz_coupling, 1 - yz_coupling])
-        # self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
-        #                                   p=[yz_coupling, 1 - yz_coupling])
+        self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
+                                          p=[x_coupling, 1 - x_coupling])
+        self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of transverse linkages
+                                          p=[yz_coupling, 1 - yz_coupling])
+        self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
+                                          p=[yz_coupling, 1 - yz_coupling])
         self.x_linkage[:, :, -1] = False  # No links from end
         self.z_linkage[-1, :, :] = False
         self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes

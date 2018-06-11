@@ -16,7 +16,8 @@ import config
 
 
 class AFInterface(QtWidgets.QMainWindow):
-    """Atrial Fibrillation simulation class."""
+    """Parent class for interface. Defines menu options and button interactions.
+    Atrial Fibrillation simulation class."""
     def __init__(self):
         super().__init__()
         self.settings = config.settings
@@ -98,7 +99,8 @@ class AFInterface(QtWidgets.QMainWindow):
 
 
 class Config(QtWidgets.QWidget):
-    """Edit system settings"""
+    """Configuration window class. Updates local version of config file.
+    Can edit model settings without restarting interface"""
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
@@ -130,32 +132,32 @@ class Config(QtWidgets.QWidget):
         xyz_dim.addWidget(QtWidgets.QLabel('z:'))
         xyz_dim.addWidget(z_dim)
 
-        # x_linkage = QtWidgets.QDoubleSpinBox()
-        # y_linkage = QtWidgets.QDoubleSpinBox()
-        # z_linkage = QtWidgets.QDoubleSpinBox()
-        # x_linkage.setDecimals(3)
-        # y_linkage.setDecimals(3)
-        # z_linkage.setDecimals(3)
-        # x_linkage.setRange(0.00, 1.00)
-        # y_linkage.setRange(0, 1)
-        # z_linkage.setRange(0, 1)
-        # x_linkage.setSingleStep(0.01)
-        # y_linkage.setSingleStep(0.01)
-        # z_linkage.setSingleStep(0.01)
-        # x_linkage.setValue(self.settings['structure']['x_coupling'])
-        # y_linkage.setValue(self.settings['structure']['y_coupling'])
-        # z_linkage.setValue(self.settings['structure']['z_coupling'])
-        # x_linkage.valueChanged.connect(self.update_x_linkage)
-        # y_linkage.valueChanged.connect(self.update_y_linkage)
-        # z_linkage.valueChanged.connect(self.update_z_linkage)
-        #
-        # xyz_linkage = QtWidgets.QHBoxLayout()
-        # xyz_linkage.addWidget(QtWidgets.QLabel('x:'))
-        # xyz_linkage.addWidget(x_linkage)
-        # xyz_linkage.addWidget(QtWidgets.QLabel('y:'))
-        # xyz_linkage.addWidget(y_linkage)
-        # xyz_linkage.addWidget(QtWidgets.QLabel('z:'))
-        # xyz_linkage.addWidget(z_linkage)
+        x_linkage = QtWidgets.QDoubleSpinBox()
+        yz_linkage = QtWidgets.QDoubleSpinBox()
+
+        x_linkage.setDecimals(3)
+        yz_linkage.setDecimals(3)
+
+        x_linkage.setRange(0.00, 1.00)
+        yz_linkage.setRange(0, 1)
+
+        x_linkage.setSingleStep(0.01)
+        yz_linkage.setSingleStep(0.01)
+
+        x_linkage.setValue(self.settings['structure']['x_coupling'])
+        yz_linkage.setValue(self.settings['structure']['yz_coupling'])
+
+        x_linkage.valueChanged.connect(self.update_x_linkage)
+        yz_linkage.valueChanged.connect(self.update_y_linkage)
+
+
+        xyz_linkage = QtWidgets.QHBoxLayout()
+        xyz_linkage.addWidget(QtWidgets.QLabel('x:'))
+        xyz_linkage.addWidget(x_linkage)
+        xyz_linkage.addWidget(QtWidgets.QLabel('yz:'))
+        xyz_linkage.addWidget(yz_linkage)
+
+
 
         refractoryBox = QtWidgets.QSpinBox()
         refractoryBox.setRange(1, 999)
@@ -187,8 +189,8 @@ class Config(QtWidgets.QWidget):
         v_cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
         v_cross_pos_spin = QtWidgets.QSpinBox()
 
-        v_cross_pos_slider.setValue(self.settings['v_cross_pos'])
-        v_cross_pos_spin.setValue(self.settings['v_cross_pos'])
+        v_cross_pos_slider.setValue(self.settings['QTviewer']['x_cross_pos'])
+        v_cross_pos_spin.setValue(self.settings['QTviewer']['x_cross_pos'])
         v_cross_pos_slider.setRange(0, self.settings['structure']['size'][1]-1)
         v_cross_pos_spin.setRange(0, self.settings['structure']['size'][1]-1)
         v_cross_pos_slider.valueChanged.connect(v_cross_pos_spin.setValue)  # Connect slider to spin boc
@@ -199,8 +201,8 @@ class Config(QtWidgets.QWidget):
         h_cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
         h_cross_pos_spin = QtWidgets.QSpinBox()
 
-        h_cross_pos_slider.setValue(self.settings['h_cross_pos'])
-        h_cross_pos_spin.setValue(self.settings['h_cross_pos'])
+        h_cross_pos_slider.setValue(self.settings['QTviewer']['y_cross_pos'])
+        h_cross_pos_spin.setValue(self.settings['QTviewer']['y_cross_pos'])
         h_cross_pos_slider.setRange(0, self.settings['structure']['size'][2]-1)
         h_cross_pos_spin.setRange(0, self.settings['structure']['size'][2]-1)
         h_cross_pos_slider.valueChanged.connect(h_cross_pos_spin.setValue)  # Connect slider to spin boc
@@ -211,8 +213,8 @@ class Config(QtWidgets.QWidget):
         w_cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
         w_cross_pos_spin = QtWidgets.QSpinBox()
 
-        w_cross_pos_slider.setValue(self.settings['w_cross_pos'])
-        w_cross_pos_spin.setValue(self.settings['w_cross_pos'])
+        w_cross_pos_slider.setValue(self.settings['QTviewer']['z_cross_pos'])
+        w_cross_pos_spin.setValue(self.settings['QTviewer']['z_cross_pos'])
         w_cross_pos_slider.setRange(0, self.settings['structure']['size'][0]-1)
         w_cross_pos_spin.setRange(0, self.settings['structure']['size'][0]-1)
         w_cross_pos_slider.valueChanged.connect(w_cross_pos_spin.setValue)  # Connect slider to spin boc
@@ -235,7 +237,7 @@ class Config(QtWidgets.QWidget):
 
         config_form = QtWidgets.QFormLayout()
         config_form.addRow(QtWidgets.QLabel('Dimensions'), xyz_dim)
-        # config_form.addRow(QtWidgets.QLabel('Linkage'), xyz_linkage)
+        config_form.addRow(QtWidgets.QLabel('Linkage'), xyz_linkage)
         config_form.addRow(QtWidgets.QLabel('Refractory Period'), refractoryBox)
         config_form.addRow(QtWidgets.QLabel('Dysfunctional cells'), dysfunction)
         config_form.addRow(QtWidgets.QLabel('Dysfunctional Probability'), dysfunction_p)
@@ -292,13 +294,13 @@ class Config(QtWidgets.QWidget):
         self.settings['view'] = val
 
     def update_v_cross_pos(self, val):
-        self.settings['v_cross_pos'] = val
+        self.settings['x_cross_pos'] = val
 
     def update_h_cross_pos(self, val):
-        self.settings['h_cross_pos'] = val
+        self.settings['y_cross_pos'] = val
 
     def update_w_cross_pos(self, val):
-        self.settings['w_cross_pos'] = val
+        self.settings['z_cross_pos'] = val
 
 
 class makeCanvas(FigureCanvas):
@@ -317,7 +319,7 @@ class makeCanvas(FigureCanvas):
 
 
 class makePhases(makeCanvas):
-    """Window containing figures of risk for different substrates."""
+    """Class for window containing figures of risk for different substrates."""
 
     def compute_initial_figure(self):
         self.resize(400, 350)
@@ -348,7 +350,7 @@ class Animation(makeCanvas):
                       height_ratios=[1, size[0]/size[2], 1])
 
         self.ax0 = self.figure.add_subplot(gs[4])
-        im = self.ax0.imshow(self.substrate.model_array[self.settings['w_cross_pos']],
+        im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
                              animated=True,
                              cmap='Greys_r',
                              vmin=0,
@@ -359,11 +361,11 @@ class Animation(makeCanvas):
                                      0, self.settings['structure']['size'][1]),
                              interpolation='nearest',
                              )
-        linev = self.ax0.axvline(x=self.settings['v_cross_pos'],
+        linev = self.ax0.axvline(x=self.settings['QTviewer']['x_cross_pos'],
                                  color='cyan',
                                  linestyle='--'
                                  )
-        lineh = self.ax0.axhline(y=self.settings['h_cross_pos'],
+        lineh = self.ax0.axhline(y=self.settings['QTviewer']['y_cross_pos'],
                                  color='cyan',
                                  linestyle='--'
                                  )
@@ -371,51 +373,46 @@ class Animation(makeCanvas):
         self.ax1 = self.figure.add_subplot(gs[0])
         clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)
 
-        cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
-        cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
-        cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
+        # cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
+        # cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
+        # cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
 
         image = self.ax1.imshow(self.substrate.model_array[-1],
                                 animated=True,
-                                cmap=cm1,
+                                cmap='Greys_r',
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin='lower',
-                                # alpha=.33,
                                 extent=(0, self.settings['structure']['size'][2],
                                         0, self.settings['structure']['size'][1]),
                                 interpolation='nearest',
                                 zorder=3,
                                 )
-        image2 = self.ax1.imshow(self.substrate.model_array[-2],
-                                 animated=True,
-                                 cmap=cm2,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 # alpha=0.66,
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=2
-
-                                 )
-        image3 = self.ax1.imshow(self.substrate.model_array[-3],
-                                 animated=True,
-                                 cmap=cm3,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 # alpha=1,
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=1
-
-                                 )
+        # image2 = self.ax1.imshow(self.substrate.model_array[-2],
+        #                          animated=True,
+        #                          cmap=cm2,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=2
+        #                          )
+        # image3 = self.ax1.imshow(self.substrate.model_array[-3],
+        #                          animated=True,
+        #                          cmap=cm3,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=1
+        #                          )
 
         self.ax2 = self.figure.add_subplot(gs[5])
-        v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :, self.settings['v_cross_pos']],
+        v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :, self.settings['QTviewer']['x_cross_pos']],
                                                    0, 1),
                                        animated=True,
                                        vmin=0,
@@ -428,7 +425,7 @@ class Animation(makeCanvas):
                                        )
 
         self.ax3 = self.figure.add_subplot(gs[2])
-        h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['h_cross_pos'], :],
+        h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
                                        animated=True,
                                        vmin=0,
                                        vmax=self.settings['structure']['refractory_period'],
@@ -455,14 +452,14 @@ class Animation(makeCanvas):
             arr = self.get_anim_array()
 
             self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, t, self.substrate.maxpos))
-            return [linev.set_xdata(self.settings['v_cross_pos']),
-                    lineh.set_ydata(self.settings['h_cross_pos']),
-                    im.set_data(arr[self.settings['w_cross_pos']]),
+            return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
+                    lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
+                    im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
                     image.set_data(arr[-1]),
-                    image2.set_data(arr[-2]),
-                    image3.set_data(arr[-3]),
-                    v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['v_cross_pos']], 0, 1)),
-                    h_cross_view.set_data(arr[:, self.settings['h_cross_pos'], :])
+                    # image2.set_data(arr[-2]),
+                    # image3.set_data(arr[-3]),
+                    v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                    h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
 
         def frames():
