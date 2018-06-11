@@ -73,7 +73,8 @@ class Viewer:
 
         return model_array_list
 
-    def animate_model_array(self, model_array_list, highlight=None, save=False, layer=0, cross_view=False, cross_pos=None, remove_refractory=False):
+    def animate_model_array(self, model_array_list, highlight=None, save=False, layer=0, cross_view=False,
+                            cross_pos=None, remove_refractory=False):
         """Read the HDF5 data file and animate the model array."""
 
         # TODO: ALLOW THIS FUNCTION WITHOUT SAVING DATA
@@ -184,15 +185,15 @@ class Viewer:
 
         ax.plot(x, y, z, color='r')
         ax.grid(False)
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
+        ax.set_xlabel("x", fontsize=18)
+        ax.set_ylabel("y", fontsize=18)
+        ax.set_zlabel("z", fontsize=18)
         ax.set_zlim(0, 25)
         plt.savefig('data/{}/model_array/circuit_{}.png'.format(self.path, circuit[0]))
         plt.show()
         plt.close()
 
-    def plot_model_array(self, model_array_list, time_steps=None, start=0):
+    def plot_model_array(self, model_array_list, highlight=None, time_steps=None, start=0):
         """
         Read the HDF5 data file and view the model array for a range of time steps.
         :param time_steps: Number of time steps to plot
@@ -203,6 +204,27 @@ class Viewer:
 
         create_dir('{}/model_array'.format(self.path))
         total_time = len(model_array_list)
+
+        if highlight:
+            print("highlighting circuit cells...")
+            # create possible views
+            (xy_view, xz_view, yz_view) = (model_array_list.copy() for _ in range(3))
+            for point in highlight:
+                # frame[point] = 51
+                # 'cell transparency' to always see circuit shape
+                xy_view[0][:, point[1], point[2]] = 51
+                xz_view[0][point[0], :, point[2]] = 51
+                yz_view[0][point[0], point[1], :] = 51
+            for i in range(len(model_array_list)):
+                xy_view[i][xy_view[0] == 51] = 51
+                xz_view[i][xz_view[0] == 51] = 51
+                yz_view[i][yz_view[0] == 51] = 51
+        else:
+            xy_view = model_array_list
+
+        # Create cmap
+        highlight_cmap = cm.get_cmap('Greys_r')
+        highlight_cmap.set_over('r')
 
         if time_steps is None or time_steps > total_time:
             time_steps = total_time - start
@@ -220,17 +242,17 @@ class Viewer:
             sys.stdout.flush()
             # ax.axis('off')
             plt.title("time={}".format(start + i), fontsize=80)
-            ax.xaxis.set_ticks([50, 100, 150])
-            ax.yaxis.set_ticks([50, 100, 150])
+            ax.xaxis.set_ticks([0, 50, 100, 150])
+            ax.yaxis.set_ticks([0, 50, 100, 150])
             plt.xlabel("x", fontsize=80)
             plt.ylabel("y", fontsize=80, rotation=0, labelpad=30)
             plt.tick_params(axis='both', which='major', labelsize=50)
-            plt.imshow(model_array_list[i][0, :, :], cmap='Greys_r', vmin=0, vmax=50, origin='lower')
+            plt.axvline(x=52, linestyle='--', linewidth=2.5, color='r')
+            # plt.axhline(y=80, linestyle='--', linewidth=2.5, color='r')
+            plt.imshow(xy_view[start + i][0, :, :], cmap=highlight_cmap, vmin=0, vmax=50, origin='lower')
             cbar = plt.colorbar()
             cbar.ax.tick_params(labelsize=50)
             plt.tight_layout()
-            plt.savefig('data/{}/model_array/{}.png'.format(self.path, i))
+            plt.savefig('data/{}/model_array/xy_{}.png'.format(self.path, start + i))
             cbar.remove()
             plt.cla()
-
-# TODO: COLOURBAR

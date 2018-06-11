@@ -5,12 +5,12 @@ settings = dict(
         dysfunction_parameter=0.05,  # fraction of dysfunctional cells
         dysfunction_probability=0.05,
         x_coupling=1.,
-        y_coupling=.08,  # probability of y linkage
-        z_coupling=.08,
+        y_coupling=.8,  # probability of y linkage
+        z_coupling=.8,
         seed=None
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period
-        runtime=1000,
+        runtime=220,
     ),
 )

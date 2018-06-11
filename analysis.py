@@ -1,6 +1,7 @@
 import operator
 import numpy as np
 from direction import Direction
+from ecg import ECG
 from utility_methods import *
 import matplotlib.pyplot as plt
 
@@ -71,7 +72,7 @@ def circuit_search(model_array_list, current_point, start_time):
     return False
 
 
-def circuit_quantify(model_array_list, circuit, start_time, layer=0):
+def circuit_quantify(model_array_list, circuit, start_time, layer=0, path=None):
     """Quantify circuit based on excitation pattern."""
 
     circuit_type = "focal"  # focal, re-entry, rotor
@@ -86,47 +87,39 @@ def circuit_quantify(model_array_list, circuit, start_time, layer=0):
     x_mid = (x_min + x_max) // 2
     y_mid = (y_min + y_max) // 2
 
-    # equal aperture in x and y
-    x_min = (2 * x_mid - 200) if x_mid >= 100 else 0
-    x_max = (2 * x_mid) if x_mid < 100 else 199
-    # y_min = (2 * y_mid - 200) if y_mid >= 100 else 0
-    # y_max = (2 * y_mid) if y_mid < 100 else 199
-    y_min = 0
-    y_max = 199
+    if path:
+        # output grid of ECGs to define circuit
+        print("preparing ECGs around centre ({}, {})...".format(x_mid, y_mid))
+        ecg_grid = [ECG([x_mid, y_mid], 3, path), ECG([x_mid, y_mid + 15], 3, path), ECG([x_mid + 15, y_mid + 15], 3, path),
+                    ECG([x_mid + 15, y_mid + 15], 3, path), ECG([x_mid + 15, y_mid], 3, path),
+                    ECG([x_mid + 15, y_mid - 15], 3, path), ECG([x_mid, y_mid - 15], 3, path),
+                    ECG([x_mid - 15, y_mid], 3, path), ECG([x_mid - 15, y_mid + 15], 3, path)]
 
-    normalisation = y_mid - 100
-    aperture_cells = np.ix_([layer], [y for y in range(y_min, y_max)], [x for x in range(x_min, x_max)])
+        for ecg in ecg_grid:
+            ecg.plot_ecg([i for i in range(len(ecg.model_array_list))], ecg.ecg())
+        
+    window_cells = np.ix_([layer], [y for y in range(y_min, y_max)], [x for x in range(x_min, x_max)])
 
     excited_average_list = []
     for i in range(150):  # 3 x refractory period
-        excited = np.where(model_array_list[start_time - i][aperture_cells] == 50)
+        excited = np.where(model_array_list[start_time - i][window_cells] == 50)
         if len(excited[0]) > 0:
-            excited_average_list.append([excited[2] + x_min, excited[1] + normalisation])  # (x, y)
+            excited_average_list.append([average(excited[2] + x_min), average(excited[1])])  # (x, y)
 
-    excited_average_list_x = weighted_moving_average([xy_list[0] for xy_list in excited_average_list], x_mid)
-    excited_average_list_y = weighted_moving_average([xy_list[1] for xy_list in excited_average_list], y_mid)
-    excited_moving_average_list = [
-        [excited_average_list_x[i], excited_average_list_y[i] - normalisation] for i in range(len(excited_average_list_x))]
-    # excited_move_list = [np.subtract(excited_moving_average_list[i + 1], excited_moving_average_list[i])
-    #                      for i in range(len(excited_moving_average_list) - 1)]
-    # excited_direction = [arr_direction(i) for i in excited_move_list]
-    # consecutive_direction = count_max_consecutive(excited_direction)
+    excited_move_list = [np.round(np.subtract(excited_average_list[i + 1], excited_average_list[i])).tolist()
+                         for i in range(len(excited_average_list) - 1)]
+    percent_singular = count_singular(excited_move_list) / len(excited_move_list)
 
-    # excited_move_list = [np.round(np.subtract(excited_average_list[i + 1], excited_average_list[i])).tolist()
-    #                      for i in range(len(excited_average_list) - 1)]
-    # percent_singular = count_singular(excited_move_list) / len(excited_move_list)
-
-    # if percent_singular >= 0.9:
-    #     circuit_type = "re-entry"
+    if percent_singular >= 0.9:
+        circuit_type = "re-entry"
     # # TODO: % singular excited move
     # # TODO: rotor
     # # TODO: incomplete re-entry
 
     # plot average excited position
-    c = np.arange(len(excited_moving_average_list))  # colour by order
-    plt.scatter(*zip(*excited_moving_average_list), c=c)
-    # plt.plot(excited_moving_average_list)
-    plt.colorbar()
-    plt.show()
+    # c = np.arange(len(excited_moving_average_list))  # colour by order
+    # plt.scatter(*zip(*excited_moving_average_list), c=c)
+    # plt.colorbar()
+    # plt.show()
 
-    return excited_moving_average_list
+    return percent_singular
