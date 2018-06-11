@@ -3,7 +3,7 @@ import random
 
 class Direction:
     """
-    Define a direction for movement and reproduction.
+    Define a direction for possible excitations.
     """
     all_directions = ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1))
 

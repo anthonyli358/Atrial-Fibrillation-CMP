@@ -11,6 +11,19 @@ from viewer import Viewer
 
 
 def simulation(substrate, recorder, runtime, pacemaker_period):
+    """
+     :param substrate: Substrate to run simulaton on
+     :type substrate: af_model.Substrate
+     :param recorder: Class to record data with update methods
+     :type recorder: recorder Class
+     :param runtime: Number of timesteps in simulation.
+     :type runtime: int
+     :param pacemaker_period: Period of the pacemaker cells
+     :type pacemaker_period: int
+     :return: Array of activation arrays at each timestep
+     :rtype: numpy array (runtime, z, y, x)
+     """
+    result = np.zeros((runtime + 1,) + substrate.size, dtype='uint8')
     for t in range(runtime + 1):
         if t % pacemaker_period == 0:
             substrate.activate_pacemaker()
@@ -20,6 +33,27 @@ def simulation(substrate, recorder, runtime, pacemaker_period):
         #     substrate.activate((70,100,-1))
         result[t] = substrate.iterate()
     return result
+
+
+def main():
+    """
+    Run the 3D CMP model, outputting data in HDF5 format using the model_recorder module.
+    """
+    start = time.time()
+    print("GENERATING SUBSTRATE")
+    substrate = af.Model(**config.settings['structure'])
+    model_recorder = ModelRecorder(substrate)
+    print('SEED: {}'.format(substrate.seed))
+    print("RUNNING SIMULATION")
+    simulation(substrate, model_recorder, **config.settings['sim'], )
+    run = time.time() - start
+    print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(run))
+    model_recorder.output_model_stat_dict()
+    model_recorder.output_model_array_list()
+    model_viewer = Viewer(model_recorder.path)
+    model_viewer.plot_model_stats()
+    # data = model_viewer.import_data()
+    # model_viewer.animate_model_array(data)
 
 
 def risk_sim(substrate, settings):
@@ -53,28 +87,6 @@ def rotor_position():
             print(_)
     plt.hist(positions[:][0], 25, (0, 25), True)
     return positions
-
-
-def main():
-    start = time.time()
-    print("GENERATING SUBSTRATE")
-    substrate = af.Model(**config.settings['structure'])
-    model_recorder = ModelRecorder(substrate)
-    print('SEED: {}'.format(substrate.seed))
-    print("RUNNING SIMULATION")
-    simulation(substrate, model_recorder, **config.settings['sim'], )
-    run = time.time() - start
-    print("SIMULATION COMPLETE IN {:.1f} SECONDS".format(run))
-    model_recorder.output_model_stat_dict()
-    model_recorder.output_model_array_list()
-    model_viewer = Viewer(model_recorder.path)
-    model_viewer.plot_model_stats()
-    model_viewer.animate_model_array()
-
-
-substrate = af.Model(**config.settings['structure'])
-model_recorder = ModelRecorder(substrate)
-print('SEED: {}'.format(substrate.seed))
 
 
 def risk_recording_code():
@@ -145,17 +157,16 @@ def risk_pos(x, yz):
     return np.array([positions, risks])
 
 
-if __name__ == '__main__':
+def gen_risk_pos():
     for yz in [0.11, 0.12]:
         for x in np.arange(0.8, .85, 0.01):
             name = 'record/' + str(x) + ',' + str(yz) + '.npy'
             print('===========', name)
             result = risk_pos(x, yz)
-            # np.save(name, result)
+            np.save(name, result)
 
-# model_viewer = Viewer(model_recorder.path)
-# model_viewer.plot_model_stats()
-# data = model_viewer.import_data()
-# model_viewer.animate_model_array(data)
+
+if __name__ == '__main__':
+    main()
 
 # TODO: KILLSWITCH()
