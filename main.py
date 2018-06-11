@@ -126,6 +126,10 @@ def risk_pos(x, yz):
     strut_sett['x_coupling'] = x
     strut_sett['y_coupling'] = yz
     strut_sett['z_coupling'] = yz
+model_viewer = Viewer(model_recorder.path)
+model_viewer.plot_model_stats()
+data = model_viewer.import_data()
+model_viewer.animate_model_array(data)
 
     for _ in range(1000):
         substrate = af.Model(**strut_sett)

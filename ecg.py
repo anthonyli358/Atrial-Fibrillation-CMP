@@ -12,26 +12,30 @@ class ECG:
     A class for the ECG analysis of model data.
     """
 
-    def __init__(self, centre, probe_height, path):
+    def __init__(self, centre, probe_height, path, model_array_list=None):
         """
         ECG Initialisation
         :param centre: The point of ecg contact on the surface
         :param probe_height: Height of the probe above the surface
         :param path: The path for data to read and view
         """
-        self.centre = centre  # 0 based
+        self.centre = centre  # (x, y), 0 based
         self.probe_height = probe_height
         self.path = path
 
-        # Import the model_array from HFD5 format
-        with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
-            self.model_array_list = model_data_file['array_list'][:]
+        if model_array_list:
+            self.model_array_list = model_array_list
+        else:
+            # Import the model_array from HFD5 format
+            with h5py.File('data/{}/data_files/model_array_list'.format(self.path), 'r') as model_data_file:
+                self.model_array_list = model_data_file['array_list'][:]
         self.refractory_period = max(self.model_array_list.flatten())
 
         self.voltage_array_list = [array[0, :, :].astype(int) for array in self.model_array_list]
         (y, x) = self.voltage_array_list[0].shape
         self.y1 = round(y / 2)
-        self.voltage_array_list = [np.roll(array, self.y1 - self.centre[0], axis=0) for array in self.voltage_array_list]
+        self.voltage_array_list = [np.roll(array, self.y1 - self.centre[1], axis=0) for array in
+                                   self.voltage_array_list]
 
         create_dir('{}/ecg'.format(self.path))
 
@@ -40,16 +44,12 @@ class ECG:
         Get the ECG voltage for the current time step.
         """
 
-        # TODO: SELECT SURFACE (3D)
-
         rows = voltage_array.shape[0]
         columns = voltage_array.shape[1]
 
-        # TODO: X AND Y POS_DIFF ALWAYS THE SAME
-
         y_pos_diff = np.array([i for i in range(rows)]) - self.y1
         y_pos_diff_transpose = y_pos_diff.reshape(rows, 1)
-        x_pos_diff = np.array([i for i in range(columns)]) - self.centre[1]
+        x_pos_diff = np.array([i for i in range(columns)]) - self.centre[0]
         x_pos_diff_matrix = np.tile(x_pos_diff, (rows, 1))
         y_pos_diff_matrix = np.tile(y_pos_diff_transpose, (1, columns))
         normalise = (x_pos_diff_matrix ** 2 + y_pos_diff_matrix ** 2 + self.probe_height ** 2) ** 1.5
@@ -70,9 +70,6 @@ class ECG:
         :param start: Start time
         """
 
-        # TODO: DECIDE CENTRE & ROLL
-        # TODO: DECIDE SURFACE TO VIEW
-
         total_time = len(self.model_array_list)
         voltage_list = np.zeros(total_time)
         if time_steps is None or time_steps > total_time:
@@ -80,7 +77,8 @@ class ECG:
 
         for i in range(time_steps):
             sys.stdout.write(
-                '\r' + "calculating ecg, time_step: {}/{}...".format(start + i, total_time - 1))
+                '\r' + "calculating ecg at ({}, {}), time_step: {}/{}...".format(self.centre[0], self.centre[1],
+                                                                                 start + i, total_time - 1))
             sys.stdout.flush()
             voltage_list[i] = self.voltage(self.voltage_array_list[i])
 
@@ -101,5 +99,5 @@ class ECG:
         plt.close()
 
 
-# e = ECG([50, 50], 3, '11-21_15-46-17')  # [y, x]
-# e.plot_ecg([i for i in range(len(e.model_array_list))], e.ecg(), "ecg")
+# model_ecg = ECG([137, 100], 3, "mechanism/focal/18-02-15_15-09-29 (130, 156)")
+# model_ecg.plot_ecg([i for i in range(len(model_ecg.model_array_list))], model_ecg.ecg())
