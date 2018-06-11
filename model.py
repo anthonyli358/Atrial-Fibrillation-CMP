@@ -7,7 +7,7 @@ class Model:
     """
 
     def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, x_coupling,
-                 yz_coupling, seed, time=0, anglevars=None):
+                 yz_coupling, seed, time=0, angle_toggle=False, anglevars=[20,45,0.7]):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -18,6 +18,8 @@ class Model:
         :param yz_coupling: The y yz_coupling factor
         :param seed: Model randomisation seed
         :param time: Current time step
+        :param angle_toggle: Toggle the setting of connectivity by angle
+        :param anglevars: List [angle at min(z), angle at max(z), connectivity magnitude]
         """
         self.size = size
         self.refractory_period = refractory_period
@@ -34,7 +36,7 @@ class Model:
         self.maxpos = [0, 0, 0]
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
 
-        if anglevars:
+        if angle_toggle == 1:
             angle0 = anglevars[0]
             angle1 = anglevars[1]
             connectivity = anglevars[2]
@@ -51,7 +53,7 @@ class Model:
             self.x_linkage = np.apply_along_axis(np.less, 0, x_ran, x_coupling_grid)
             self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
             self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
-        else:
+        elif angle_toggle == 0:
 
             self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                               p=[x_coupling, 1 - x_coupling])
