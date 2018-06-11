@@ -148,7 +148,7 @@ class Config(QtWidgets.QWidget):
         yz_linkage.setValue(self.settings['structure']['yz_coupling'])
 
         x_linkage.valueChanged.connect(self.update_x_linkage)
-        yz_linkage.valueChanged.connect(self.update_y_linkage)
+        yz_linkage.valueChanged.connect(self.update_yz_linkage)
 
 
         xyz_linkage = QtWidgets.QHBoxLayout()
@@ -275,11 +275,8 @@ class Config(QtWidgets.QWidget):
     def update_x_linkage(self, val):
         self.settings['structure']['x_coupling'] = val
 
-    def update_y_linkage(self, val):
-        self.settings['structure']['y_coupling'] = val
-
-    def update_z_linkage(self, val):
-        self.settings['structure']['z_coupling'] = val
+    def update_yz_linkage(self, val):
+        self.settings['structure']['yz_coupling'] = val
 
     def update_refractory(self, val):
         self.settings['structure']['refractory_period'] = val
@@ -340,14 +337,16 @@ class makePhases(makeCanvas):
 class Animation(makeCanvas):
     """Window with real-time Atrial Fibrillation animation."""
     def compute_initial_figure(self):
+        """Function to create figures"""
+        # Sets initial plots and plot positions
         size = self.settings['structure']['size']
-        self.hist = []
+        self.hist = []  # Saves array history
 
         self.substrate = model.Model(**self.settings['structure'])
 
         gs = GridSpec(3, 2,
                       width_ratios=[1, size[0]/size[1]],
-                      height_ratios=[1, size[0]/size[2], 1])
+                      height_ratios=[1, size[0]/size[2], 1])  # Setting grid layout for figures
 
         self.ax0 = self.figure.add_subplot(gs[4])
         im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
@@ -371,13 +370,14 @@ class Animation(makeCanvas):
                                  )
 
         self.ax1 = self.figure.add_subplot(gs[0])
-        clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)
+        clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)  # Clicking changes the cut through positions
 
+        # # Transparent colourmaps if needed
         # cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
         # cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
         # cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
 
-        image = self.ax1.imshow(self.substrate.model_array[-1],
+        image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
                                 animated=True,
                                 cmap='Greys_r',
                                 vmin=0,
@@ -411,7 +411,7 @@ class Animation(makeCanvas):
         #                          zorder=1
         #                          )
 
-        self.ax2 = self.figure.add_subplot(gs[5])
+        self.ax2 = self.figure.add_subplot(gs[5])  # Plot the x axis cut through
         v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :, self.settings['QTviewer']['x_cross_pos']],
                                                    0, 1),
                                        animated=True,
@@ -424,7 +424,7 @@ class Animation(makeCanvas):
                                                0, self.settings['structure']['size'][1])
                                        )
 
-        self.ax3 = self.figure.add_subplot(gs[2])
+        self.ax3 = self.figure.add_subplot(gs[2])  # Plot the y axis cut through
         h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
                                        animated=True,
                                        vmin=0,
@@ -437,21 +437,23 @@ class Animation(makeCanvas):
                                        )
 
         def func(framedata):
-            """Function to iterate animation over, All active changes here"""
+            """Function to iterate animation, All active changes here"""
             t, play = framedata
 
             if t % self.settings['sim']['pacemaker_period'] == 0:
                 self.substrate.activate_pacemaker()
-            if play:
-                self.substrate.iterate()
-                self.hist.append(np.copy(self.get_anim_array()))
+            if play:  # If viewer is not paused iterate each timestep.
+                self.substrate.iterate()  # advance simulation
+                self.hist.append(np.copy(self.get_anim_array()))  # append change to list
             # if t == 300:
             #     self.substrate.add_ablation(self.substrate.maxpos, 2)
             # if t == 1:
             #     self.substrate.add_ablation((0,100,100), 2)
-            arr = self.get_anim_array()
+
+            arr = self.get_anim_array()  # get array for plotting
 
             self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, t, self.substrate.maxpos))
+            # Update all the plot data with new variables
             return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                     lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                     im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
@@ -462,15 +464,15 @@ class Animation(makeCanvas):
                     h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
 
-        def frames():
+        def frames():  # Iterator for animation, yield same time value while paused
             t = -1
             while True:
-                advanced = False
+                play = False
                 if self.settings['play'] or self.settings['step']:
                     self.settings['step'] = False  # enable one timestep only while paused
-                    advanced = True  # let substrate iterate
+                    play = True  # let substrate iterate
                     t += 1
-                yield (t, advanced)
+                yield (t, play)
 
         self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False)
 
