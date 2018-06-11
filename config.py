@@ -1,16 +1,26 @@
 settings = dict(
     structure=dict(
-        size=(25, 200, 200),  # (z, y, x)
-        refractory_period=50,
-        dysfunction_parameter=0.05,  # fraction of dysfunctional cells
-        dysfunction_probability=0.05,
-        x_coupling=.9,
-        y_coupling=.12,  # probability of y linkage
-        z_coupling=.12,
-        seed=None  # 11-13_17-02-49 pretty, .61,.61
+        size=[25, 200, 200],  # (z, y, x)
+        refractory_period=50,   # tau, refractory period of cells
+        dysfunction_parameter=0.05, # delta, fraction of dysfunctional cells
+        dysfunction_probability=0.05,   # epsilon, probability of dysfunctional cell failing
+        x_coupling=0.6,  # nu_x, probability of x linkage
+        yz_coupling=1,  # nu_yz, probability of y and z linkage
+        seed=None
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period
         runtime=1000,
+    ),
+    viewer=dict(
+        cross_view=True,
+        save=False,  # save file?
+        cross_pos=50,
+        interval=1,  # length of each frame in milliseconds
+    ),
+    QTviewer=dict(
+        x_cross_pos=50,
+        y_cross_pos=50,
+        z_cross_pos=0,
     ),
 )
