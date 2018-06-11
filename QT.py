@@ -232,6 +232,42 @@ class Config(QtWidgets.QWidget):
         cross_pos3.addWidget(w_cross_pos_spin)
         cross_pos3.addWidget(w_cross_pos_slider)
 
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.HLine)
+        separator.setFrameShadow(QtWidgets.QFrame.Sunken)
+
+        toggle = QtWidgets.QCheckBox()
+        toggle.setTristate(False)
+        toggle.setCheckState(2*self.settings['structure']['angle_toggle'])
+        toggle.stateChanged.connect(self.update_toggle)
+
+        angle0 = QtWidgets.QSpinBox()
+        angle1 = QtWidgets.QSpinBox()
+
+        angle0.setRange(0, 180)
+        angle1.setRange(0, 180)
+
+        angle0.setSingleStep(10)
+        angle1.setSingleStep(10)
+
+        angle0.setValue(self.settings['structure']['anglevars'][0])
+        angle1.setValue(self.settings['structure']['anglevars'][1])
+
+        angle0.valueChanged.connect(self.update_angle0)
+        angle1.valueChanged.connect(self.update_angle1)
+
+        angles = QtWidgets.QHBoxLayout()
+        angles.addWidget(QtWidgets.QLabel('Angle at min z:'))
+        angles.addWidget(angle0)
+        angles.addWidget(QtWidgets.QLabel('Angle at max z:'))
+        angles.addWidget(angle1)
+
+        anglemag = QtWidgets.QDoubleSpinBox()
+        anglemag.setDecimals(3)
+        anglemag.setRange(0.00, 1.00)
+        anglemag.setSingleStep(0.01)
+        anglemag.setValue(self.settings['structure']['anglevars'][2])
+        anglemag.valueChanged.connect(self.update_anglemag)
         config_box = QtWidgets.QGroupBox()
         config_box.setTitle('Substrate Configuration Settings')
 
@@ -241,6 +277,11 @@ class Config(QtWidgets.QWidget):
         config_form.addRow(QtWidgets.QLabel('Refractory Period'), refractoryBox)
         config_form.addRow(QtWidgets.QLabel('Dysfunctional cells'), dysfunction)
         config_form.addRow(QtWidgets.QLabel('Dysfunctional Probability'), dysfunction_p)
+        config_form.addWidget(separator)
+        config_form.addRow(QtWidgets.QLabel('Toggle angle'), toggle)
+        config_form.addRow(QtWidgets.QLabel('Angles'), angles)
+        config_form.addRow(QtWidgets.QLabel('Average connectivity'), anglemag)
+
         config_form.addWidget(reset_button)
 
         config_box.setLayout(config_form)
@@ -299,6 +340,17 @@ class Config(QtWidgets.QWidget):
     def update_w_cross_pos(self, val):
         self.settings['QTviewer']['z_cross_pos'] = val
 
+    def update_toggle(self, val):
+        self.settings['structure']['angle_toggle'] = val/2
+
+    def update_angle0(self, val):
+        self.settings['structure']['anglevars'][0] = val
+
+    def update_angle1(self, val):
+        self.settings['structure']['anglevars'][1] = val
+
+    def update_anglemag(self, val):
+        self.settings['structure']['anglevars'][2] = val
 
 class makeCanvas(FigureCanvas):
     """Parent class of all Canvases. Initiate a figure with a toolbar."""

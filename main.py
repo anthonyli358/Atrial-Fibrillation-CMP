@@ -133,8 +133,8 @@ def risk_pos(x, yz):
     positions = []
     risks = []
     strut_sett = config.settings['structure']
-    strut_sett['x_coupling'] = [x]
-    strut_sett['yz_coupling'] = [yz]
+    strut_sett['x_coupling'] = x
+    strut_sett['yz_coupling'] = yz
 
     for _ in range(1000):
         substrate = af.Model(**strut_sett)
