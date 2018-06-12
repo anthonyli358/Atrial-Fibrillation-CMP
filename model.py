@@ -27,6 +27,7 @@ class Model:
         self.dysfunction_probability = dysfunction_probability
         self.time = time
         self.seed = seed if seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
+        np.random.seed(self.seed)
         self.direction = np.zeros(size, dtype='uint8')
 
         self.excited = np.zeros(size, dtype=bool)
@@ -36,16 +37,17 @@ class Model:
         self.maxpos = [0, 0, 0]
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
 
+
         if angle_toggle == 1:
             angle0 = anglevars[0]
             angle1 = anglevars[1]
-            connectivity = anglevars[2]
+            connectivity = 2 * anglevars[2]
 
             angle_grid = np.linspace(angle0, angle1, size[0]) * np.pi/180
-            x_coupling_grid = connectivity * np.cos(angle_grid)
-            yz_coupling_grid = connectivity * np.sin(angle_grid)
-
-
+            tangent = np.tan(angle_grid)
+            x_coupling_grid = connectivity / (1+tangent)
+            yz_coupling_grid = x_coupling_grid * tangent
+            print(x_coupling_grid,yz_coupling_grid)
             x_ran = np.random.random(size)
             y_ran = np.random.random(size)
             z_ran = np.random.random(size)
@@ -53,6 +55,7 @@ class Model:
             self.x_linkage = np.apply_along_axis(np.less, 0, x_ran, x_coupling_grid)
             self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
             self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
+
         elif angle_toggle == 0:
 
             self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
@@ -123,12 +126,12 @@ class Model:
         # Update excited and resting arrays
         self.excited = self.model_array == self.refractory_period
         self.resting = self.model_array == 0
-        # self.excount += np.uint32(self.excited)
+        self.excount += np.uint32(self.excited)
 
-        # itermax = np.max(self.excount)
-        # if itermax != self._max:  # When a new level of excitation happens find position of excitation
-        #     self._max = itermax
-        #     self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
+        itermax = np.max(self.excount)
+        if itermax != self._max:  # When a new level of excitation happens find position of excitation
+            self._max = itermax
+            self.maxpos = np.unravel_index(np.argmax(self.excount), self.size)
 
         return self.model_array
 

@@ -21,8 +21,8 @@ class AFInterface(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.settings = config.settings
-        self.config = Config(self)
         self.initUI()
+        self.config = Config(self)
 
     def initUI(self):
 
@@ -88,9 +88,14 @@ class AFInterface(QtWidgets.QMainWindow):
     def reset(self):
         if not config.settings['structure']['seed']:
             self.settings['structure']['seed'] = None
+        if self.config.seedCheck.isChecked():
+            self.settings['structure']['seed'] = np.uint32(self.config.seedBox.text())
+        else:
+            self.settings['structure']['seed'] = None
         self.anim.close_event()  # Ends Current animation
         self.anim = Animation(self)  # Overwrites animation with new one
         self.setCentralWidget(self.anim)  # Replaces animation with new one
+        self.config.seedBox.setText(np.str(self.anim.substrate.seed))
         print('\n\n New Settings \n')
         pprint(self.settings)
 
@@ -177,6 +182,18 @@ class Config(QtWidgets.QWidget):
         dysfunction_p.setSingleStep(0.005)
         dysfunction_p.setValue(self.settings['structure']['dysfunction_probability'])
         dysfunction_p.valueChanged.connect(self.update_dysfunctional_prob)
+
+        self.seedCheck = QtWidgets.QCheckBox()
+        self.seedCheck.setCheckState(0)
+
+        self.seedBox = QtWidgets.QLineEdit()
+        validator = QtGui.QIntValidator(0,4294967295)
+        self.seedBox.setValidator(validator)
+        self.seedBox.setText(np.str(self.parent.anim.substrate.seed))
+
+        seedHBox = QtWidgets.QHBoxLayout()
+        seedHBox.addWidget(self.seedCheck)
+        seedHBox.addWidget(self.seedBox)
 
         reset_button = QtWidgets.QPushButton()
         reset_button.setText('Reset with these settings')
@@ -282,6 +299,7 @@ class Config(QtWidgets.QWidget):
         config_form.addRow(QtWidgets.QLabel('Angles'), angles)
         config_form.addRow(QtWidgets.QLabel('Average connectivity'), anglemag)
 
+        config_form.addRow(QtWidgets.QLabel('Seed'), seedHBox)
         config_form.addWidget(reset_button)
 
         config_box.setLayout(config_form)
@@ -373,9 +391,9 @@ class makePhases(makeCanvas):
     def compute_initial_figure(self):
         self.resize(400, 350)
         self.step = False
-        names = ['Phase_Spaces/1_200_200.npy', 'Phase_Spaces/2_200_200.npy',
-                 'Phase_Spaces/4_200_200.npy', 'Phase_Spaces/8_200_200.npy',
-                 'Phase_Spaces/16_200_200.npy', 'Phase_Spaces/32_200_200.npy']
+        names = ['data_analysis/phase_spaces/1_200_200.npy', 'data_analysis/phase_spaces/2_200_200.npy',
+                 'data_analysis/phase_spaces/4_200_200.npy', 'data_analysis/phase_spaces/8_200_200.npy',
+                 'data_analysis/phase_spaces/16_200_200.npy', 'data_analysis/phase_spaces/32_200_200.npy']
         compilation = []
         for i in names:
             compilation.append(np.load(i)[:, :, 2])
