@@ -31,7 +31,6 @@ class Model:
         np.random.seed(self.seed)
         self.direction = np.zeros(size, dtype='uint8')
 
-
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
         self.excount = np.zeros(size, dtype='uint32')
@@ -40,15 +39,14 @@ class Model:
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
 
         if angle_toggle:
-            angle0 = angle_vars[0]
-            angle1 = angle_vars[1]
-            connectivity = 2 * angle_vars[2]
+            angles = np.array([angle_vars[0], angle_vars[1]])
+            average = angle_vars[2]
+            x = 3 * average / (1 + 2 * np.tan(angles * np.pi / 180))
+            yz = 0.5 * (3 * average - x)
 
-            angle_grid = np.linspace(angle0, angle1, size[0]) * np.pi / 180
-            tangent = np.tan(angle_grid)
-            x_coupling_grid = connectivity / (1 + tangent)
-            yz_coupling_grid = x_coupling_grid * tangent
-            print(x_coupling_grid, yz_coupling_grid)
+            x_coupling_grid = np.linspace(x[0], x[1], size[0], True)
+            yz_coupling_grid = np.linspace(yz[0], yz[1], size[0], True)
+            # print(x_coupling_grid, yz_coupling_grid)
             x_ran = np.random.random(size)
             y_ran = np.random.random(size)
             z_ran = np.random.random(size)
