@@ -39,16 +39,16 @@ class Model:
         self.maxpos = [0, 0, 0]
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
 
-
         if angle_toggle:
-            angles = np.array([angle_vars[0],  angle_vars[1]])
-            average = angle_vars[2]
-            x = 3 * average / (1 + 2 * np.tan(angles*np.pi/180))
-            yz = 0.5 * (3 * average - x)
+            angle0 = angle_vars[0]
+            angle1 = angle_vars[1]
+            connectivity = 2 * angle_vars[2]
 
-            x_coupling_grid = np.linspace(x[0],x[1],size[0],True)
-            yz_coupling_grid = np.linspace(yz[0],yz[1],size[0],True)
-            print(x_coupling_grid,yz_coupling_grid)
+            angle_grid = np.linspace(angle0, angle1, size[0]) * np.pi / 180
+            tangent = np.tan(angle_grid)
+            x_coupling_grid = connectivity / (1 + tangent)
+            yz_coupling_grid = x_coupling_grid * tangent
+            print(x_coupling_grid, yz_coupling_grid)
             x_ran = np.random.random(size)
             y_ran = np.random.random(size)
             z_ran = np.random.random(size)
@@ -57,7 +57,7 @@ class Model:
             self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
             self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
 
-        elif not angle_toggle:
+        elif angle_toggle == 0:
 
             self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                               p=[x_coupling, 1 - x_coupling])
@@ -65,6 +65,7 @@ class Model:
                                               p=[yz_coupling, 1 - yz_coupling])
             self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
                                               p=[yz_coupling, 1 - yz_coupling])
+
         self.x_linkage[:, :, -1] = False  # No links from end
         self.z_linkage[-1, :, :] = False
         self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes
@@ -145,10 +146,10 @@ class Model:
         y = range(self.size[1])
         x = range(self.size[2])
         Z, Y, X = np.meshgrid(z, y, x, indexing='ij')
-        Xp, Yp, Zp = X-coordinate[2], Y-coordinate[1], Z
-        dist_sq = np.square(Xp*0.5) + np.square(Yp*0.1) + np.square(Zp*0.1)
-        self.destroyed = dist_sq < radius**2
-    
+        Xp, Yp, Zp = X - coordinate[2], Y - coordinate[1], Z
+        dist_sq = np.square(Xp * 0.5) + np.square(Yp * 0.1) + np.square(Zp * 0.1)
+        self.destroyed = dist_sq < radius ** 2
+
     def activate(self, coordinate):
         """
         Activate specified cell.
@@ -162,6 +163,6 @@ class Model:
         :param circuit_coord: First activated cell (starting point) of the circuit
         """
         self.y_linkage[0, circuit_coord[0] - 1:circuit_coord[0] + 1,
-                       circuit_coord[1]: int(circuit_coord[1] + self.refractory_period / 2 + 1)] = 0
+        circuit_coord[1]: int(circuit_coord[1] + self.refractory_period / 2 + 1)] = 0
         self.model_array[0, circuit_coord[0], circuit_coord[1] + 3] = self.refractory_period
         self.model_array[0, circuit_coord[0], circuit_coord[1] + 4] = self.refractory_period - 1

@@ -24,7 +24,7 @@ For the purpose of simply running the 3D CMP model other modules may be disregar
 - Run QT.py 
   - Changes plotting design may be made in the *Animation* class.
 
-- The z=0 and z=24 surfaces with cross sections indicated by cyan dotted lines are displayed alongside the current seed and timestep.
+- The epicardial (z=0) and endocardial (z=24) surfaces with cross sections indicated by cyan dotted lines are displayed alongside the current seed and timestep.
   - ![alt text](Icons/icons8-play-50.png) Play/Pause animation.
   - ![alt text](Icons/icons8-heat-map-50.png) Plot phase spaces for AF risk (may be intensive & time-consuming).
   - ![alt text](Icons/icons8-settings-50.png) Settings - change structure parameters, animation style, and cross-section position.

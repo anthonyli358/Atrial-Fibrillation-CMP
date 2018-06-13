@@ -4,7 +4,6 @@ __pycache__/
 *.pyc
 test.py
 
-
 # Folders
 data/
 viva_recordings/
