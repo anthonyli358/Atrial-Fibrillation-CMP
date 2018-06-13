@@ -218,8 +218,8 @@ class Config(QtWidgets.QWidget):
         angle0.setSingleStep(10)
         angle1.setSingleStep(10)
 
-        angle0.setValue(self.settings['structure']['anglevars'][0])
-        angle1.setValue(self.settings['structure']['anglevars'][1])
+        angle0.setValue(self.settings['structure']['angle_vars'][0])
+        angle1.setValue(self.settings['structure']['angle_vars'][1])
 
         angle0.valueChanged.connect(self.update_angle0)
         angle1.valueChanged.connect(self.update_angle1)
@@ -234,7 +234,7 @@ class Config(QtWidgets.QWidget):
         anglemag.setDecimals(3)
         anglemag.setRange(0.00, 1.00)
         anglemag.setSingleStep(0.01)
-        anglemag.setValue(self.settings['structure']['anglevars'][2])
+        anglemag.setValue(self.settings['structure']['angle_vars'][2])
         anglemag.valueChanged.connect(self.update_anglemag)
 
 
