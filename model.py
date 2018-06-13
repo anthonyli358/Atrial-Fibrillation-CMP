@@ -7,7 +7,7 @@ class Model:
     """
 
     def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, x_coupling,
-                 yz_coupling, seed, time=0, angle_toggle=False, anglevars=[20,45,0.7]):
+                 yz_coupling, seed, time=0, angle_toggle=False, angle_vars=[20, 45, 0.7]):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -19,7 +19,7 @@ class Model:
         :param seed: Model randomisation seed
         :param time: Current time step
         :param angle_toggle: Toggle the setting of connectivity by angle
-        :param anglevars: List [angle at min(z), angle at max(z), connectivity magnitude]
+        :param angle_vars: List [angle at min(z), angle at max(z), connectivity magnitude]
         """
         self.size = size
         self.refractory_period = refractory_period
@@ -37,17 +37,16 @@ class Model:
         self.maxpos = [0, 0, 0]
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
 
+        if angle_toggle:
+            angle0 = angle_vars[0]
+            angle1 = angle_vars[1]
+            connectivity = 2 * angle_vars[2]
 
-        if angle_toggle == 1:
-            angle0 = anglevars[0]
-            angle1 = anglevars[1]
-            connectivity = 2 * anglevars[2]
-
-            angle_grid = np.linspace(angle0, angle1, size[0]) * np.pi/180
+            angle_grid = np.linspace(angle0, angle1, size[0]) * np.pi / 180
             tangent = np.tan(angle_grid)
-            x_coupling_grid = connectivity / (1+tangent)
+            x_coupling_grid = connectivity / (1 + tangent)
             yz_coupling_grid = x_coupling_grid * tangent
-            print(x_coupling_grid,yz_coupling_grid)
+            print(x_coupling_grid, yz_coupling_grid)
             x_ran = np.random.random(size)
             y_ran = np.random.random(size)
             z_ran = np.random.random(size)
@@ -56,14 +55,14 @@ class Model:
             self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
             self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
 
-        elif angle_toggle == 0:
-
+        else:
             self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                               p=[x_coupling, 1 - x_coupling])
             self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of transverse linkages
                                               p=[yz_coupling, 1 - yz_coupling])
             self.z_linkage = np.random.choice(a=[True, False], size=size,  # array of layer linkages
                                               p=[yz_coupling, 1 - yz_coupling])
+
         self.x_linkage[:, :, -1] = False  # No links from end
         self.z_linkage[-1, :, :] = False
         self.dysfunctional = np.random.choice(a=[True, False], size=size,  # array of dysfunctional nodes
@@ -143,10 +142,10 @@ class Model:
         y = range(self.size[1])
         x = range(self.size[2])
         Z, Y, X = np.meshgrid(z, y, x, indexing='ij')
-        Xp, Yp, Zp = X-coordinate[2], Y-coordinate[1], Z
-        dist_sq = np.square(Xp*0.5) + np.square(Yp*0.1) + np.square(Zp*0.1)
-        self.destroyed = dist_sq < radius**2
-    
+        Xp, Yp, Zp = X - coordinate[2], Y - coordinate[1], Z
+        dist_sq = np.square(Xp * 0.5) + np.square(Yp * 0.1) + np.square(Zp * 0.1)
+        self.destroyed = dist_sq < radius ** 2
+
     def activate(self, coordinate):
         """
         Activate specified cell.
@@ -160,6 +159,6 @@ class Model:
         :param circuit_coord: First activated cell (starting point) of the circuit
         """
         self.y_linkage[0, circuit_coord[0] - 1:circuit_coord[0] + 1,
-                       circuit_coord[1]: int(circuit_coord[1] + self.refractory_period / 2 + 1)] = 0
+        circuit_coord[1]: int(circuit_coord[1] + self.refractory_period / 2 + 1)] = 0
         self.model_array[0, circuit_coord[0], circuit_coord[1] + 3] = self.refractory_period
         self.model_array[0, circuit_coord[0], circuit_coord[1] + 4] = self.refractory_period - 1
