@@ -218,8 +218,8 @@ class Config(QtWidgets.QWidget):
         angle0.setSingleStep(10)
         angle1.setSingleStep(10)
 
-        angle0.setValue(self.settings['structure']['anglevars'][0])
-        angle1.setValue(self.settings['structure']['anglevars'][1])
+        angle0.setValue(self.settings['structure']['angle_vars'][0])
+        angle1.setValue(self.settings['structure']['angle_vars'][1])
 
         angle0.valueChanged.connect(self.update_angle0)
         angle1.valueChanged.connect(self.update_angle1)
@@ -234,7 +234,7 @@ class Config(QtWidgets.QWidget):
         anglemag.setDecimals(3)
         anglemag.setRange(0.00, 1.00)
         anglemag.setSingleStep(0.01)
-        anglemag.setValue(self.settings['structure']['anglevars'][2])
+        anglemag.setValue(self.settings['structure']['angle_vars'][2])
         anglemag.valueChanged.connect(self.update_anglemag)
 
 
@@ -303,6 +303,27 @@ class Config(QtWidgets.QWidget):
 
 
 
+        angle0.setSingleStep(10)
+        angle1.setSingleStep(10)
+
+        angle0.setValue(self.settings['structure']['angle_vars'][0])
+        angle1.setValue(self.settings['structure']['angle_vars'][1])
+
+        angle0.valueChanged.connect(self.update_angle0)
+        angle1.valueChanged.connect(self.update_angle1)
+
+        angles = QtWidgets.QHBoxLayout()
+        angles.addWidget(QtWidgets.QLabel('Angle at min z:'))
+        angles.addWidget(angle0)
+        angles.addWidget(QtWidgets.QLabel('Angle at max z:'))
+        angles.addWidget(angle1)
+
+        anglemag = QtWidgets.QDoubleSpinBox()
+        anglemag.setDecimals(3)
+        anglemag.setRange(0.00, 1.00)
+        anglemag.setSingleStep(0.01)
+        anglemag.setValue(self.settings['structure']['angle_vars'][2])
+        anglemag.valueChanged.connect(self.update_anglemag)
         config_box = QtWidgets.QGroupBox()
         config_box.setTitle('Substrate Configuration Settings')
 
@@ -382,13 +403,13 @@ class Config(QtWidgets.QWidget):
         self.settings['structure']['angle_toggle'] = val/2
 
     def update_angle0(self, val):
-        self.settings['structure']['anglevars'][0] = val
+        self.settings['structure']['angle_vars'][0] = val
 
     def update_angle1(self, val):
-        self.settings['structure']['anglevars'][1] = val
+        self.settings['structure']['angle_vars'][1] = val
 
     def update_anglemag(self, val):
-        self.settings['structure']['anglevars'][2] = val
+        self.settings['structure']['angle_vars'][2] = val
 
 class makeCanvas(FigureCanvas):
     """Parent class of all Canvases. Initiate a figure with a toolbar."""
