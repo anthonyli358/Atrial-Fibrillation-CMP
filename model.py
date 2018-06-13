@@ -7,7 +7,7 @@ class Model:
     """
 
     def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, x_coupling,
-                 yz_coupling, seed, time=0, angle_toggle=False, anglevars=[20,45,0.7]):
+                 yz_coupling, seed, time=0, angle_toggle=False, angle_vars=[20, 45, 0.7]):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -19,7 +19,7 @@ class Model:
         :param seed: Model randomisation seed
         :param time: Current time step
         :param angle_toggle: Toggle the setting of connectivity by angle
-        :param anglevars: List [angle at min(z), angle at max(z), connectivity magnitude]
+        :param angle_vars: List [angle at min(z), angle at max(z), connectivity magnitude]
         """
         self.size = size
         self.refractory_period = refractory_period
@@ -38,15 +38,14 @@ class Model:
         self.model_array = np.zeros(size, dtype='uint8')  # array of model_array state
 
 
-        if angle_toggle == 1:
-            angle0 = anglevars[0]
-            angle1 = anglevars[1]
-            connectivity = 2 * anglevars[2]
+        if angle_toggle:
+            angles = np.array([angle_vars[0],  angle_vars[1]])
+            average = angle_vars[2]
+            x = 3 * average / (1 + 2 * np.tan(angles))
+            yz = 0.5 * (3 * average - x)
 
-            angle_grid = np.linspace(angle0, angle1, size[0]) * np.pi/180
-            tangent = np.tan(angle_grid)
-            x_coupling_grid = connectivity / (1+tangent)
-            yz_coupling_grid = x_coupling_grid * tangent
+            x_coupling_grid = np.linspace(x[0],x[1],size[0],True)
+            yz_coupling_grid = np.linspace(yz[0],yz[1],size[0],True)
             print(x_coupling_grid,yz_coupling_grid)
             x_ran = np.random.random(size)
             y_ran = np.random.random(size)
@@ -56,7 +55,7 @@ class Model:
             self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
             self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
 
-        elif angle_toggle == 0:
+        elif not angle_toggle:
 
             self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                               p=[x_coupling, 1 - x_coupling])
