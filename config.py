@@ -7,8 +7,8 @@ settings = dict(
         x_coupling=0.8,  # nu_x, probability of x linkage
         yz_coupling=.12,  # nu_yz, probability of y and z linkage
         seed=None,  # set a specific seed. Defaults from 'uint32'
-        angle_toggle=False,  # Use angular definition of coupling
-        angle_vars=[24,42,.35],  # theta(z=0), theta(z=max), magnitude of connectivity
+        angle_toggle=True,  # Use angular definition of coupling
+        angle_vars=[24,42,.31],  # theta(z=0), theta(z=max), magnitude of connectivity
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period

@@ -13,6 +13,7 @@ from pprint import pprint  # to get readable print output for dicts
 
 import model
 import config
+import scipy.ndimage as spim
 
 
 class AFInterface(QtWidgets.QMainWindow):
@@ -549,10 +550,6 @@ class Animation(makeCanvas):
                                  zorder=1
                                  )
 
-        # contour = self.ax1.contour(self.substrate.model_array[0],
-        #                            animated=True,
-        #                            zorder=5,
-        #                            levels=[50])
 
         self.ax2 = self.figure.add_subplot(gs[5])  # Plot the x axis cut through
         v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :, self.settings['QTviewer']['x_cross_pos']],
@@ -604,26 +601,30 @@ class Animation(makeCanvas):
                 self.settings['skip'] = False
                 self.parent.toggle_pause()
                 print(jumps)
-            self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos))
+
             # # Update all the plot data with new variables
 
             arr = self.get_anim_array()  # get array for plotting
 
+            arr_act = arr == 50
+            a = 10*(spim.filters.gaussian_filter(50*(arr>40),(10,5,5), mode=('reflect','wrap','constant')))
+            # a = 50 * spim.filters.gaussian_filter((50*(coarse_max==50)), 1)
             # self.ax1.clear()
-            # coarse_max = np.maximum(np.maximum(arr[0],arr[1]),np.maximum(arr[2],arr[3]))
-            # contour = self.ax1.contour(coarse_max,
+            # contour = self.ax1.contour(a[-1],
             #                            animated=True,
             #                            zorder=5,
             #                            levels=[50])
-
+            self.ax1.set_title(
+                'seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos))
             return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                     lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                     im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
                     im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
                     im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
-                    image.set_data(arr[-1]),
-                    image2.set_data(arr[-2]),
-                    image3.set_data(arr[-3]),
+                    image.set_data(a[0]),
+                    # image.set_data(arr[-1]),
+                    # image2.set_data(arr[-2]),
+                    # image3.set_data(arr[-3]),
                     v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                     h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
