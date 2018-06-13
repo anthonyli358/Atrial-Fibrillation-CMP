@@ -43,7 +43,7 @@ class Model:
         if angle_toggle:
             angles = np.array([angle_vars[0],  angle_vars[1]])
             average = angle_vars[2]
-            x = 3 * average / (1 + 2 * np.tan(angles))
+            x = 3 * average / (1 + 2 * np.tan(angles*np.pi/180))
             yz = 0.5 * (3 * average - x)
 
             x_coupling_grid = np.linspace(x[0],x[1],size[0],True)
