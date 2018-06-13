@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 class Model:
@@ -30,6 +31,7 @@ class Model:
         np.random.seed(self.seed)
         self.direction = np.zeros(size, dtype='uint8')
 
+
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
         self.excount = np.zeros(size, dtype='uint32')
@@ -55,7 +57,8 @@ class Model:
             self.y_linkage = np.apply_along_axis(np.less, 0, y_ran, yz_coupling_grid)
             self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
 
-        else:
+        elif angle_toggle == 0:
+
             self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                               p=[x_coupling, 1 - x_coupling])
             self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of transverse linkages
@@ -114,6 +117,7 @@ class Model:
                                      )[excitable]
 
         # Check if dysfunctional cells fail to excite
+        # rng = random.Random()
         self.failed[excitable & self.dysfunctional] = np.random.random(
             len(self.failed[excitable & self.dysfunctional])) < self.dysfunction_probability
 

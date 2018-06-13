@@ -29,6 +29,7 @@ class AFInterface(QtWidgets.QMainWindow):
         self.settings['play'] = True
         self.settings['step'] = False
         self.settings['view'] = 'activation'
+        self.settings['skip'] = False
         self.setWindowIcon(QtGui.QIcon('icons8-heart-with-pulse-50.png'))
         self.anim = Animation(self)
         self.setCentralWidget(self.anim)
@@ -53,6 +54,11 @@ class AFInterface(QtWidgets.QMainWindow):
         advAct.triggered.connect(self.advance)
         advAct.setShortcut('return')
 
+        skipAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-end-32.png'), 'skip', self)
+        skipAct.triggered.connect(self.skip)
+
+
+
         # Creating menu bar
         menubar = self.menuBar()
 
@@ -64,10 +70,10 @@ class AFInterface(QtWidgets.QMainWindow):
 
         # Adding animation toolbar
         self.toolbar = self.addToolBar('Animation')
-        self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct])
+        self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct, skipAct])
         self.toolbar.setMaximumHeight(25)
 
-        self.setGeometry(300, 100, 300, 400)
+        self.setGeometry(300, 150, 350, 650)
         self.setWindowTitle('AF Viewer')
 
         self.show()
@@ -75,6 +81,9 @@ class AFInterface(QtWidgets.QMainWindow):
     def toggle_pause(self):
 
         self.settings['play'] ^= True  # Toggle play setting
+
+    def skip(self):
+        self.settings['skip'] = True
 
     def show_config(self):
         # self.config = Config(self)
@@ -191,6 +200,44 @@ class Config(QtWidgets.QWidget):
         self.seedBox.setValidator(validator)
         self.seedBox.setText(np.str(self.parent.anim.substrate.seed))
 
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.HLine)
+        separator.setFrameShadow(QtWidgets.QFrame.Sunken)
+
+        toggle = QtWidgets.QCheckBox()
+        toggle.setTristate(False)
+        toggle.setCheckState(2*self.settings['structure']['angle_toggle'])
+        toggle.stateChanged.connect(self.update_toggle)
+
+        angle0 = QtWidgets.QSpinBox()
+        angle1 = QtWidgets.QSpinBox()
+
+        angle0.setRange(0, 180)
+        angle1.setRange(0, 180)
+
+        angle0.setSingleStep(10)
+        angle1.setSingleStep(10)
+
+        angle0.setValue(self.settings['structure']['angle_vars'][0])
+        angle1.setValue(self.settings['structure']['angle_vars'][1])
+
+        angle0.valueChanged.connect(self.update_angle0)
+        angle1.valueChanged.connect(self.update_angle1)
+
+        angles = QtWidgets.QHBoxLayout()
+        angles.addWidget(QtWidgets.QLabel('Angle at min z:'))
+        angles.addWidget(angle0)
+        angles.addWidget(QtWidgets.QLabel('Angle at max z:'))
+        angles.addWidget(angle1)
+
+        anglemag = QtWidgets.QDoubleSpinBox()
+        anglemag.setDecimals(3)
+        anglemag.setRange(0.00, 1.00)
+        anglemag.setSingleStep(0.01)
+        anglemag.setValue(self.settings['structure']['angle_vars'][2])
+        anglemag.valueChanged.connect(self.update_anglemag)
+
+
         seedHBox = QtWidgets.QHBoxLayout()
         seedHBox.addWidget(self.seedCheck)
         seedHBox.addWidget(self.seedBox)
@@ -249,20 +296,12 @@ class Config(QtWidgets.QWidget):
         cross_pos3.addWidget(w_cross_pos_spin)
         cross_pos3.addWidget(w_cross_pos_slider)
 
-        separator = QtWidgets.QFrame()
-        separator.setFrameShape(QtWidgets.QFrame.HLine)
-        separator.setFrameShadow(QtWidgets.QFrame.Sunken)
+        skipCheck = QtWidgets.QPushButton()
+        skipCheck.setText('Skip')
+        skipCheck.pressed.connect(self.parent.skip)
 
-        toggle = QtWidgets.QCheckBox()
-        toggle.setTristate(False)
-        toggle.setCheckState(2*self.settings['structure']['angle_toggle'])
-        toggle.stateChanged.connect(self.update_toggle)
 
-        angle0 = QtWidgets.QSpinBox()
-        angle1 = QtWidgets.QSpinBox()
 
-        angle0.setRange(0, 180)
-        angle1.setRange(0, 180)
 
         angle0.setSingleStep(10)
         angle1.setSingleStep(10)
@@ -311,7 +350,9 @@ class Config(QtWidgets.QWidget):
         anim_form.addRow(QtWidgets.QLabel('Animation Style'), viewopts)
         anim_form.addRow(QtWidgets.QLabel('Vertical cross view position'), cross_pos)
         anim_form.addRow(QtWidgets.QLabel('Horizontal cross view position'), cross_pos2)
-        anim_form.addRow(QtWidgets.QLabel('Inline cross view position'), cross_pos3)
+
+        anim_form.addRow(QtWidgets.QLabel('Depth cross view position'), cross_pos3)
+        anim_form.addRow(QtWidgets.QLabel('Skip to breakthrough'), skipCheck)
         anim_box.setLayout(anim_form)
 
         box_list = QtWidgets.QVBoxLayout()
@@ -414,6 +455,11 @@ class Animation(makeCanvas):
 
         self.substrate = model.Model(**self.settings['structure'])
 
+        # Transparent colourmaps if needed
+        cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
+        cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
+        cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
+
         gs = GridSpec(3, 2,
                       width_ratios=[1, size[0]/size[1]],
                       height_ratios=[1, size[0]/size[2], 1])  # Setting grid layout for figures
@@ -421,35 +467,57 @@ class Animation(makeCanvas):
         self.ax0 = self.figure.add_subplot(gs[4])
         im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
                              animated=True,
-                             cmap='Greys_r',
+                             cmap=cm1,
                              vmin=0,
                              vmax=self.settings['structure']['refractory_period'],
                              origin='lower',
-                             alpha=1,
                              extent=(0, self.settings['structure']['size'][2],
                                      0, self.settings['structure']['size'][1]),
                              interpolation='nearest',
+                             zorder=3
                              )
+
+        im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
+                                 animated=True,
+                                 cmap=cm2,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=2
+                                 )
+        im3 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+2],
+                                 animated=True,
+                                 cmap=cm3,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=1
+                                 )
+
         linev = self.ax0.axvline(x=self.settings['QTviewer']['x_cross_pos'],
                                  color='cyan',
-                                 linestyle='--'
+                                 linestyle='--',
+                                 zorder=4
                                  )
         lineh = self.ax0.axhline(y=self.settings['QTviewer']['y_cross_pos'],
                                  color='cyan',
-                                 linestyle='--'
+                                 linestyle='--',
+                                 zorder=4
                                  )
 
         self.ax1 = self.figure.add_subplot(gs[0])
         clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)  # Clicking changes the cut through positions
 
-        # Transparent colourmaps if needed
-        cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
-        cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
-        cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
 
         image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
                                 animated=True,
-                                cmap='Greys_r',
+                                cmap=cm1,
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin='lower',
@@ -458,28 +526,33 @@ class Animation(makeCanvas):
                                 interpolation='nearest',
                                 zorder=3,
                                 )
-        # image2 = self.ax1.imshow(self.substrate.model_array[-2],
-        #                          animated=True,
-        #                          cmap=cm2,
-        #                          vmin=0,
-        #                          vmax=self.settings['structure']['refractory_period'],
-        #                          origin='lower',
-        #                          extent=(0, self.settings['structure']['size'][2],
-        #                                  0, self.settings['structure']['size'][1]),
-        #                          interpolation='nearest',
-        #                          zorder=2
-        #                          )
-        # image3 = self.ax1.imshow(self.substrate.model_array[-3],
-        #                          animated=True,
-        #                          cmap=cm3,
-        #                          vmin=0,
-        #                          vmax=self.settings['structure']['refractory_period'],
-        #                          origin='lower',
-        #                          extent=(0, self.settings['structure']['size'][2],
-        #                                  0, self.settings['structure']['size'][1]),
-        #                          interpolation='nearest',
-        #                          zorder=1
-        #                          )
+        image2 = self.ax1.imshow(self.substrate.model_array[-2],
+                                 animated=True,
+                                 cmap=cm2,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=2
+                                 )
+        image3 = self.ax1.imshow(self.substrate.model_array[-3],
+                                 animated=True,
+                                 cmap=cm3,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=1
+                                 )
+
+        # contour = self.ax1.contour(self.substrate.model_array[0],
+        #                            animated=True,
+        #                            zorder=5,
+        #                            levels=[50])
 
         self.ax2 = self.figure.add_subplot(gs[5])  # Plot the x axis cut through
         v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :, self.settings['QTviewer']['x_cross_pos']],
@@ -510,29 +583,51 @@ class Animation(makeCanvas):
             """Function to iterate animation, All active changes here"""
             t, play = framedata
 
-            if t % self.settings['sim']['pacemaker_period'] == 0:
+            if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
                 self.substrate.activate_pacemaker()
             if play:  # If viewer is not paused iterate each timestep.
                 self.substrate.iterate()  # advance simulation
-                self.hist.append(np.copy(self.get_anim_array()))  # append change to list
+                # self.hist.append(np.copy(self.get_anim_array()))  # append change to list
             # if t == 300:
             #     self.substrate.add_ablation(self.substrate.maxpos, 2)
             # if t == 1:
             #     self.substrate.add_ablation((0,100,100), 2)
 
+            if self.settings['skip']:  # Skip without iterating animation
+                jumps=0
+                while self.substrate.maxpos[-1] <= 1 and jumps<1000:
+                    if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
+                        self.substrate.activate_pacemaker()
+                    self.substrate.iterate()
+                    jumps +=1
+
+                self.settings['skip'] = False
+                self.parent.toggle_pause()
+                print(jumps)
+            self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos))
+            # # Update all the plot data with new variables
+
             arr = self.get_anim_array()  # get array for plotting
 
-            self.ax1.set_title('seed={}, t={}, {}'.format(self.substrate.seed, t, self.substrate.maxpos))
-            # Update all the plot data with new variables
+            # self.ax1.clear()
+            # coarse_max = np.maximum(np.maximum(arr[0],arr[1]),np.maximum(arr[2],arr[3]))
+            # contour = self.ax1.contour(coarse_max,
+            #                            animated=True,
+            #                            zorder=5,
+            #                            levels=[50])
+
             return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                     lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                     im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
+                    # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
+                    # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
                     image.set_data(arr[-1]),
                     # image2.set_data(arr[-2]),
                     # image3.set_data(arr[-3]),
                     v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                     h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
+
 
         def frames():  # Iterator for animation, yield same time value while paused
             t = -1
@@ -544,7 +639,7 @@ class Animation(makeCanvas):
                     t += 1
                 yield (t, play)
 
-        self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False)
+        self.ani = FuncAnimation(self.figure, func, frames, interval=0, blit=False)
 
     def onclick(self, event):
         if event.xdata:
