@@ -1,6 +1,6 @@
 settings = dict(
     structure=dict(
-        size=[1, 200, 200],  # (z, y, x)
+        size=[25, 200, 200],  # (z, y, x)
         refractory_period=50,   # tau, refractory period of cells
         dysfunction_parameter=0.05,  # delta, fraction of dysfunctional cells
         dysfunction_probability=0.05,  # epsilon, probability of dysfunctional cell failing
