@@ -467,7 +467,7 @@ class Animation(makeCanvas):
         self.ax0 = self.figure.add_subplot(gs[4])
         im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
                              animated=True,
-                             cmap='Greys_r',
+                             cmap=cm1,
                              vmin=0,
                              vmax=self.settings['structure']['refractory_period'],
                              origin='lower',
@@ -477,28 +477,28 @@ class Animation(makeCanvas):
                              zorder=3
                              )
 
-        # im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
-        #                          animated=True,
-        #                          cmap=cm2,
-        #                          vmin=0,
-        #                          vmax=self.settings['structure']['refractory_period'],
-        #                          origin='lower',
-        #                          extent=(0, self.settings['structure']['size'][2],
-        #                                  0, self.settings['structure']['size'][1]),
-        #                          interpolation='nearest',
-        #                          zorder=2
-        #                          )
-        # im3 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+2],
-        #                          animated=True,
-        #                          cmap=cm3,
-        #                          vmin=0,
-        #                          vmax=self.settings['structure']['refractory_period'],
-        #                          origin='lower',
-        #                          extent=(0, self.settings['structure']['size'][2],
-        #                                  0, self.settings['structure']['size'][1]),
-        #                          interpolation='nearest',
-        #                          zorder=1
-        #                          )
+        im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
+                                 animated=True,
+                                 cmap=cm2,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=2
+                                 )
+        im3 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+2],
+                                 animated=True,
+                                 cmap=cm3,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=1
+                                 )
 
         linev = self.ax0.axvline(x=self.settings['QTviewer']['x_cross_pos'],
                                  color='cyan',
@@ -514,14 +514,10 @@ class Animation(makeCanvas):
         self.ax1 = self.figure.add_subplot(gs[0])
         clicked = self.figure.canvas.mpl_connect('button_press_event', self.onclick)  # Clicking changes the cut through positions
 
-        # Transparent colourmaps if needed
-        cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
-        cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
-        cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
 
         image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
                                 animated=True,
-                                cmap='Greys_r',
+                                cmap=cm1,
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin='lower',
@@ -530,28 +526,28 @@ class Animation(makeCanvas):
                                 interpolation='nearest',
                                 zorder=3,
                                 )
-        # image2 = self.ax1.imshow(self.substrate.model_array[-2],
-        #                          animated=True,
-        #                          cmap=cm2,
-        #                          vmin=0,
-        #                          vmax=self.settings['structure']['refractory_period'],
-        #                          origin='lower',
-        #                          extent=(0, self.settings['structure']['size'][2],
-        #                                  0, self.settings['structure']['size'][1]),
-        #                          interpolation='nearest',
-        #                          zorder=2
-        #                          )
-        # image3 = self.ax1.imshow(self.substrate.model_array[-3],
-        #                          animated=True,
-        #                          cmap=cm3,
-        #                          vmin=0,
-        #                          vmax=self.settings['structure']['refractory_period'],
-        #                          origin='lower',
-        #                          extent=(0, self.settings['structure']['size'][2],
-        #                                  0, self.settings['structure']['size'][1]),
-        #                          interpolation='nearest',
-        #                          zorder=1
-        #                          )
+        image2 = self.ax1.imshow(self.substrate.model_array[-2],
+                                 animated=True,
+                                 cmap=cm2,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=2
+                                 )
+        image3 = self.ax1.imshow(self.substrate.model_array[-3],
+                                 animated=True,
+                                 cmap=cm3,
+                                 vmin=0,
+                                 vmax=self.settings['structure']['refractory_period'],
+                                 origin='lower',
+                                 extent=(0, self.settings['structure']['size'][2],
+                                         0, self.settings['structure']['size'][1]),
+                                 interpolation='nearest',
+                                 zorder=1
+                                 )
 
         # contour = self.ax1.contour(self.substrate.model_array[0],
         #                            animated=True,
