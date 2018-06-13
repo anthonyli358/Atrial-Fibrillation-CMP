@@ -32,7 +32,19 @@ def risk_curve_data(runs, repeats, nu_x, nu_yz, nu_av, time=100000):
     return data
 
 
+def gen_risk_pos():
+    yzs = [0.11,0.12]
+    xs =  np.arange(0.8, .85, 0.01)
+    runs = 1
+    repeats = 1
+    time = 10000
+    for yz in yzs:
+        for x in xs:
+            name = 'data_analysis/new_risk/' + str(x) + ',' + str(yz) + '.npy'
+            print('===========', name)
+            result = risk_curve_data(runs, repeats, x, yz, 0, time)
+            np.save(name, result)
+
 if __name__ =='__main__':
-    data = risk_curve_data(1,10,.8,.12,0)
-    print(data)
+    gen_risk_pos()
 
