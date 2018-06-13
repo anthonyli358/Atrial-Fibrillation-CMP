@@ -329,6 +329,8 @@ class Config(QtWidgets.QWidget):
         anim_form.addRow(QtWidgets.QLabel('Animation Style'), viewopts)
         anim_form.addRow(QtWidgets.QLabel('Vertical cross view position'), cross_pos)
         anim_form.addRow(QtWidgets.QLabel('Horizontal cross view position'), cross_pos2)
+
+        anim_form.addRow(QtWidgets.QLabel('Depth cross view position'), cross_pos3)
         anim_form.addRow(QtWidgets.QLabel('Skip to breakthrough'), skipCheck)
         anim_box.setLayout(anim_form)
 
@@ -444,7 +446,7 @@ class Animation(makeCanvas):
         self.ax0 = self.figure.add_subplot(gs[4])
         im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
                              animated=True,
-                             cmap=cm1,
+                             cmap='Greys_r',
                              vmin=0,
                              vmax=self.settings['structure']['refractory_period'],
                              origin='lower',
@@ -454,36 +456,38 @@ class Animation(makeCanvas):
                              zorder=3
                              )
 
-        im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
-                                 animated=True,
-                                 cmap=cm2,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=2
-                                 )
-        im3 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+2],
-                                 animated=True,
-                                 cmap=cm3,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=1
-                                 )
+        # im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
+        #                          animated=True,
+        #                          cmap=cm2,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=2
+        #                          )
+        # im3 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+2],
+        #                          animated=True,
+        #                          cmap=cm3,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=1
+        #                          )
 
         linev = self.ax0.axvline(x=self.settings['QTviewer']['x_cross_pos'],
                                  color='cyan',
-                                 linestyle='--'
+                                 linestyle='--',
+                                 zorder=4
                                  )
         lineh = self.ax0.axhline(y=self.settings['QTviewer']['y_cross_pos'],
                                  color='cyan',
-                                 linestyle='--'
+                                 linestyle='--',
+                                 zorder=4
                                  )
 
         self.ax1 = self.figure.add_subplot(gs[0])
@@ -496,7 +500,7 @@ class Animation(makeCanvas):
 
         image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
                                 animated=True,
-                                cmap=cm1,
+                                cmap='Greys_r',
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin='lower',
@@ -505,28 +509,28 @@ class Animation(makeCanvas):
                                 interpolation='nearest',
                                 zorder=3,
                                 )
-        image2 = self.ax1.imshow(self.substrate.model_array[-2],
-                                 animated=True,
-                                 cmap=cm2,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=2
-                                 )
-        image3 = self.ax1.imshow(self.substrate.model_array[-3],
-                                 animated=True,
-                                 cmap=cm3,
-                                 vmin=0,
-                                 vmax=self.settings['structure']['refractory_period'],
-                                 origin='lower',
-                                 extent=(0, self.settings['structure']['size'][2],
-                                         0, self.settings['structure']['size'][1]),
-                                 interpolation='nearest',
-                                 zorder=1
-                                 )
+        # image2 = self.ax1.imshow(self.substrate.model_array[-2],
+        #                          animated=True,
+        #                          cmap=cm2,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=2
+        #                          )
+        # image3 = self.ax1.imshow(self.substrate.model_array[-3],
+        #                          animated=True,
+        #                          cmap=cm3,
+        #                          vmin=0,
+        #                          vmax=self.settings['structure']['refractory_period'],
+        #                          origin='lower',
+        #                          extent=(0, self.settings['structure']['size'][2],
+        #                                  0, self.settings['structure']['size'][1]),
+        #                          interpolation='nearest',
+        #                          zorder=1
+        #                          )
 
         # contour = self.ax1.contour(self.substrate.model_array[0],
         #                            animated=True,
@@ -598,11 +602,11 @@ class Animation(makeCanvas):
             return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                     lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                     im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
-                    im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
-                    im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
+                    # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
+                    # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
                     image.set_data(arr[-1]),
-                    image2.set_data(arr[-2]),
-                    image3.set_data(arr[-3]),
+                    # image2.set_data(arr[-2]),
+                    # image3.set_data(arr[-3]),
                     v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                     h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
