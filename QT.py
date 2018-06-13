@@ -619,11 +619,11 @@ class Animation(makeCanvas):
             return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                     lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                     im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
-                    # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
-                    # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
+                    im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
+                    im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
                     image.set_data(arr[-1]),
-                    # image2.set_data(arr[-2]),
-                    # image3.set_data(arr[-3]),
+                    image2.set_data(arr[-2]),
+                    image3.set_data(arr[-3]),
                     v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                     h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
