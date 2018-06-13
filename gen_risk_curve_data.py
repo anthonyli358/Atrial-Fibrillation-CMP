@@ -3,10 +3,11 @@ from model import Model
 import numpy as np
 
 
-def risk_curve_data(runs, repeats, nu_x, nu_yz, nu_av, time=100000):
+def risk_curve_data(runs, repeats, nu_x, nu_yz, angles=False, time=100000):
     data = np.zeros(shape=(runs, repeats, 4), dtype='int')
     params = config.settings["structure"]
     params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
+    params['anglevars'] = angles
     for i in range(runs):
         tissue = Model(**params)
         for j in range(repeats):
@@ -28,23 +29,44 @@ def risk_curve_data(runs, repeats, nu_x, nu_yz, nu_av, time=100000):
                 elif not np.any(excitations):  # Maybe terminate when no excited cells instead of all resting?
                     data[i][j][3] = t
                     break
-            print(data[i][j])
     return data
 
 
 def gen_risk_pos():
     yzs = [0.11,0.12]
-    xs =  np.arange(0.8, .85, 0.01)
+    xs = np.arange(0.8, .85, 0.01)
+    save_loc='new_phase_space'  # Only works if folder exists already in data_analysis
     runs = 1
     repeats = 1
     time = 10000
     for yz in yzs:
         for x in xs:
-            name = 'data_analysis/new_risk/' + str(x) + ',' + str(yz) + '.npy'
+            name = 'data_analysis/{}/{},{}.npy'.format(save_loc, str(x), str(yz))
             print('===========', name)
-            result = risk_curve_data(runs, repeats, x, yz, 0, time)
+            result = risk_curve_data(runs, repeats, x, yz, False, time)
             np.save(name, result)
 
+def gen_angle_pos():
+    angle_endo = 20
+    angle_epi = 45
+    averages = np.arange(.3,.5001,.1,)
+    save_loc ='angle_space'  # Only works if folder exists already in data_analysis
+    runs = 1
+    repeats = 1
+    time = 10000
+    for average in averages:
+        angles = [angle_endo,angle_epi,average]
+        name = 'data_analysis/{}/{},{},{:.2f}'.format(save_loc,angles[0],angles[1],angles[2])
+        print('===========', name)
+        result = risk_curve_data(runs,repeats, 0,0,averages,time)
+        np.save(name, result)
+
+
+
+
+
+
+
 if __name__ =='__main__':
-    gen_risk_pos()
+    gen_angle_pos()
 
