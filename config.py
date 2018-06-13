@@ -23,6 +23,7 @@ settings = dict(
         cross_view=True,
         save=False,  # save file?
         cross_pos=50,
-        interval=1,  # length of each frame in milliseconds
+        interval=1,  # length of each frame in milliseconds,
+
     ),
 )

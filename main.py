@@ -149,6 +149,7 @@ def risk_pos(x, yz):
                 breakpoint = substrate.maxpos
             if substrate.maxpos[-1] > 1 and t > 200:
                 risk += 1
+            print(t)
             t += 1
         positions.append(breakpoint)
         risks.append(risk)
@@ -167,6 +168,6 @@ def gen_risk_pos():
 
 
 if __name__ == '__main__':
-    main()
+    gen_risk_pos()
 
 # TODO: KILLSWITCH()
