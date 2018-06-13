@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 class Model:
@@ -29,6 +30,7 @@ class Model:
         self.seed = seed if seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
         np.random.seed(self.seed)
         self.direction = np.zeros(size, dtype='uint8')
+
 
         self.excited = np.zeros(size, dtype=bool)
         self.resting = np.ones(size, dtype=bool)
@@ -115,6 +117,7 @@ class Model:
                                      )[excitable]
 
         # Check if dysfunctional cells fail to excite
+        # rng = random.Random()
         self.failed[excitable & self.dysfunctional] = np.random.random(
             len(self.failed[excitable & self.dysfunctional])) < self.dysfunction_probability
 
