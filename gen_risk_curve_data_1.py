@@ -75,6 +75,7 @@ def gen_risk(runs, repeats, l_z, nu_x_range, nu_yz_range, angle_vars=False, t=10
         risk_type.__name__, runs, repeats, t)
     if not os.path.exists('data_analysis/{}'.format(dir_name)):
         os.makedirs('data_analysis/{}'.format(dir_name))
+        print("hi")
 
     if angle_vars:
         for av in angle_vars[2]:
@@ -94,7 +95,7 @@ def gen_risk(runs, repeats, l_z, nu_x_range, nu_yz_range, angle_vars=False, t=10
 
 if __name__ == '__main__':
     for i in [1]:
-        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.0, 1.001, 0.02), nu_yz_range=np.arange(0.0, 1.001, 0.02),
+        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.01, 1.001, 0.02), nu_yz_range=np.arange(0.01, 1.001, 0.02),
                  angle_vars=False, t=100000, time_data=False)
-        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.0, 1.001, 0.02), nu_yz_range=np.arange(0.0, 1.001, 0.02),
+        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.01, 1.001, 0.02), nu_yz_range=np.arange(0.01, 1.001, 0.02),
                  angle_vars=False, t=1000000, time_data=True)

@@ -85,7 +85,7 @@ def gen_risk(runs, repeats, l_z, nu_x_range, nu_yz_range, angle_vars=False, t=10
     else:
         for x in nu_x_range:
             for yz in nu_yz_range:
-                if 0.45-45/8*x <= yz and (yz <= 0.6 - 0.4*x or yz <= 1.25 - 2.5*x):  # Comparison range
+                if 0.45-.5625*x <= yz and (yz <= 0.6 - 0.4*x or yz <= 1.25 - 2.5*x):  # Comparison range
                         result = risk_type(runs, repeats, l_z, x, yz, False, t)
                         with h5py.File('data_analysis/{}/l_z={}, nu_x={:.2f}, nu_yz={:.2f}'.format(
                                 dir_name, l_z, x, yz), 'w') as data_file:
@@ -94,7 +94,7 @@ def gen_risk(runs, repeats, l_z, nu_x_range, nu_yz_range, angle_vars=False, t=10
 
 if __name__ == '__main__':
     for i in [5]:
-        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.0, 1.001, 0.02), nu_yz_range=np.arange(0.0, 1.001, 0.02),
+        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.01, 1.001, 0.02), nu_yz_range=np.arange(0.01, 1.001, 0.02),
                  angle_vars=False, t=100000, time_data=False)
-        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.0, 1.001, 0.02), nu_yz_range=np.arange(0.0, 1.001, 0.02),
+        gen_risk(runs=50, repeats=1, l_z=i, nu_x_range=np.arange(0.01, 1.001, 0.02), nu_yz_range=np.arange(0.01, 1.001, 0.02),
                  angle_vars=False, t=1000000, time_data=True)

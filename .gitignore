@@ -12,3 +12,5 @@ dist_data/
 data_analysis/new_risk_homogeneous/
 data_analysis/new_risk_angled/
 plotting\.py
+
+ddd\.py
