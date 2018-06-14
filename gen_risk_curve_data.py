@@ -12,7 +12,7 @@ def risk_curve_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000)
     params["size"][0], params["seed"] = l_z, None
     params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
     params["angle_toggle"], params["angle_vars"] = angle_vars, angle_vars
-    print("l_z: {}, nu_x: {}, nu_yz: {}, angle_vars: {}".format(l_z, nu_x, nu_yz, angle_vars))
+    print("l_z: {}, nu_x: {:.2f}, nu_yz: {:.2f}, angle_vars: {}".format(l_z, nu_x, nu_yz, angle_vars))
     start = time.time()
     for i in range(runs):
         tissue = Model(**params)
@@ -44,7 +44,7 @@ def af_time_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     params["size"][0], params["seed"] = l_z, None
     params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
     params["angle_toggle"], params["angle_vars"] = angle_vars, angle_vars
-    print("l_z: {}, nu_x: {}, nu_yz: {}, angle_vars: {}".format(l_z, nu_x, nu_yz, angle_vars))
+    print("l_z: {}, nu_x: {:.2f}, nu_yz: {:.2f}, angle_vars: {}".format(l_z, nu_x, nu_yz, angle_vars))
     start = time.time()
     for i in range(runs):
         tissue = Model(**params)
@@ -70,25 +70,26 @@ def af_time_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
 
 def gen_risk(runs, repeats, l_z, nu_x_range, nu_yz_range, angle_vars=False, t=100000, time_data=False):
     risk_type = af_time_data if time_data else risk_curve_data
-    dir_name = "new_risk_angled" if angle_vars else "new_risk_homogeneous"
+    dir_name = "new_risk_angled/{}, runs={}, repeats={}, time={}".format(
+        risk_type.__name__, runs, repeats, t) if angle_vars else "new_risk_homogeneous/{}, runs={}, repeats={}, time={}".format(
+        risk_type.__name__, runs, repeats, t)
     if not os.path.exists('data_analysis/{}'.format(dir_name)):
         os.makedirs('data_analysis/{}'.format(dir_name))
 
     if angle_vars:
         for av in angle_vars[2]:
             result = risk_type(runs, repeats, l_z, 1.0, 1.0, [angle_vars[0], angle_vars[1], av], t)
-            with h5py.File('data_analysis/{}/{}, runs={}, repeats={}, l_z={}, ang_epi={}, ang_endo={}, nu_av={}'.format(
-                    dir_name, runs, repeats, risk_type.__name__, l_z, angle_vars[0], angle_vars[1], av), 'w') as data_file:
+            with h5py.File('data_analysis/{}/l_z={}, ang_epi={}, ang_endo={}, nu_av={:.2f}'.format(
+                    dir_name, l_z, angle_vars[0], angle_vars[1], av), 'w') as data_file:
                 data_file.create_dataset('risk', data=result, dtype='uint32')
     else:
         for x in nu_x_range:
             for yz in nu_yz_range:
-                if not 0.45 < x + yz / 2 < 0.6:
-                    break
-                result = risk_type(runs, repeats, l_z, x, yz, False, t)
-                with h5py.File('data_analysis/{}/{}, runs={}, repeats={}, l_z={}, nu_x={}, nu_yz={}'.format(
-                        dir_name, runs, repeats, risk_type.__name__, l_z, x, yz), 'w') as data_file:
-                    data_file.create_dataset('risk', data=result, dtype='uint32')
+                if 0.45 < (x + yz / 2) < 0.6:
+                    result = risk_type(runs, repeats, l_z, x, yz, False, t)
+                    with h5py.File('data_analysis/{}/l_z={}, nu_x={:.2f}, nu_yz={:.2f}'.format(
+                            dir_name, l_z, x, yz), 'w') as data_file:
+                        data_file.create_dataset('risk', data=result, dtype='uint32')
 
 
 if __name__ == '__main__':
