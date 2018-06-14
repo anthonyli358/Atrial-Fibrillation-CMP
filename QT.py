@@ -461,6 +461,11 @@ class Animation(makeCanvas):
         cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
         cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
 
+
+        cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, .6)], N=50)
+        cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (1, .66, .5, .6)], N=50)
+        cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (1, .33, .25, 1)], N=50)
+
         gs = GridSpec(3, 2,
                       width_ratios=[1, size[0]/size[1]],
                       height_ratios=[1, size[0]/size[2], 1])  # Setting grid layout for figures
@@ -607,7 +612,7 @@ class Animation(makeCanvas):
             arr = self.get_anim_array()  # get array for plotting
 
             arr_act = arr == 50
-            a = 10*(spim.filters.gaussian_filter(50*(arr>40),(10,5,5), mode=('reflect','wrap','constant')))
+            a = 10*(spim.filters.maximum_filter(50*(arr>40),(5,5,5), mode=('mirror','wrap','constant')))
             # a = 50 * spim.filters.gaussian_filter((50*(coarse_max==50)), 1)
             # self.ax1.clear()
             # contour = self.ax1.contour(a[-1],
@@ -622,6 +627,8 @@ class Animation(makeCanvas):
                     im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
                     im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
                     image.set_data(a[0]),
+                    image2.set_data(a[12]),
+                    image3.set_data(a[-1]),
                     # image.set_data(arr[-1]),
                     # image2.set_data(arr[-2]),
                     # image3.set_data(arr[-3]),
