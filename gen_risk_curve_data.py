@@ -77,21 +77,23 @@ def gen_risk(runs, repeats, l_z, nu_x_range, nu_yz_range, angle_vars=False, t=10
     if angle_vars:
         for av in angle_vars[2]:
             result = risk_type(runs, repeats, l_z, 1.0, 1.0, [angle_vars[0], angle_vars[1], av], t)
-            with h5py.File('data_analysis/{}/{}, l_z={}, ang_epi={}, ang_endo={}, nu_av={}'.format(
-                    dir_name, risk_type.__name__, l_z, angle_vars[0], angle_vars[1], av), 'w') as data_file:
+            with h5py.File('data_analysis/{}/{}, runs={}, repeats={}, l_z={}, ang_epi={}, ang_endo={}, nu_av={}'.format(
+                    dir_name, runs, repeats, risk_type.__name__, l_z, angle_vars[0], angle_vars[1], av), 'w') as data_file:
                 data_file.create_dataset('risk', data=result, dtype='uint32')
     else:
         for x in nu_x_range:
             for yz in nu_yz_range:
+                if not 0.45 < x + yz / 2 < 0.6:
+                    break
                 result = risk_type(runs, repeats, l_z, x, yz, False, t)
-                with h5py.File('data_analysis/{}/{}, l_z={}, nu_x={}, nu_yz={}'.format(
-                        dir_name, risk_type.__name__, l_z, x, yz), 'w') as data_file:
+                with h5py.File('data_analysis/{}/{}, runs={}, repeats={}, l_z={}, nu_x={}, nu_yz={}'.format(
+                        dir_name, runs, repeats, risk_type.__name__, l_z, x, yz), 'w') as data_file:
                     data_file.create_dataset('risk', data=result, dtype='uint32')
 
 
 if __name__ == '__main__':
-    for i in [1, 5]:
-        gen_risk(runs=100, repeats=2, l_z=i, nu_x_range=[0.1, 0.3, 0.5, 0.7, 0.9], nu_yz_range=[0.1, 0.3, 0.5, 0.7, 0.9],
+    for i in [1]:
+        gen_risk(runs=100, repeats=1, l_z=i, nu_x_range=np.arange(0.01, 1, 0.01), nu_yz_range=np.arange(0.01, 1, 0.01),
                  angle_vars=False, t=100000, time_data=False)
-        gen_risk(runs=50, repeats=2, l_z=i, nu_x_range=[0.1, 0.3, 0.5, 0.7, 0.9], nu_yz_range=[0.1, 0.3, 0.5, 0.7, 0.9],
-                 angle_vars=False, t=100000, time_data=True)
+        # gen_risk(runs=25, repeats=1, l_z=i, nu_x_range=[0.1, 0.3, 0.5, 0.7, 0.9], nu_yz_range=[0.1, 0.3, 0.5, 0.7, 0.9],
+        #          angle_vars=False, t=10000, time_data=True)
