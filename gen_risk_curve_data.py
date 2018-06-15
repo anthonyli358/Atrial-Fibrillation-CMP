@@ -8,7 +8,7 @@ import binascii
 
 
 def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
-    data = np.zeros(shape=(runs, 6), dtype='uint32')
+    data = np.zeros(shape=(runs, 7), dtype='uint32')
     params = config.settings["structure"]
     params["size"][0], params["seed"] = l_z, None
     params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
@@ -28,6 +28,8 @@ def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
             elif not np.any(excitations == 50):
                 data[i, 5] = tissue.time
                 break
+            if np.any(excitations[:,:,-1]):
+                data[i, 6] = True
         print('Run: {}, Data: {}'.format(i + 1, data[i]))
     print("time={}".format(time.time() - start))
 
@@ -96,7 +98,9 @@ def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False
 if __name__ == '__main__':
     input_value=5
     # change the variables, you can loop over nu_x and nu_y
-    for [x,y] in np.load('nu_variables_low_res.npy'):
+    param_space = np.load('nu_variables_low_res.npy')
+    print
+    for [x,y] in param_space[:100]:
         variables = dict(
             runs=1,
             l_z=25,

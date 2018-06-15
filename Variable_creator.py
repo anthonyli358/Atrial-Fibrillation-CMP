@@ -9,7 +9,7 @@ list = []
 
 for v, i in enumerate(x):
     for _, j in enumerate(yz):
-        if 0.36*i*i - 0.79*i +0.43 <= j <= 0.375*i*i - 0.825*i +0.65:
+        if 0.36*i*i - 0.79*i + 0.25 <= j <= 0.375*i*i - 0.825*i +0.65:
             list.append([i,j])
             grid[_,v] = True
 
