@@ -4,7 +4,7 @@ from utility_methods import *
 import numpy as np
 import time
 import binascii
-
+import sys
 
 
 def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
@@ -94,22 +94,21 @@ def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False
 
     np.save(filename, result)
 
-
 if __name__ == '__main__':
-    input_value=5
+
     # change the variables, you can loop over nu_x and nu_y
-    param_space = np.load('nu_variables_low_res.npy')
-    print
-    for [x,y] in param_space[:100]:
-        variables = dict(
-            runs=1,
-            l_z=25,
-            nu_x=x,
-            nu_yz=y,
-            # to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
-            # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
-            angle_vars=False,
-            t=10000,
-            time_data=False,  # True for AF time sim, False for AF induction probability sim
-        )
-        gen_risk(**variables)
+    input_value = int(sys.argv[1])
+    [x,y] = np.load('nu_variables_low_res.npy')[input_value]
+
+    variables = dict(
+        runs=1,
+        l_z=25,
+        nu_x=x,
+        nu_yz=y,
+        # to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
+        # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
+        angle_vars=False,
+        t=10000,
+        time_data=False,  # True for AF time sim, False for AF induction probability sim
+    )
+    gen_risk(**variables)
