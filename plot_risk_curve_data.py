@@ -4,8 +4,8 @@ import numpy as np
 import glob
 
 
-nu_yz_val = np.arange(0.1, 1, 0.02)
-nu_x_val = np.arange(0.1, 1, 0.02)
+nu_yz_val = np.arange(0.005, 1, 0.01)
+nu_x_val = np.arange(0.005, 1, 0.01)
 X,Y = np.meshgrid(nu_x_val,nu_yz_val)
 Z = np.zeros(X.shape)
 con = np.zeros_like(Z)
@@ -19,12 +19,12 @@ for yi in range(len(nu_yz_val)):
         x = X[xi,yi]
         y = Y[xi,yi]
         try:
-            start = 'risk_curve_data_25_{:.3f}_{:.3f}*'.format(x,y).replace('.', '')
+            start = 'risk_curve_data_25_{:.3f}_{:.3f}*'.format(nu_x_val[xi],nu_yz_val[yi]).replace('.', '')
             filename = glob.glob(start)[0]
             # print(filename)
             risk_data = np.load(filename)
             Z[xi,yi] = np.sum(risk_data[:, 1]) / risk_data[:, 1].size
-            con[xi,yi] = np.sum(risk_data[:, -1]) / risk_data[:, -1].size
+            con[xi,yi] = np.sum(risk_data[:, -2]) / risk_data[:, -2].size
 
         except:
             pass

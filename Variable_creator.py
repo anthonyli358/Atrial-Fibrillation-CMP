@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-x = np.arange(0.1,1,.02)
-yz = np.arange(0.1,1,.02)
+x = np.arange(0.01,1,.02)
+yz = np.arange(0.01,1,.02)
 grid = np.zeros((len(x),len(yz)))
 
 list = []
@@ -15,5 +15,6 @@ for v, i in enumerate(x):
 
 
 variables = np.array(list)
+print(len(variables))
 
-np.save('nu_variables_low_res', variables)
+np.save('nu_variables_res_' +str(len(variables)), variables)
