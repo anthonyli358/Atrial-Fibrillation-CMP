@@ -106,13 +106,13 @@ class Model:
         excitable = (excited_from_neg_y | excited_from_pos_y | excited_from_neg_x |
                      excited_from_pos_x | excited_from_pos_z | excited_from_neg_z) & self.resting & ~ self.destroyed
 
-        self.direction[excitable] = (1 * excited_from_neg_y.astype('int8') +
-                                     2 * excited_from_pos_y.astype('int8') +
-                                     4 * excited_from_neg_x.astype('int8') +
-                                     8 * excited_from_pos_x.astype('int8') +
-                                     16 * excited_from_pos_z.astype('int8') +
-                                     32 * excited_from_neg_z.astype('int8')
-                                     )[excitable]
+        # self.direction[excitable] = (1 * excited_from_neg_y.astype('int8') +
+        #                              2 * excited_from_pos_y.astype('int8') +
+        #                              4 * excited_from_neg_x.astype('int8') +
+        #                              8 * excited_from_pos_x.astype('int8') +
+        #                              16 * excited_from_pos_z.astype('int8') +
+        #                              32 * excited_from_neg_z.astype('int8')
+        #                              )[excitable]
 
         # Check if dysfunctional cells fail to excite
         # rng = random.Random()
