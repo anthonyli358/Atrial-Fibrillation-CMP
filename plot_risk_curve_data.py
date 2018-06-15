@@ -1,28 +1,36 @@
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import glob
 
 
 path = "new_risk_homogeneous/risk_curve_data, runs=100, repeats=1, time=100000"
 
-nu_yz_val = np.arange(0.01, 1, 0.01)
-nu_x_val = np.arange(0.01, 1, 0.01)
-af_risk = np.zeros(shape=(len(nu_yz_val), len(nu_x_val)))
+nu_yz_val = np.arange(0.1, 1, 0.02)
+nu_x_val = np.arange(0.1, 1, 0.02)
+X,Y = np.meshgrid(nu_x_val,nu_yz_val)
+Z = np.zeros(X.shape)
+wabwab = np.zeros(X.shape)
 
-for l_z in [1]:
-    for i, nu_yz in enumerate(nu_yz_val):
-        for j, nu_x in enumerate(nu_x_val):
-            try:
-                with h5py.File('data_analysis/{}/l_z={}, nu_x={:.2f}, nu_yz={:.2f}'.format(
-                        path, l_z, nu_x, nu_yz), 'r') as data_file:
-                    risk_data = data_file['risk'][:]
-                af_risk[i, j] = np.sum(risk_data[:, :, 1]) / risk_data[:, :, 1].size
-            except OSError:
-                pass
+example = 'risk_curve_data_5_0100_0500_False_10000_eb8610e35046e63f'
+files = glob.glob('risk_curve_data_5_*')
 
-print(np.array(af_risk))
-plt.imshow(af_risk, extent=(0, 1, 0, 1), origin='lower')
-plt.xlabel("nu_x")
-plt.ylabel("nu_yz")
-plt.colorbar()
+for yi in range(len(nu_yz_val)):
+    for xi in range(len(nu_x_val)):
+        x = X[xi,yi]
+        y = Y[xi,yi]
+        try:
+            start = 'risk_curve_data_5_{:.3f}_{:.3f}*'.format(x,y).replace('.', '')
+            filename = glob.glob(start)[0]
+            # print(filename)
+            risk_data = np.load(filename)
+            Z[xi,yi] = np.sum(risk_data[:, 1]) / risk_data[:, 1].size
+        except:
+            pass
+        if 0.36 * x * x - 0.79 * x + 0.43 <= y <= 0.375 * x * x - 0.825 * x + 0.65:
+            wabwab[xi,yi] = True
+
+# res = 0.36*X*X - 0.79*X +0.43 <= Y <= 0.375*X*X - 0.825*X +0.65
+plt.imshow(Z, extent=(0,1,0,1), origin='lower')
+plt.imshow(wabwab, extent=(0,1,0,1), origin='lower', alpha=.1,zorder=2)
 plt.show()
