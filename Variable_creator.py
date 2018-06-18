@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-x = np.arange(0.01,1,.02)
-yz = np.arange(0.01,1,.02)
+x = np.arange(0.05,1,.01)
+yz = np.arange(0.05,1,.01)
 grid = np.zeros((len(x),len(yz)))
 
 list = []
