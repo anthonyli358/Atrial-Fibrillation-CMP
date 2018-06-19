@@ -99,8 +99,8 @@ if __name__ == '__main__':
     input_values = int(sys.argv[1]) + np.array([0,1000,2000,3000])
     # input_values = [100]
     for input_value in input_values:
-        if input_value < 3179:
-            [x, y] = np.load('test.npy')[input_value]
+        if input_value < 1821:
+            [x, y] = np.load('nu_variables_exact_1821.npy')[input_value]
 
             variables = dict(
                 runs=5,

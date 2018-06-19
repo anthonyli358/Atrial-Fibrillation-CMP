@@ -13,19 +13,19 @@ wabwab = np.zeros(X.shape)
 avz = np.zeros_like(Z)
 varz = np.zeros_like(Z)
 end_time = np.zeros_like(Z)
+conduction_block = np.zeros_like(Z)
+non_zero_coordinates = np.zeros_like(Z)
+mask = np.load('nu_variables_exact_1821.npy')
+new_mask = []
 
-example = 'data_analysis/afinduced_data/risk_curve_data_25_0100_0500_False_10000_eb8610e35046e63f'
-files = glob.glob('data_analysis/afinduced_data/risk_curve_data_1000_25*')
-num_succ = 0
-non_zero = 0
+
 
 for yi in range(len(nu_yz_val)):
     for xi in range(len(nu_x_val)):
         x = X[xi, yi]
         y = Y[xi, yi]
-
         try:
-            start = 'data_analysis/afinduced_data/risk_curve_data_1000_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
+            start = 'afinduced_data/risk_curve_data_1000_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
             filename = glob.glob(start)[0]
             # print(filename)
             risk_data = np.load(filename)
@@ -38,11 +38,19 @@ for yi in range(len(nu_yz_val)):
             normz = (np.absolute((fib[:, 2]).astype('int') - 12))
             avz[yi, xi] = np.average(normz)
             varz[yi, xi] = np.std(normz)
+            conduction_block[yi, xi] = np.average(risk_data[:, -1])
+
 
         except:
             ave = 0
             pass
         Z[yi, xi] = ave - .5 * (ave == 0)
+
+        # if ave:
+        #     new_mask.append([x,y])
+        #     non_zero_coordinates[yi, xi] = True
+        if [x, y] in mask:
+            non_zero_coordinates[yi, xi] = True
         # if 0.36 * x * x - 0.79 * x + 0.25 <= y <= 0.375 * x * x - 0.825 * x + 0.65:
         #     wabwab[xi,yi] = True
 
@@ -57,10 +65,11 @@ plt.plot(nu_x_val, nu_x_val*np.tan(30*np.pi/180), **grid_args)
 plt.plot(nu_x_val, nu_x_val*np.tan(45*np.pi/180), **grid_args)
 plt.plot(nu_x_val, nu_x_val*np.tan(60*np.pi/180), **grid_args)
 plt.plot(nu_x_val, nu_x_val*np.tan(75*np.pi/180), **grid_args)
-plt.plot(nu_x_val,1-nu_x_val*2,  **grid_args)
-plt.plot(nu_x_val,.75-nu_x_val*2,  **grid_args)
-plt.plot(nu_x_val,.5-nu_x_val*2,  **grid_args)
-plt.plot(nu_x_val,.25-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.5-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.4-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.3-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.2-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.1-nu_x_val*2,  **grid_args)
 plt.xlim((0,1))
 plt.ylim((0,1))
 
@@ -75,11 +84,15 @@ plt.imshow(avz, extent=(0, 1, 0, 1), origin='lower', vmin=5, vmax=10)
 plt.title('Averaege z')
 
 plt.figure()
-plt.imshow(varz, extent=(0, 1, 0, 1), origin='lower')
-plt.title('variance z')
+plt.imshow(conduction_block, extent=(0, 1, 0, 1), origin='lower')
+plt.title('Conduction Block')
 
 plt.figure()
 plt.imshow(200 /end_time , extent=(0, 1, 0, 1), origin='lower')
 plt.title('conduction speed')
+
+plt.figure()
+plt.imshow(non_zero_coordinates, extent=(0, 1, 0, 1), origin='lower')
+plt.title('Mask')
 
 plt.show()
