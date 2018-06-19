@@ -14,6 +14,8 @@ for v, i in enumerate(x):
             grid[_,v] = True
 
 
+
+
 variables = np.array(list)
 print(len(variables))
 
