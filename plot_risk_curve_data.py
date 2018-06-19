@@ -18,13 +18,7 @@ conduction_block = np.zeros_like(Z)
 non_zero_coordinates = np.zeros_like(Z)
 mask = np.load('nu_variables_exact_1821.npy')
 new_mask = []
-
-example = 'afinduced_data/risk_curve_data_25_0100_0500_False_10000_eb8610e35046e63f.npy'
-files = glob.glob('afinduced_data/risk_curve_data_1000_25*')
-num_succ = 0
-non_zero = 0
 fib_check = 0
-
 
 for yi in range(len(nu_yz_val)):
     for xi in range(len(nu_x_val)):
@@ -34,6 +28,7 @@ for yi in range(len(nu_yz_val)):
             path = "afinduced_data"
             file = 'risk_curve_data_1000_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
             filename = glob.glob("{path}/{file}".format(path=path, file=file))
+            # check & move duplicate files
             if len(filename) > 1:
                 if not os.path.exists('{path}/duplicates'.format(path=path)):
                     os.makedirs('{path}/duplicates'.format(path=path))
@@ -58,9 +53,7 @@ for yi in range(len(nu_yz_val)):
             normz = (np.absolute((fib[:, 2]).astype('int') - 12))
             avz[yi, xi] = np.average(normz)
             varz[yi, xi] = np.std(normz)
-            Z[xi, yi] = np.average(risk_data[:, 1])
-            time[xi, yi] = np.average(risk_data[:, 5] * risk_data[:, 1])
-
+            conduction_block[yi, xi] = np.average(risk_data[:, -1])
 
         except:
             ave = 0
@@ -83,23 +76,25 @@ plt.title('Risk curve')
 # plt.contour(X,Y,Z, levels=[.1,.9], colors='w')
 grid_args = dict(color='w',
                  alpha=.4)
-plt.plot(nu_x_val, nu_x_val * np.tan(15 * np.pi / 180), **grid_args)
-plt.plot(nu_x_val, nu_x_val * np.tan(30 * np.pi / 180), **grid_args)
-plt.plot(nu_x_val, nu_x_val * np.tan(45 * np.pi / 180), **grid_args)
-plt.plot(nu_x_val, nu_x_val * np.tan(60 * np.pi / 180), **grid_args)
-plt.plot(nu_x_val, nu_x_val * np.tan(75 * np.pi / 180), **grid_args)
-plt.plot(nu_x_val, 1 - nu_x_val * 2, **grid_args)
-plt.plot(nu_x_val, .75 - nu_x_val * 2, **grid_args)
-plt.plot(nu_x_val, .5 - nu_x_val * 2, **grid_args)
-plt.plot(nu_x_val, .25 - nu_x_val * 2, **grid_args)
-plt.xlim((0, 1))
-plt.ylim((0, 1))
+plt.plot(nu_x_val, nu_x_val*np.tan(15*np.pi/180), **grid_args)
+plt.plot(nu_x_val, nu_x_val*np.tan(30*np.pi/180), **grid_args)
+plt.plot(nu_x_val, nu_x_val*np.tan(45*np.pi/180), **grid_args)
+plt.plot(nu_x_val, nu_x_val*np.tan(60*np.pi/180), **grid_args)
+plt.plot(nu_x_val, nu_x_val*np.tan(75*np.pi/180), **grid_args)
+plt.plot(nu_x_val,3*.5-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.4-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.3-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.2-nu_x_val*2,  **grid_args)
+plt.plot(nu_x_val,3*.1-nu_x_val*2,  **grid_args)
+plt.xlim((0,1))
+plt.ylim((0,1))
 
 plt.figure()
 plt.imshow(time, extent=(0, 1, 0, 1), origin='lower', zorder=3)
 plt.title('Time to fibrillation')
 plt.clim((100., 220.))
 # plt.imshow(wabwab, extent=(0,1,0,1), origin='lower', alpha=.1,zorder=2)
+
 plt.figure()
 plt.imshow(avz, extent=(0, 1, 0, 1), origin='lower', vmin=5, vmax=10)
 plt.title('Averaege z')
@@ -108,9 +103,9 @@ plt.figure()
 plt.imshow(conduction_block, extent=(0, 1, 0, 1), origin='lower')
 plt.title('Conduction Block')
 
-# plt.figure()
-# plt.imshow(200 / end_time, extent=(0, 1, 0, 1), origin='lower')
-# plt.title('conduction speed')
+plt.figure()
+plt.imshow(200 / end_time, extent=(0, 1, 0, 1), origin='lower')
+plt.title('Conduction speed')
 
 plt.figure()
 plt.imshow(non_zero_coordinates, extent=(0, 1, 0, 1), origin='lower')
