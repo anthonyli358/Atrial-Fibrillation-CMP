@@ -28,7 +28,7 @@ def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
             elif not np.any(excitations == 50):
                 data[i, 5] = tissue.time
                 break
-            if np.any(excitations[:,:,-1]):
+            if np.any(excitations[:, :, -1]):
                 data[i, 6] = True
         print('Run: {}, Data: {}'.format(i + 1, data[i]))
     print("time={}".format(time.time() - start))
@@ -88,7 +88,7 @@ def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False
         token=str(binascii.b2a_hex(np.random.random(1)))[2:-1]
     )
     filename = "{risk}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_{time}_{token}".format(**file_dict)
-    filename = filename.replace(".", "").replace(', ','_').replace('[','').replace(']','')
+    filename = filename.replace(".", "").replace(', ', '_').replace('[', '').replace(']', '')
     print(filename)
     result = risk_type(runs, l_z, nu_x, nu_yz, angle_vars, t)
 
@@ -98,35 +98,36 @@ def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False
 if __name__ == '__main__':
 
     # change the variables, you can loop over nu_x and nu_y
-    input_values = int(sys.argv[1]) + np.array([0,1000,2000,3000])
+    # input_values = int(sys.argv[1]) + np.array([0,1000,2000,3000])
+    input_values = [100, 50, 1800]
     for input_value in input_values:
-	if input_value < 3179:
-	    [x,y] = np.load('nu_variables_res_3179.npy')[input_value]
-
-	    variables = dict(
-		runs=1,
-		l_z=25,
-		nu_x=x,
-		nu_yz=y,
-		# to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
-		# if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
-		angle_vars=False,
-		t=10000,
-		time_data=False,  # True for AF time sim, False for AF induction probability sim
-	    )
-	    gen_risk(**variables)
-
-            # [x,y] = np.load('nu_variables_low_res.npy')[input_value]
+        if input_value < 3179:
+            [x, y] = np.load('nu_variables_high_res.npy')[input_value]
 
             variables = dict(
                 runs=1,
-                l_z=1,
+                l_z=25,
                 nu_x=x,
                 nu_yz=y,
                 # to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
                 angle_vars=False,
-                t=100,
-                time_data=False,  # True for AF time sim, False for AF induction probability sim
+                t=10000,
+                time_data=True,  # True for AF time sim, False for AF induction probability sim
             )
             gen_risk(**variables)
+
+            # [x,y] = np.load('nu_variables_low_res.npy')[input_value]
+
+            # variables = dict(
+            #     runs=1,
+            #     l_z=1,
+            #     nu_x=x,
+            #     nu_yz=y,
+            #     # to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
+            #     # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
+            #     angle_vars=False,
+            #     t=100,
+            #     time_data=False,  # True for AF time sim, False for AF induction probability sim
+            # )
+            # gen_risk(**variables)

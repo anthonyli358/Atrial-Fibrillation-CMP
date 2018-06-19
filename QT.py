@@ -521,6 +521,7 @@ class Animation(makeCanvas):
                                 interpolation='nearest',
                                 zorder=3,
                                 )
+
         # image2 = self.ax1.imshow(self.substrate.model_array[-2],
         #                          animated=True,
         #                          cmap=cm2,
@@ -561,7 +562,7 @@ class Animation(makeCanvas):
             interpolation='nearest',
             extent=(0, self.settings['structure']['size'][0],
                     0, self.settings['structure']['size'][1])
-            )
+        )
 
         self.ax3 = self.figure.add_subplot(gs[2])  # Plot the y axis cut through
         h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
@@ -600,8 +601,8 @@ class Animation(makeCanvas):
                 self.settings['skip'] = False
                 self.parent.toggle_pause()
                 print(jumps)
-            self.ax1.set_title(
-                'seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos))
+            self.figure.suptitle(
+                'seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos), y=.05)
             # # Update all the plot data with new variables
 
             arr = self.get_anim_array()  # get array for plotting
