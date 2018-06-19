@@ -72,6 +72,29 @@ def af_time_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     return data
 
 
+def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
+    data = np.zeros(shape=(runs, 2), dtype='uint32')
+    params = config.settings["structure"]
+    params["size"][0], params["seed"] = l_z, None
+    params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
+    params["angle_toggle"], params["angle_vars"] = angle_vars, angle_vars
+    start = time.time()
+    for i in range(runs):
+        tissue = Model(**params)
+        data[i, 0] = tissue.seed
+        while tissue.time < t:
+            if tissue.time % 220 == 0:
+                tissue.activate_pacemaker()  # Initialise new wavefront
+            excitations = tissue.iterate()
+            if np.any(excitations[:, :, -1]):
+                data[i, 1] = tissue.time
+                break
+
+    #     print('Run: {}, Data: {}'.format(i + 1, data[i]))
+    # print("time={}".format(time.time() - start))
+    return
+
+
 def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False):
     risk_type = af_time_data if time_data else risk_curve_data
 
@@ -79,7 +102,6 @@ def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False
         risk=risk_type.__name__,
         runs=runs,
         l_z=l_z,
-        runs=runs,
         nu_x=nu_x,
         nu_yz=nu_yz,
         angle_vars=angle_vars,

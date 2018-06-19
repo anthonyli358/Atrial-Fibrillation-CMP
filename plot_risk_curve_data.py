@@ -45,28 +45,28 @@ for yi in range(len(nu_yz_val)):
                 fib_check += 1
 
             ave = np.average(risk_data[:, 1])
-            var[yi, xi] = np.std(risk_data[:, 1])
+            var[xi, yi] = np.std(risk_data[:, 1])
             fib = risk_data[risk_data[:, 1] == 1]
             no_fib = risk_data[(risk_data[:, 1] == 0) & (risk_data[:, -1] == 1)]
-            time[yi, xi] = np.average(fib[:, 5])
-            end_time[yi, xi] = np.average(no_fib[:, 5])
+            time[xi, yi] = np.average(fib[:, 5])
+            end_time[xi, yi] = np.average(no_fib[:, 5])
             normz = (np.absolute((fib[:, 2]).astype('int') - 12))
-            avz[yi, xi] = np.average(normz)
-            varz[yi, xi] = np.std(normz)
+            avz[xi, yi] = np.average(normz)
+            varz[xi, yi] = np.std(normz)
             conduction_block[yi, xi] = np.average(risk_data[:, -1])
 
         except:
             ave = 0
             pass
-        Z[yi, xi] = ave - .5 * (ave == 0)
+        Z[xi, yi] = ave - .5 * (ave == 0)
 
         # if ave:
         #     new_mask.append([x,y])
         #     non_zero_coordinates[yi, xi] = True
         if [x, y] in mask:
             non_zero_coordinates[yi, xi] = True
-        # if 0.36 * x * x - 0.79 * x + 0.25 <= y <= 0.375 * x * x - 0.825 * x + 0.65:
-        #     wabwab[xi,yi] = True
+            # if 0.36 * x * x - 0.79 * x + 0.25 <= y <= 0.375 * x * x - 0.825 * x + 0.65:
+            #     wabwab[xi,yi] = True
 
 print(fib_check)
 
@@ -76,18 +76,18 @@ plt.title('Risk curve')
 # plt.contour(X,Y,Z, levels=[.1,.9], colors='w')
 grid_args = dict(color='w',
                  alpha=.4)
-plt.plot(nu_x_val, nu_x_val*np.tan(15*np.pi/180), **grid_args)
-plt.plot(nu_x_val, nu_x_val*np.tan(30*np.pi/180), **grid_args)
-plt.plot(nu_x_val, nu_x_val*np.tan(45*np.pi/180), **grid_args)
-plt.plot(nu_x_val, nu_x_val*np.tan(60*np.pi/180), **grid_args)
-plt.plot(nu_x_val, nu_x_val*np.tan(75*np.pi/180), **grid_args)
-plt.plot(nu_x_val,3*.5-nu_x_val*2,  **grid_args)
-plt.plot(nu_x_val,3*.4-nu_x_val*2,  **grid_args)
-plt.plot(nu_x_val,3*.3-nu_x_val*2,  **grid_args)
-plt.plot(nu_x_val,3*.2-nu_x_val*2,  **grid_args)
-plt.plot(nu_x_val,3*.1-nu_x_val*2,  **grid_args)
-plt.xlim((0,1))
-plt.ylim((0,1))
+plt.plot(nu_x_val, nu_x_val * np.tan(15 * np.pi / 180), **grid_args)
+plt.plot(nu_x_val, nu_x_val * np.tan(30 * np.pi / 180), **grid_args)
+plt.plot(nu_x_val, nu_x_val * np.tan(45 * np.pi / 180), **grid_args)
+plt.plot(nu_x_val, nu_x_val * np.tan(60 * np.pi / 180), **grid_args)
+plt.plot(nu_x_val, nu_x_val * np.tan(75 * np.pi / 180), **grid_args)
+plt.plot(nu_x_val, 3 * .5 - nu_x_val * 2, **grid_args)
+plt.plot(nu_x_val, 3 * .4 - nu_x_val * 2, **grid_args)
+plt.plot(nu_x_val, 3 * .3 - nu_x_val * 2, **grid_args)
+plt.plot(nu_x_val, 3 * .2 - nu_x_val * 2, **grid_args)
+plt.plot(nu_x_val, 3 * .1 - nu_x_val * 2, **grid_args)
+plt.xlim((0, 1))
+plt.ylim((0, 1))
 
 plt.figure()
 plt.imshow(time, extent=(0, 1, 0, 1), origin='lower', zorder=3)
