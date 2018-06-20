@@ -31,6 +31,8 @@ class AFInterface(QtWidgets.QMainWindow):
         self.settings['step'] = False
         self.settings['view'] = 'activation'
         self.settings['skip'] = False
+        self.settings['ablate'] = False
+        self.settings['abradius'] = 2
         self.setWindowIcon(QtGui.QIcon('icons8-heart-with-pulse-50.png'))
         self.anim = Animation(self)
         self.setCentralWidget(self.anim)
@@ -58,6 +60,11 @@ class AFInterface(QtWidgets.QMainWindow):
         skipAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-end-32.png'), 'skip', self)
         skipAct.triggered.connect(self.skip)
 
+        self.ablateAct = QtWidgets.QAction('ABLATE', self)
+        self.ablateAct.setCheckable(True)
+        self.ablateAct.setChecked(self.settings['ablate'])
+        self.ablateAct.triggered.connect(self.ablate)
+
         # Creating menu bar
         menubar = self.menuBar()
 
@@ -69,7 +76,7 @@ class AFInterface(QtWidgets.QMainWindow):
 
         # Adding animation toolbar
         self.toolbar = self.addToolBar('Animation')
-        self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct, skipAct])
+        self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct, skipAct, self.ablateAct])
         self.toolbar.setMaximumHeight(25)
 
         self.setGeometry(300, 150, 350, 650)
@@ -109,6 +116,9 @@ class AFInterface(QtWidgets.QMainWindow):
 
     def advance(self):
         self.settings['step'] = True
+
+    def ablate(self):
+        self.settings['ablate'] ^= True
 
 
 class Config(QtWidgets.QWidget):
@@ -316,6 +326,19 @@ class Config(QtWidgets.QWidget):
         anglemag.setSingleStep(0.01)
         anglemag.setValue(self.settings['structure']['angle_vars'][2])
         anglemag.valueChanged.connect(self.update_anglemag)
+
+        self.ablationToggle = QtWidgets.QPushButton()
+        self.ablationToggle.setText('Ablate')
+        self.ablationToggle.setCheckable(True)
+        self.ablationToggle.setChecked(self.settings['ablate'])
+        self.ablationToggle.pressed.connect(self.parent.ablate)
+
+        ablationradius = QtWidgets.QSpinBox()
+        ablationradius.setRange(1, 999)
+        ablationradius.setValue(self.settings['abradius'])
+        ablationradius.valueChanged.connect(self.update_abradius)
+
+
         config_box = QtWidgets.QGroupBox()
         config_box.setTitle('Substrate Configuration Settings')
 
@@ -347,9 +370,18 @@ class Config(QtWidgets.QWidget):
         anim_form.addRow(QtWidgets.QLabel('Skip to breakthrough'), skipCheck)
         anim_box.setLayout(anim_form)
 
+
+        ablation_box = QtWidgets.QGroupBox()
+        ablation_box.setTitle('Ablation Settings')
+        ablation_form = QtWidgets.QFormLayout()
+        ablation_form.addRow(QtWidgets.QLabel('Ablate on click'), self.ablationToggle)
+        ablation_form.addRow(QtWidgets.QLabel('Ablation radius (mm, 1 layer is 0.1mm thick)'), ablationradius)
+        ablation_box.setLayout(ablation_form)
+
         box_list = QtWidgets.QVBoxLayout()
         box_list.addWidget(config_box)
         box_list.addWidget(anim_box)
+        box_list.addWidget(ablation_box)
 
         self.setLayout(box_list)
 
@@ -402,6 +434,9 @@ class Config(QtWidgets.QWidget):
 
     def update_anglemag(self, val):
         self.settings['structure']['angle_vars'][2] = val
+
+    def update_abradius(self, val):
+        self.settings['abradius'] = val
 
 
 class makeCanvas(FigureCanvas):
@@ -469,9 +504,20 @@ class Animation(makeCanvas):
                              extent=(0, self.settings['structure']['size'][2],
                                      0, self.settings['structure']['size'][1]),
                              interpolation='nearest',
-                             zorder=3
+                             zorder=1
                              )
 
+        redmap = LinearSegmentedColormap.from_list('red', [(1, 0.2, 0.2, 0), (1, 0.2, 0.2, 1)], N=10)
+        destroyed = self.ax0.imshow(self.substrate.destroyed[self.settings['QTviewer']['z_cross_pos']],
+                                    animated=True,
+                                    cmap=redmap,
+                                    vmin=0,
+                                    vmax=1,
+                                    zorder=2,
+                                    origin='lower',
+                                    extent=(0, self.settings['structure']['size'][2],
+                                            0, self.settings['structure']['size'][1]),
+                                    )
         # im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
         #                          animated=True,
         #                          cmap=cm2,
@@ -551,18 +597,31 @@ class Animation(makeCanvas):
         #                            levels=[50])
 
         self.ax2 = self.figure.add_subplot(gs[5])  # Plot the x axis cut through
-        v_cross_view = self.ax2.imshow(
-            np.swapaxes(self.substrate.model_array[:, :, self.settings['QTviewer']['x_cross_pos']],
-                        0, 1),
-            animated=True,
-            vmin=0,
-            vmax=self.settings['structure']['refractory_period'],
-            origin='lower',
-            cmap='Greys_r',
-            interpolation='nearest',
-            extent=(0, self.settings['structure']['size'][0],
-                    0, self.settings['structure']['size'][1])
-        )
+        v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :,
+                                                   self.settings['QTviewer']['x_cross_pos']], 0, 1),
+                                       animated=True,
+                                       vmin=0,
+                                       vmax=self.settings['structure']['refractory_period'],
+                                       origin='lower',
+                                       cmap='Greys_r',
+                                       interpolation='nearest',
+                                       extent=(0, self.settings['structure']['size'][0],
+                                               0, self.settings['structure']['size'][1]),
+                                       zorder=1,
+                                       )
+
+        v_cross_destroyed = self.ax2.imshow(np.swapaxes(self.substrate.destroyed[:, :,
+                                                        self.settings['QTviewer']['x_cross_pos']], 0, 1),
+                                            animated=True,
+                                            origin='lower',
+                                            cmap=redmap,
+                                            vmin=0,
+                                            vmax=1,
+                                            interpolation='nearest',
+                                            extent=(0, self.settings['structure']['size'][0],
+                                                    0, self.settings['structure']['size'][1]),
+                                            zorder=2
+                                            )
 
         self.ax3 = self.figure.add_subplot(gs[2])  # Plot the y axis cut through
         h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
@@ -573,8 +632,21 @@ class Animation(makeCanvas):
                                        cmap='Greys_r',
                                        interpolation='nearest',
                                        extent=(0, self.settings['structure']['size'][2],
-                                               0, self.settings['structure']['size'][0])
+                                               0, self.settings['structure']['size'][0]),
+                                       zorder=1
                                        )
+
+        h_cross_destroyed = self.ax3.imshow(self.substrate.destroyed[:, self.settings['QTviewer']['y_cross_pos'], :],
+                                            animated=True,
+                                            origin='lower',
+                                            cmap=redmap,
+                                            vmin=0,
+                                            vmax=1,
+                                            interpolation='nearest',
+                                            extent=(0, self.settings['structure']['size'][2],
+                                                    0, self.settings['structure']['size'][0]),
+                                            zorder=2
+                                            )
 
         def func(framedata):
             """Function to iterate animation, All active changes here"""
@@ -606,6 +678,7 @@ class Animation(makeCanvas):
             # # Update all the plot data with new variables
 
             arr = self.get_anim_array()  # get array for plotting
+            dest_arr = self.substrate.destroyed
 
             # self.ax1.clear()
             # coarse_max = np.maximum(np.maximum(arr[0],arr[1]),np.maximum(arr[2],arr[3]))
@@ -617,13 +690,17 @@ class Animation(makeCanvas):
             return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                     lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                     im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
+                    destroyed.set_data(dest_arr[self.settings['QTviewer']['z_cross_pos']]),
                     # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
                     # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
                     image.set_data(arr[-1]),
                     # image2.set_data(arr[-2]),
                     # image3.set_data(arr[-3]),
                     v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
-                    h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :])
+                    v_cross_destroyed.set_data(
+                        np.swapaxes(dest_arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                    h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :]),
+                    h_cross_destroyed.set_data(dest_arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                     ]
 
         def frames():  # Iterator for animation, yield same time value while paused
@@ -642,6 +719,12 @@ class Animation(makeCanvas):
         if event.xdata:
             self.parent.config.update_v_cross_pos(int(event.xdata))
             self.parent.config.update_h_cross_pos(int(event.ydata))
+            if self.settings['ablate']:
+                coordinate = (0, int(event.ydata), int(event.xdata))
+                self.substrate.add_ablation(coordinate, radius=self.settings['abradius'])
+                self.settings['ablate'] = False
+                self.parent.ablateAct.setChecked(False)
+                self.parent.config.ablationToggle.setChecked(False)
 
     def get_anim_array(self):
         method = self.settings['view']
