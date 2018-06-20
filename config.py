@@ -4,8 +4,8 @@ settings = dict(
         refractory_period=50,   # tau, refractory period of cells
         dysfunction_parameter=0.05,  # delta, fraction of dysfunctional cells
         dysfunction_probability=0.05,  # epsilon, probability of dysfunctional cell failing
-        x_coupling=.8,  # nu_x, probability of x linkage
-        yz_coupling=0.12,  # nu_yz, probability of y and z linkage
+        x_coupling=1.,  # nu_x, probability of x linkage
+        yz_coupling=0.2,  # nu_yz, probability of y and z linkage
         angle_toggle=False,  # Use angular definition of coupling
         angle_vars=[24, 42, .32],  # theta(z=0), theta(z=max), magnitude of connectivity
         seed=None,  # set a specific seed. Defaults from 'uint32'

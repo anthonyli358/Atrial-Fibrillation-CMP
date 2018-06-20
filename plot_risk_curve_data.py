@@ -53,7 +53,7 @@ for yi in range(len(nu_yz_val)):
             normz = (np.absolute((fib[:, 2]).astype('int') - 12))
             avz[xi, yi] = np.average(normz)
             varz[xi, yi] = np.std(normz)
-            conduction_block[yi, xi] = np.average(risk_data[:, -1])
+            conduction_block[xi, yi] = np.average(risk_data[:, -1])
 
         except:
             ave = 0
