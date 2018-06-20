@@ -30,7 +30,7 @@ def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
                 break
             if np.any(excitations[:, :, -1]):
                 data[i, 6] = True
-    # print('Run: {}, Data: {}'.format(i + 1, data[i]))
+        # print('Run: {}, Data: {}'.format(i + 1, data[i]))
     # print("time={}".format(time.time() - start))
 
     return data
@@ -62,7 +62,7 @@ def af_time_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
         if new:
             run_data.append(tissue.time)
         data.append(run_data)
-    # print('Run: {}, Data: {}'.format(i + 1, data[i]))
+        # print('Run: {}, Data: {}'.format(i + 1, data[i]))
     # print("time={}".format(time.time() - start))
 
     return data
@@ -74,7 +74,7 @@ def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     params["size"][0], params["seed"] = l_z, None
     params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
     params["angle_toggle"], params["angle_vars"] = angle_vars, angle_vars
-    # start = time.time()
+    start = time.time()
     for i in range(runs):
         tissue = Model(**params)
         data[i, 0] = tissue.seed
@@ -87,24 +87,22 @@ def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
             elif np.any(excitations[:, :, -1]):
                 data[i, 2] = tissue.time
                 data[i, 3] = np.average(np.where(excitations == 50)[2])
-                if angle_vars:
-                    data[i, 4] = np.average(np.where(excitations[0, :, :] == 50)[1])
-                    data[i, 5] = np.average(np.where(excitations[24, :, :] == 50)[1])
+                data[i, 4] = np.average(np.where(excitations[0, :, :] == 50)[1])
+                data[i, 5] = np.average(np.where(excitations[24, :, :] == 50)[1])
                 break
             elif not np.any(excitations == 50):
                 data[i, 2] = tissue.time
                 data[i, 3] = np.average(np.where(excitations == 49)[2])
-                if angle_vars:
-                    data[i, 4] = np.average(np.where(excitations[0, :, :] == 50)[1])
-                    data[i, 5] = np.average(np.where(excitations[24, :, :] == 50)[1])
+                data[i, 4] = np.average(np.where(excitations[0, :, :] == 50)[1])
+                data[i, 5] = np.average(np.where(excitations[24, :, :] == 50)[1])
                 break
-    # print('Run: {}, Data: {}'.format(i + 1, data[i]))
-    # print("time={}".format(time.time() - start))
+        print('Run: {}, Data: {}'.format(i + 1, data[i]))
+    print("time={}".format(time.time() - start))
     return data
 
 
 def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False):
-    risk_type = af_time_data if time_data else risk_curve_data
+    risk_type = con_vel_data
 
     file_dict = dict(
         risk=risk_type.__name__,
@@ -132,8 +130,8 @@ if __name__ == '__main__':
     #         [x, y] = np.load('nu_variables_res_3179.npy')[input_value]
 
     # change the variables, you can loop over nu_x and nu_y
-    for x in [1]:
-        for y in [0.02]:
+    for x in np.arange(0.2, 1.01, 0.2):
+        for y in np.arange(0.2, 1.01, 0.2):
 
             variables = dict(
                 runs=5,
@@ -143,7 +141,7 @@ if __name__ == '__main__':
                 # to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
                 angle_vars=False,
-                t=10000,
+                t=100000,
                 time_data=False,  # True for AF time sim, False for AF induction probability sim
             )
             gen_risk(**variables)
