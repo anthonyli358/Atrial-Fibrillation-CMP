@@ -1,10 +1,14 @@
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import glob
 import os
 
+
 def plot_risk_curve_data():
+    """
+    seed, AF?, x, y, z, time AF/end, conduction block?
+    :return:
+    """
 
     nu_yz_val = np.arange(0.005, 1, 0.01)
     nu_x_val = np.arange(0.005, 1, 0.01)
@@ -117,6 +121,10 @@ def plot_risk_curve_data():
 
 
 def plot_con_vel_data():
+    """
+    seed, time, bulk (av, max, min), z=0 (av, max, min), z=24 (av, max, min)
+    :return:
+    """
 
     nu_yz_val = np.arange(0.2, 1.01, 0.2)
     nu_x_val = np.arange(0.2, 1.01, 0.2)
@@ -137,7 +145,7 @@ def plot_con_vel_data():
                         os.makedirs('{path}/duplicates'.format(path=path))
                     for nfile in filename:
                         risk_data = np.load(nfile)
-                        print(np.sum(risk_data[999, 1:6]))
+                        print(risk_data[-1, :])
                     os.rename(filename[1], filename[1].replace("{}".format(path), "{}/duplicates".format(path)))
                     filename = filename[0]
                 else:
@@ -145,9 +153,9 @@ def plot_con_vel_data():
                 # print(filename)
                 risk_data = np.load(filename)
 
-                ave = np.average(risk_data[:, 3] / risk_data[:, 2])
+                ave = np.average(risk_data[:, 2] / risk_data[:, 1])
 
-            except:
+            except OSError:
                 ave = 0
                 pass
 

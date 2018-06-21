@@ -1,6 +1,5 @@
 import config
 from model import Model
-from utility_methods import *
 import numpy as np
 import time
 import binascii
@@ -9,10 +8,10 @@ import sys
 
 def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     data = np.zeros(shape=(runs, 7), dtype='uint32')
-    params = config.settings["structure"]
-    params["size"][0], params["seed"] = l_z, None
-    params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
-    params["angle_toggle"], params["angle_vars"] = angle_vars, angle_vars
+    params = config.settings['structure']
+    params['size'][0], params['seed'] = l_z, None
+    params['x_coupling'], params['yz_coupling'] = nu_x, nu_yz
+    params['angle_toggle'], params['angle_vars'] = angle_vars, angle_vars
     # start = time.time()
     for i in range(runs):
         tissue = Model(**params)
@@ -38,10 +37,10 @@ def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
 
 def af_time_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     data = []
-    params = config.settings["structure"]
-    params["size"][0], params["seed"] = l_z, None
-    params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
-    params["angle_toggle"], params["angle_vars"] = angle_vars, angle_vars
+    params = config.settings['structure']
+    params['size'][0], params['seed'] = l_z, None
+    params['x_coupling'], params['yz_coupling'] = nu_x, nu_yz
+    params['angle_toggle'], params['angle_vars'] = angle_vars, angle_vars
     # start = time.time()
     for i in range(runs):
         tissue = Model(**params)
@@ -69,11 +68,12 @@ def af_time_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
 
 
 def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
-    data = np.zeros(shape=(runs, 6), dtype='uint32')
-    params = config.settings["structure"]
-    params["size"][0], params["seed"] = l_z, None
-    params["x_coupling"], params["yz_coupling"] = nu_x, nu_yz
-    params["angle_toggle"], params["angle_vars"] = angle_vars, angle_vars
+    data = np.zeros(shape=(runs, 11), dtype='float32')
+    params = config.settings['structure']
+    params['dysfunction_parameter'] = 0
+    params['size'][0], params['seed'] = l_z, None
+    params['x_coupling'], params['yz_coupling'] = nu_x, nu_yz
+    params['angle_toggle'], params['angle_vars'] = angle_vars, angle_vars
     start = time.time()
     for i in range(runs):
         tissue = Model(**params)
@@ -82,27 +82,67 @@ def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
         while tissue.time < t:
             excitations = tissue.iterate()
             if np.intersect1d(tissue.excount, [2]):
-                data[i, 1] = True
-                break
+                raise Exception("AF occurred, check that delta is set to 0!")
+            #     data[i, 1] = True
+            #     break
             elif np.any(excitations[:, :, -1]):
-                data[i, 2] = tissue.time
-                data[i, 3] = np.average(np.where(excitations == 50)[2])
-                data[i, 4] = np.average(np.where(excitations[0, :, :] == 50)[1])
-                data[i, 5] = np.average(np.where(excitations[24, :, :] == 50)[1])
+                data[i, 1] = tissue.time
+                x_pos = np.where(excitations == 50)[2]
+                data[i, 2] = np.average(x_pos)
+                data[i, 3] = max(x_pos)
+                data[i, 4] = min(x_pos)
+                if np.any(excitations[0, :, :] == 50):
+                    x_pos_0 = np.where(excitations[0, :, :] == 50)[1]
+                    data[i, 5] = np.average(x_pos_0)
+                    data[i, 6] = max(x_pos_0)
+                    data[i, 7] = min(x_pos_0)
+                if np.any(excitations[24, :, :] == 50):
+                    x_pos_24 = np.where(excitations[24, :, :] == 50)[1]
+                    data[i, 8] = np.average(x_pos_24)
+                    data[i, 9] = max(x_pos_24)
+                    data[i, 10] = min(x_pos_24)
                 break
             elif not np.any(excitations == 50):
-                data[i, 2] = tissue.time
-                data[i, 3] = np.average(np.where(excitations == 49)[2])
-                data[i, 4] = np.average(np.where(excitations[0, :, :] == 50)[1])
-                data[i, 5] = np.average(np.where(excitations[24, :, :] == 50)[1])
+                data[i, 1] = tissue.time
+                x_pos = np.where(excitations == 49)[2]
+                data[i, 2] = np.average(x_pos)
+                data[i, 3] = max(x_pos)
+                data[i, 4] = min(x_pos)
+                if np.any(excitations[0, :, :] == 49):
+                    x_pos_0 = np.where(excitations[0, :, :] == 49)[1]
+                    data[i, 5] = np.average(x_pos_0)
+                    data[i, 6] = max(x_pos_0)
+                    data[i, 7] = min(x_pos_0)
+                if np.any(excitations[24, :, :] == 49):
+                    x_pos_24 = np.where(excitations[24, :, :] == 49)[1]
+                    data[i, 8] = np.average(x_pos_24)
+                    data[i, 9] = max(x_pos_24)
+                    data[i, 10] = min(x_pos_24)
                 break
         print('Run: {}, Data: {}'.format(i + 1, data[i]))
     print("time={}".format(time.time() - start))
     return data
 
 
-def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, time_data=False):
-    risk_type = con_vel_data
+def invest_af_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
+    data = np.zeros(shape=(runs, repeats, 11), dtype='float32')
+    params = config.settings['structure']
+    params['size'][0], params['seed'] = l_z, None
+    params['x_coupling'], params['yz_coupling'] = nu_x, nu_yz
+    params['angle_toggle'], params['angle_vars'] = angle_vars, angle_vars
+    start = time.time()
+    for i in range(runs):
+        tissue = Model(**params)
+
+        print('Run: {}, Data: {}'.format(i + 1, data[i]))
+    print("time={}".format(time.time() - start))
+    return data
+
+
+def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=False):
+    if not func:
+        raise Exception("Set func='risk_curve_data, af_time_data, or con_vel_data' to create data!")
+    risk_type = func
 
     file_dict = dict(
         risk=risk_type.__name__,
@@ -142,6 +182,6 @@ if __name__ == '__main__':
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
                 angle_vars=False,
                 t=100000,
-                time_data=False,  # True for AF time sim, False for AF induction probability sim
+                func=False,  # risk_curve_data, af_time_data, con_vel_data
             )
             gen_risk(**variables)

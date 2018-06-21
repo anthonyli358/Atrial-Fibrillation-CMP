@@ -13,7 +13,7 @@ num = np.zeros_like(Z)
 ind_time = np.zeros_like(Z)
 
 
-
+# seed, AF?, (AF on, AF off),etc.
 
 for yi in range(len(nu_yz_val)):
     for xi in range(len(nu_x_val)):
