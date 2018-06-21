@@ -6,9 +6,10 @@ settings = dict(
         dysfunction_probability=0.05,  # epsilon, probability of dysfunctional cell failing
         x_coupling=1.,  # nu_x, probability of x linkage
         yz_coupling=0.2,  # nu_yz, probability of y and z linkage
-        angle_toggle=False,  # Use angular definition of coupling
+        angle_toggle=False,  # use angular definition of coupling
         angle_vars=[24, 42, .32],  # theta(z=0), theta(z=max), magnitude of connectivity
-        seed=None,  # set a specific seed. Defaults from 'uint32'
+        seed=None,  # set a specific seed for structure & epsilon. Defaults from 'uint32'
+        dys_seed=None,  # if not None, epsilon fire randomly
     ),
     sim=dict(
         pacemaker_period=220,  # pacemaker activation period

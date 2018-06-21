@@ -8,7 +8,7 @@ class Model:
     """
 
     def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, x_coupling,
-                 yz_coupling, seed, time=0, angle_toggle=False, angle_vars=[20, 45, 0.7], random_runtime=False):
+                 yz_coupling, seed, time=0, angle_toggle=False, angle_vars=[20, 45, 0.7], dys_seed=None):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -70,8 +70,8 @@ class Model:
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.failed = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
         self.destroyed = np.zeros(size, dtype=bool)
-        if random_runtime:  # Randomise the seed for running
-            np.random.seed()
+        self.dys_seed = dys_seed if dys_seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
+        np.random.seed(self.dys_seed)
 
     def activate_pacemaker(self):
         """

@@ -125,7 +125,7 @@ def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
 
 
 def af_pos_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
-    data = np.zeros(shape=(runs, repeats, 5), dtype='float32')
+    data = np.zeros(shape=(runs, repeats, 6), dtype='float32')
     params = config.settings['structure']
     params['random_runtime'] = True
     params['size'][0], params['seed'] = l_z, None
@@ -140,11 +140,12 @@ def af_pos_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
             tissue.activate_pacemaker()  # Initialise new wavefront
             tissue.time = 0
             data[i, j, 0] = tissue.seed
+            data[i, j, 1] = tissue.dys_seed
             while tissue.time < t:
                 excitations = tissue.iterate()
                 if np.intersect1d(tissue.excount, [2]):
-                    data[i, j, 1] = 1
-                    data[i, 2:5] = tissue.maxpos
+                    data[i, j, 2] = 1
+                    data[i, 3:6] = tissue.maxpos
                     break
                 elif not np.any(excitations == 50):
                     break

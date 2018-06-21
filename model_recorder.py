@@ -35,6 +35,7 @@ class ModelRecorder:
             with open('config.py') as old_file:
                 for line in old_file:
                     new_file.write(line.replace('seed=None', 'seed={}'.format(model.seed)))
+                    new_file.write(line.replace('dys_seed=None', 'dys_seed={}'.format(model.dys_seed)))
         os.close(fd)  # prevent file descriptor leakage
         move(new_path, 'data/{}/config.py'.format(self.path))  # move new file
 
