@@ -117,6 +117,7 @@ class AFInterface(QtWidgets.QMainWindow):
         self.anim = Animation(self)  # Overwrites animation with new one
         self.setCentralWidget(self.anim)  # Replaces animation with new one
         self.config.seedBox.setText(np.str(self.anim.substrate.seed))
+        self.config.dys_seedBox.setText(np.str(self.anim.substrate.dys_seed))
         print('\n\n New Settings \n')
         pprint(self.settings)
 
@@ -372,7 +373,7 @@ class Config(QtWidgets.QWidget):
         config_form.addRow(QtWidgets.QLabel('Average connectivity'), anglemag)
 
         config_form.addRow(QtWidgets.QLabel('Seed'), seedHBox)
-        config_form.addRow(QtWidgets.QLabel('Seed'), dys_seedHBox)
+        config_form.addRow(QtWidgets.QLabel('Dysfunction Seed'), dys_seedHBox)
         config_form.addWidget(reset_button)
 
         config_box.setLayout(config_form)
@@ -687,7 +688,7 @@ class Animation(makeCanvas):
                     if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
                         self.substrate.activate_pacemaker()
                     self.substrate.iterate()
-                    self.hist.append(self.substrate.model_array.copy())
+                    # self.hist.append(self.substrate.model_array.copy())
                     jumps += 1
 
                 self.settings['skip'] = False
@@ -710,19 +711,19 @@ class Animation(makeCanvas):
             output_ims = [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                           lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
                           im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
-                          destroyed.set_data(dest_arr[self.settings['QTviewer']['z_cross_pos']]),
+                          destroyed.set_data(dest_arr.copy()[self.settings['QTviewer']['z_cross_pos']]),
                           # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
                           # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
-                          image.set_data(arr[-1]),
+                          image.set_data(arr.copy()[-1]),
                           # image2.set_data(arr[-2]),
                           # image3.set_data(arr[-3]),
-                          v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                          v_cross_view.set_data(np.swapaxes(arr.copy()[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                           v_cross_destroyed.set_data(
-                              np.swapaxes(dest_arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
-                          h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :]),
-                          h_cross_destroyed.set_data(dest_arr[:, self.settings['QTviewer']['y_cross_pos'], :])
+                              np.swapaxes(dest_arr.copy()[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                          h_cross_view.set_data(arr.copy()[:, self.settings['QTviewer']['y_cross_pos'], :]),
+                          h_cross_destroyed.set_data(dest_arr.copy()[:, self.settings['QTviewer']['y_cross_pos'], :])
                           ]
-            # self.hist.append([linev,lineh,im,destroyed,image,v_cross_view,v_cross_destroyed,h_cross_view,h_cross_destroyed])
+            self.hist.append([linev,lineh,im,destroyed,image,v_cross_view,v_cross_destroyed,h_cross_view,h_cross_destroyed])
 
             return output_ims
 
