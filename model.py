@@ -28,6 +28,7 @@ class Model:
         self.dysfunction_probability = dysfunction_probability
         self.time = time
         self.seed = seed if seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
+        self.dys_seed = dys_seed if dys_seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
         np.random.seed(self.seed)
         self.direction = np.zeros(size, dtype='uint8')
 

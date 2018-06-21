@@ -2,17 +2,21 @@ import sys
 from PyQt5 import QtWidgets, QtGui
 
 from PyQt5.QtCore import Qt
+from matplotlib import rcParams
+# rcParams['animation.ffmpeg_path'] = "/Users/andrew/Downloads/ffmpeg-4.0.1/ffmpeg.exe"
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib.animation import FuncAnimation
 from matplotlib.gridspec import GridSpec
 from matplotlib.colors import LinearSegmentedColormap
+
 import numpy as np
 from pprint import pprint  # to get readable print output for dicts
 
 import model
 import config
+import queue
 
 
 class AFInterface(QtWidgets.QMainWindow):
@@ -105,6 +109,8 @@ class AFInterface(QtWidgets.QMainWindow):
             self.settings['structure']['seed'] = None
         if self.config.seedCheck.isChecked():
             self.settings['structure']['seed'] = np.uint32(self.config.seedBox.text())
+        if self.config.dys_seedCheck.isChecked():
+            self.settings['structure']['dys_seed'] = np.uint32(self.config.dys_seedBox.text())
         else:
             self.settings['structure']['seed'] = None
         self.anim.close_event()  # Ends Current animation
@@ -119,6 +125,7 @@ class AFInterface(QtWidgets.QMainWindow):
 
     def ablate(self):
         self.settings['ablate'] ^= True
+
 
 
 class Config(QtWidgets.QWidget):
@@ -205,6 +212,14 @@ class Config(QtWidgets.QWidget):
         validator = QtGui.QIntValidator(0, 4294967295)
         self.seedBox.setValidator(validator)
         self.seedBox.setText(np.str(self.parent.anim.substrate.seed))
+        
+        self.dys_seedCheck = QtWidgets.QCheckBox()
+        self.dys_seedCheck.setCheckState(0)
+
+        self.dys_seedBox = QtWidgets.QLineEdit()
+        validator = QtGui.QIntValidator(0, 4294967295)
+        self.dys_seedBox.setValidator(validator)
+        self.dys_seedBox.setText(np.str(self.parent.anim.substrate.dys_seed))
 
         separator = QtWidgets.QFrame()
         separator.setFrameShape(QtWidgets.QFrame.HLine)
@@ -246,6 +261,10 @@ class Config(QtWidgets.QWidget):
         seedHBox = QtWidgets.QHBoxLayout()
         seedHBox.addWidget(self.seedCheck)
         seedHBox.addWidget(self.seedBox)
+        
+        dys_seedHBox = QtWidgets.QHBoxLayout()
+        dys_seedHBox.addWidget(self.dys_seedCheck)
+        dys_seedHBox.addWidget(self.dys_seedBox)
 
         reset_button = QtWidgets.QPushButton()
         reset_button.setText('Reset with these settings')
@@ -338,7 +357,6 @@ class Config(QtWidgets.QWidget):
         ablationradius.setValue(self.settings['abradius'])
         ablationradius.valueChanged.connect(self.update_abradius)
 
-
         config_box = QtWidgets.QGroupBox()
         config_box.setTitle('Substrate Configuration Settings')
 
@@ -354,6 +372,7 @@ class Config(QtWidgets.QWidget):
         config_form.addRow(QtWidgets.QLabel('Average connectivity'), anglemag)
 
         config_form.addRow(QtWidgets.QLabel('Seed'), seedHBox)
+        config_form.addRow(QtWidgets.QLabel('Seed'), dys_seedHBox)
         config_form.addWidget(reset_button)
 
         config_box.setLayout(config_form)
@@ -369,7 +388,6 @@ class Config(QtWidgets.QWidget):
         anim_form.addRow(QtWidgets.QLabel('Depth cross view position'), cross_pos3)
         anim_form.addRow(QtWidgets.QLabel('Skip to breakthrough'), skipCheck)
         anim_box.setLayout(anim_form)
-
 
         ablation_box = QtWidgets.QGroupBox()
         ablation_box.setTitle('Ablation Settings')
@@ -481,7 +499,8 @@ class Animation(makeCanvas):
         """Function to create figures"""
         # Sets initial plots and plot positions
         size = self.settings['structure']['size']
-        self.hist = []  # Saves array history
+        # self.hist = queue.Queue(500)
+        self.hist = []
 
         self.substrate = model.Model(**self.settings['structure'])
 
@@ -668,6 +687,7 @@ class Animation(makeCanvas):
                     if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
                         self.substrate.activate_pacemaker()
                     self.substrate.iterate()
+                    self.hist.append(self.substrate.model_array.copy())
                     jumps += 1
 
                 self.settings['skip'] = False
@@ -677,8 +697,8 @@ class Animation(makeCanvas):
                 'seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos), y=.05)
             # # Update all the plot data with new variables
 
-            arr = self.get_anim_array()  # get array for plotting
-            dest_arr = self.substrate.destroyed
+            arr = self.get_anim_array().copy()  # get array for plotting
+            dest_arr = self.substrate.destroyed.copy()
 
             # self.ax1.clear()
             # coarse_max = np.maximum(np.maximum(arr[0],arr[1]),np.maximum(arr[2],arr[3]))
@@ -687,21 +707,24 @@ class Animation(makeCanvas):
             #                            zorder=5,
             #                            levels=[50])
 
-            return [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
-                    lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
-                    im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
-                    destroyed.set_data(dest_arr[self.settings['QTviewer']['z_cross_pos']]),
-                    # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
-                    # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
-                    image.set_data(arr[-1]),
-                    # image2.set_data(arr[-2]),
-                    # image3.set_data(arr[-3]),
-                    v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
-                    v_cross_destroyed.set_data(
-                        np.swapaxes(dest_arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
-                    h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :]),
-                    h_cross_destroyed.set_data(dest_arr[:, self.settings['QTviewer']['y_cross_pos'], :])
-                    ]
+            output_ims = [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
+                          lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
+                          im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
+                          destroyed.set_data(dest_arr[self.settings['QTviewer']['z_cross_pos']]),
+                          # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
+                          # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
+                          image.set_data(arr[-1]),
+                          # image2.set_data(arr[-2]),
+                          # image3.set_data(arr[-3]),
+                          v_cross_view.set_data(np.swapaxes(arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                          v_cross_destroyed.set_data(
+                              np.swapaxes(dest_arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                          h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :]),
+                          h_cross_destroyed.set_data(dest_arr[:, self.settings['QTviewer']['y_cross_pos'], :])
+                          ]
+            # self.hist.append([linev,lineh,im,destroyed,image,v_cross_view,v_cross_destroyed,h_cross_view,h_cross_destroyed])
+
+            return output_ims
 
         def frames():  # Iterator for animation, yield same time value while paused
             t = -1
@@ -713,7 +736,13 @@ class Animation(makeCanvas):
                     t += 1
                 yield (t, play)
 
-        self.ani = FuncAnimation(self.figure, func, frames, interval=0, blit=False)
+        def savefunk(t):
+            return self.hist.get()
+
+        self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False, save_count=100)
+
+        # self.saveani = FuncAnimation(self.figure, savefunk, interval=5, save_count=500)
+
 
     def onclick(self, event):
         if event.xdata:
