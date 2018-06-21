@@ -124,24 +124,38 @@ def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     return data
 
 
-def invest_af_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
-    data = np.zeros(shape=(runs, repeats, 11), dtype='float32')
+def af_pos_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
+    data = np.zeros(shape=(runs, repeats, 5), dtype='float32')
     params = config.settings['structure']
+    params['random_runtime'] = True
     params['size'][0], params['seed'] = l_z, None
     params['x_coupling'], params['yz_coupling'] = nu_x, nu_yz
     params['angle_toggle'], params['angle_vars'] = angle_vars, angle_vars
     start = time.time()
     for i in range(runs):
         tissue = Model(**params)
-
-        print('Run: {}, Data: {}'.format(i + 1, data[i]))
+        for j in range(repeats):
+            tissue.model_array.fill(0)  # Clear activations
+            tissue.excount.fill(0)  # Clear excitation count
+            tissue.activate_pacemaker()  # Initialise new wavefront
+            tissue.time = 0
+            data[i, j, 0] = tissue.seed
+            while tissue.time < t:
+                excitations = tissue.iterate()
+                if np.intersect1d(tissue.excount, [2]):
+                    data[i, j, 1] = 1
+                    data[i, 2:5] = tissue.maxpos
+                    break
+                elif not np.any(excitations == 50):
+                    break
+            print('Run: {}, Repeat: {}, Data: {}'.format(i + 1, j + 1, data[i]))
     print("time={}".format(time.time() - start))
     return data
 
 
 def gen_risk(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=False):
     if not func:
-        raise Exception("Set func='risk_curve_data, af_time_data, or con_vel_data' to create data!")
+        raise Exception("Set func='risk_curve_data, af_time_data, con_vel_data, or af_pos_data' to create data!")
     risk_type = func
 
     file_dict = dict(
@@ -182,6 +196,6 @@ if __name__ == '__main__':
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
                 angle_vars=False,
                 t=100000,
-                func=False,  # risk_curve_data, af_time_data, con_vel_data
+                func=False,  # risk_curve_data, af_time_data, con_vel_data, af_pos_data
             )
             gen_risk(**variables)

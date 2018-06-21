@@ -6,7 +6,7 @@ import os
 
 def plot_risk_curve_data():
     """
-    seed, AF?, x, y, z, time AF/end, conduction block?
+    [runs [seed, AF?, x, y, z, time AF/end, conduction block?]]
     :return:
     """
 
@@ -122,7 +122,7 @@ def plot_risk_curve_data():
 
 def plot_con_vel_data():
     """
-    seed, time, bulk (av, max, min), z=0 (av, max, min), z=24 (av, max, min)
+    [runs[seed, time, bulk (av, max, min), z=0 (av, max, min), z=24 (av, max, min)]]
     :return:
     """
 
