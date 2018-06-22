@@ -27,6 +27,8 @@ class Model:
         self.refractory_period = refractory_period
         self.dysfunction_parameter = dysfunction_parameter
         self.dysfunction_probability = dysfunction_probability
+        self.nu_x = x_coupling
+        self.nu_yz = yz_coupling
         self.time = time
         self.seed = seed if seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
         self.dys_seed = dys_seed if dys_seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')

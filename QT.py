@@ -89,7 +89,7 @@ class AFInterface(QtWidgets.QMainWindow):
         self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct, skipAct, saveFile, self.ablateAct])
         self.toolbar.setMaximumHeight(25)
 
-        self.setGeometry(300, 150, 400, 650)
+        self.setGeometry(300, 150, 400, 680)
         self.setWindowTitle('AF Viewer')
 
         self.show()
@@ -137,8 +137,11 @@ class AFInterface(QtWidgets.QMainWindow):
         name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File')
         print(name)
         anim2 = Animation(self)
-        anim2.compute_initial_figure(recall=name[0]+'.gif')
-        anim2.close_event()
+        anim2.compute_initial_figure(recall=name[0]+'.mp4')
+        try:
+            anim2.close_event()
+        except Exception:
+            pass
 
 
 class Config(QtWidgets.QWidget):
@@ -476,6 +479,7 @@ class makeCanvas(FigureCanvas):
     def __init__(self, parent):
         self.parent = parent
         self.figure = Figure()
+        self.figure.set_size_inches(3.6,6)
         super().__init__(self.figure)
         self.settings = parent.settings
         self.compute_initial_figure()
@@ -490,7 +494,7 @@ class makePhases(makeCanvas):
     """Class for window containing figures of risk for different substrates."""
 
     def compute_initial_figure(self):
-        self.resize(400, 350)
+        self.resize(400, 680)
         self.step = False
         names = ['data_analysis/phase_spaces/1_200_200.npy', 'data_analysis/phase_spaces/2_200_200.npy',
                  'data_analysis/phase_spaces/4_200_200.npy', 'data_analysis/phase_spaces/8_200_200.npy',
@@ -531,6 +535,11 @@ class Animation(makeCanvas):
                       width_ratios=[1, size[0] / size[1]],
                       height_ratios=[1, size[0] / size[2], 1])  # Setting grid layout for figures
 
+        self.axtext = self.figure.add_subplot(gs[1])
+        self.axtext.axis('off')
+        self.axtext.annotate(xy=(-0.8,0.5), xycoords='axes fraction', s = '$\\nu_x = {:.3f}$\n$\\nu_{{yz}}={:.3f}$'.format(self.substrate.nu_x,
+                                                                                                              self.substrate.nu_yz))
+
         self.ax0 = self.figure.add_subplot(gs[4])
         self.im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
                              animated=True,
@@ -543,6 +552,9 @@ class Animation(makeCanvas):
                              interpolation='nearest',
                              zorder=1
                              )
+        self.ax0.set_ylabel('y $(z={})$'.format(self.settings['QTviewer']['z_cross_pos']))
+        self.ax0.set_xlabel('x')
+
 
         redmap = LinearSegmentedColormap.from_list('red', [(1, 0.2, 0.2, 0), (1, 0.2, 0.2, 1)], N=10)
         self.im_destroyed = self.ax0.imshow(self.substrate.destroyed[self.settings['QTviewer']['z_cross_pos']],
@@ -599,11 +611,13 @@ class Animation(makeCanvas):
                                 vmin=0,
                                 vmax=self.settings['structure']['refractory_period'],
                                 origin='lower',
-                                extent=(0, self.settings['structure']['size'][2],
-                                        0, self.settings['structure']['size'][1]),
+                                extent=(0, size[2],
+                                        0, size[1]),
                                 interpolation='nearest',
                                 zorder=3,
                                 )
+        self.ax1.set_ylabel('y $(z={})$'.format(size[0]-1))
+        self.ax1.get_xaxis().set_visible(False)
 
         # image2 = self.ax1.imshow(self.substrate.model_array[-2],
         #                          animated=True,
@@ -634,6 +648,9 @@ class Animation(makeCanvas):
         #                            levels=[50])
 
         self.ax2 = self.figure.add_subplot(gs[5])  # Plot the x axis cut through
+        self.ax2.set_xlabel('z $(x={})$'.format(self.settings['QTviewer']['x_cross_pos']))
+        self.ax2.get_yaxis().set_visible(False)
+
         self.v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :,
                                                    self.settings['QTviewer']['x_cross_pos']], 0, 1),
                                        animated=True,
@@ -642,8 +659,8 @@ class Animation(makeCanvas):
                                        origin='lower',
                                        cmap='Greys_r',
                                        interpolation='nearest',
-                                       extent=(0, self.settings['structure']['size'][0],
-                                               0, self.settings['structure']['size'][1]),
+                                       extent=(0, size[0],
+                                               0, size[1]),
                                        zorder=1,
                                        )
 
@@ -661,6 +678,8 @@ class Animation(makeCanvas):
                                             )
 
         self.ax3 = self.figure.add_subplot(gs[2])  # Plot the y axis cut through
+        self.ax3.set_ylabel('z $(y={})$'.format(self.settings['QTviewer']['y_cross_pos']))
+        self.ax3.get_xaxis().set_visible(False)
         self.h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
                                        animated=True,
                                        vmin=0,
@@ -723,7 +742,11 @@ class Animation(makeCanvas):
                     return
 
             self.figure.suptitle(
-                'seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos), y=.05)
+                'seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos), y=.03)
+            self.ax0.set_ylabel('y $(z={})$'.format(self.settings['QTviewer']['z_cross_pos']))
+            self.ax2.set_xlabel('z $(x={})$'.format(self.settings['QTviewer']['x_cross_pos']))
+            self.ax3.set_ylabel('z $(y={})$'.format(self.settings['QTviewer']['y_cross_pos']))
+
             # # Update all the plot data with new variables
 
             arr = self.get_anim_array()  # get array for plotting
@@ -769,10 +792,10 @@ class Animation(makeCanvas):
         #     return self.hist.get()
 
         if recall:
-            self.saveani = FuncAnimation(self.figure, func, frames, interval=1,
+            self.saveani = FuncAnimation(self.figure, func, frames, interval=100,
                                          blit=False, save_count=len(self.frozenhist))
             self.i = 0
-            self.saveani.save(recall, writer='imagemagick')
+            self.saveani.save(recall, writer='ffmpeg')
             print('SAVED to {}'.format(recall))
         else:
             self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False, save_count=500)
