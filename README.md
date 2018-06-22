@@ -16,9 +16,9 @@ For the purpose of simply running the 3D CMP model other modules may be disregar
 
 ### Running the Model:
 - Open config.py and define the model initialisation parameters:
-  - The *structure* dictionary is used to define the CMP model structure parameters. Change the seed from "None" to the seed for a known structure to reproduce the same behaviour. The dys_seed parameter can be used to reproduce dysfunctional cell firing behaviour.
+  - The *structure* dictionary is used to define the CMP model structure parameters. Change the seed from *None* to the seed for a known structure to reproduce the same behaviour. The dys_seed parameter can be used to reproduce dysfunctional cell firing behaviour.
   - The *sim* dictionary is used to set the activation period of the sinoatrial node. The runtime does not need to be set for real-time simulations.
-  - The *QTviewer" dictionary sets the x, y, z positions at which cross-sections are taken and displayed.
+  - The *QTviewer* dictionary sets the x, y, z positions at which cross-sections are taken and displayed.
   - The *viewer* dictionary is not needed for real-time simulations.
   
 - Run QT.py 
@@ -44,16 +44,16 @@ Scroll to the bottom under the *if __name__ == '__main__':* statement for:
 
 - plot_risk_curve_data.py:
     - Comment and uncomment each data specific function as required.
-    - The *path* parameter is the folder path for data. 
-    - Check for each function that the nu_x, nu_yz / nu_av ranges are correct and that the *file* variable is of the correct name format.
-    
+    - The *path* parameter is the folder path for data (*None* if same directory). 
+    - Check for each function that the nu_x, nu_yz / nu_av ranges are the same as for data generation and that the *file* variable is of the correct name format for glob patterns using the wildcard character *.
+
 ### Initialising Ablated Tissue
 
 The *ablated_tissue* parameter in config.py takes a list of positions (z, y, x) and ablates them upon tissue initialisation with a default radius of 2mm (this may be changed in the __init__() of model.py). It may be extended to ablate tissue of fixed structure where the positions of possible AF sources is known:
 
 - gen_risk_curve_data.py and plot_risk_curve_data.py: Generate and read af_pos_data().
     - The processed data will be saved in it's original folder in numpy format entitled *af_positions_parameters.npy*.
-    - Data structure of [runs $\times$ [seed, (z, y, x),etc.]].
+    - Data structure of [runs x [seed, (z, y, x),etc.]].
 
 - config.py: Make changes outlined by comments in the file itself and in the pseudocode below.
     ```python
