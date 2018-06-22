@@ -8,7 +8,8 @@ class Model:
     """
 
     def __init__(self, size, refractory_period, dysfunction_parameter, dysfunction_probability, x_coupling,
-                 yz_coupling, seed, time=0, angle_toggle=False, angle_vars=[20, 45, 0.7], dys_seed=None):
+                 yz_coupling, seed, dys_seed=None, time=0, angle_toggle=False, angle_vars=[20, 45, 0.7],
+                 ablated_tissue=None):
         """
         Heart Initialisation
         :param size: The dimensions of the heart as a tuple e.g. (200, 200, 10)
@@ -30,6 +31,9 @@ class Model:
         self.seed = seed if seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
         self.dys_seed = dys_seed if dys_seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
         np.random.seed(self.seed)
+        self.dys_seed = dys_seed if dys_seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
+        np.random.seed(self.dys_seed)
+
         self.direction = np.zeros(size, dtype='uint8')
 
         self.excited = np.zeros(size, dtype=bool)
@@ -57,7 +61,6 @@ class Model:
             self.z_linkage = np.apply_along_axis(np.less, 0, z_ran, yz_coupling_grid)
 
         elif angle_toggle == 0:
-
             self.x_linkage = np.random.choice(a=[True, False], size=size,  # array of longitudinal linkages
                                               p=[x_coupling, 1 - x_coupling])
             self.y_linkage = np.random.choice(a=[True, False], size=size,  # array of transverse linkages
@@ -71,8 +74,8 @@ class Model:
                                               p=[dysfunction_parameter, 1 - dysfunction_parameter])
         self.failed = np.zeros(size, dtype=bool)  # array of currently dysfunctional nodes
         self.destroyed = np.zeros(size, dtype=bool)
-        self.dys_seed = dys_seed if dys_seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
-        np.random.seed(self.dys_seed)
+        if ablated_tissue:
+            self.multi_ablation(ablated_tissue, 2)  # ablation radius 2mm by default
 
     def activate_pacemaker(self):
         """
@@ -151,6 +154,13 @@ class Model:
                                                 np.abs(Y - coordinate[1])], axis=0), Z
         dist_sq = np.square(Xp * 0.5) + np.square(Yp * 0.1) + np.square(Zp * 0.1)
         self.destroyed |= dist_sq < radius ** 2
+
+    def multi_ablation(self, coordinate_list, radius):
+        """
+        Ablate multiple points.
+        """
+        for point in coordinate_list:
+            self.add_ablation(point, radius)
 
     def activate(self, coordinate):
         """
