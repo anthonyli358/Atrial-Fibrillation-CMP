@@ -16,6 +16,7 @@ from pprint import pprint  # to get readable print output for dicts
 
 import model
 import config
+import copy
 import queue
 
 
@@ -64,7 +65,12 @@ class AFInterface(QtWidgets.QMainWindow):
         skipAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-end-32.png'), 'skip', self)
         skipAct.triggered.connect(self.skip)
 
-        self.ablateAct = QtWidgets.QAction('ABLATE', self)
+        saveFile = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-save-as-50.png'), 'save', self)
+        saveFile.setShortcut("Ctrl+S")
+        saveFile.setStatusTip('Save File')
+        saveFile.triggered.connect(self.file_save)
+
+        self.ablateAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-laser-beam-50.png'), 'ablate', self)
         self.ablateAct.setCheckable(True)
         self.ablateAct.setChecked(self.settings['ablate'])
         self.ablateAct.triggered.connect(self.ablate)
@@ -80,10 +86,10 @@ class AFInterface(QtWidgets.QMainWindow):
 
         # Adding animation toolbar
         self.toolbar = self.addToolBar('Animation')
-        self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct, skipAct, self.ablateAct])
+        self.toolbar.addActions([playAct, phaseAct, settAct, resetAct, advAct, skipAct, saveFile, self.ablateAct])
         self.toolbar.setMaximumHeight(25)
 
-        self.setGeometry(300, 150, 350, 650)
+        self.setGeometry(300, 150, 400, 650)
         self.setWindowTitle('AF Viewer')
 
         self.show()
@@ -127,6 +133,12 @@ class AFInterface(QtWidgets.QMainWindow):
     def ablate(self):
         self.settings['ablate'] ^= True
 
+    def file_save(self):
+        name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File')
+        print(name)
+        anim2 = Animation(self)
+        anim2.compute_initial_figure(recall=name[0]+'.gif')
+        anim2.close_event()
 
 
 class Config(QtWidgets.QWidget):
@@ -496,14 +508,19 @@ class makePhases(makeCanvas):
 class Animation(makeCanvas):
     """Window with real-time Atrial Fibrillation animation."""
 
-    def compute_initial_figure(self):
+    def compute_initial_figure(self, recall=False):
         """Function to create figures"""
         # Sets initial plots and plot positions
         size = self.settings['structure']['size']
         # self.hist = queue.Queue(500)
-        self.hist = []
-
-        self.substrate = model.Model(**self.settings['structure'])
+        if not recall:
+            self.hist = []
+            self.substrate = model.Model(**self.settings['structure'])
+            self.hist.append(copy.deepcopy(self.substrate))
+        else:
+            self.frozenhist = copy.copy(self.parent.anim.hist)
+            self.i = 0
+            self.substrate = self.frozenhist[self.i]
 
         # Transparent colourmaps if needed
         cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, 1)], N=50)
@@ -515,7 +532,7 @@ class Animation(makeCanvas):
                       height_ratios=[1, size[0] / size[2], 1])  # Setting grid layout for figures
 
         self.ax0 = self.figure.add_subplot(gs[4])
-        im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
+        self.im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
                              animated=True,
                              cmap='Greys_r',
                              vmin=0,
@@ -528,7 +545,7 @@ class Animation(makeCanvas):
                              )
 
         redmap = LinearSegmentedColormap.from_list('red', [(1, 0.2, 0.2, 0), (1, 0.2, 0.2, 1)], N=10)
-        destroyed = self.ax0.imshow(self.substrate.destroyed[self.settings['QTviewer']['z_cross_pos']],
+        self.im_destroyed = self.ax0.imshow(self.substrate.destroyed[self.settings['QTviewer']['z_cross_pos']],
                                     animated=True,
                                     cmap=redmap,
                                     vmin=0,
@@ -561,12 +578,12 @@ class Animation(makeCanvas):
         #                          zorder=1
         #                          )
 
-        linev = self.ax0.axvline(x=self.settings['QTviewer']['x_cross_pos'],
+        self.linev = self.ax0.axvline(x=self.settings['QTviewer']['x_cross_pos'],
                                  color='cyan',
                                  linestyle='--',
                                  zorder=4
                                  )
-        lineh = self.ax0.axhline(y=self.settings['QTviewer']['y_cross_pos'],
+        self.lineh = self.ax0.axhline(y=self.settings['QTviewer']['y_cross_pos'],
                                  color='cyan',
                                  linestyle='--',
                                  zorder=4
@@ -576,7 +593,7 @@ class Animation(makeCanvas):
         clicked = self.figure.canvas.mpl_connect('button_press_event',
                                                  self.onclick)  # Clicking changes the cut through positions
 
-        image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
+        self.image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
                                 animated=True,
                                 cmap='Greys_r',
                                 vmin=0,
@@ -617,7 +634,7 @@ class Animation(makeCanvas):
         #                            levels=[50])
 
         self.ax2 = self.figure.add_subplot(gs[5])  # Plot the x axis cut through
-        v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :,
+        self.v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :,
                                                    self.settings['QTviewer']['x_cross_pos']], 0, 1),
                                        animated=True,
                                        vmin=0,
@@ -630,7 +647,7 @@ class Animation(makeCanvas):
                                        zorder=1,
                                        )
 
-        v_cross_destroyed = self.ax2.imshow(np.swapaxes(self.substrate.destroyed[:, :,
+        self.v_cross_destroyed = self.ax2.imshow(np.swapaxes(self.substrate.destroyed[:, :,
                                                         self.settings['QTviewer']['x_cross_pos']], 0, 1),
                                             animated=True,
                                             origin='lower',
@@ -644,7 +661,7 @@ class Animation(makeCanvas):
                                             )
 
         self.ax3 = self.figure.add_subplot(gs[2])  # Plot the y axis cut through
-        h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
+        self.h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
                                        animated=True,
                                        vmin=0,
                                        vmax=self.settings['structure']['refractory_period'],
@@ -656,7 +673,7 @@ class Animation(makeCanvas):
                                        zorder=1
                                        )
 
-        h_cross_destroyed = self.ax3.imshow(self.substrate.destroyed[:, self.settings['QTviewer']['y_cross_pos'], :],
+        self.h_cross_destroyed = self.ax3.imshow(self.substrate.destroyed[:, self.settings['QTviewer']['y_cross_pos'], :],
                                             animated=True,
                                             origin='lower',
                                             cmap=redmap,
@@ -668,37 +685,48 @@ class Animation(makeCanvas):
                                             zorder=2
                                             )
 
+
+
         def func(framedata):
             """Function to iterate animation, All active changes here"""
             t, play = framedata
+            if not recall:
+                if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
+                    self.substrate.activate_pacemaker()
+                if play:  # If viewer is not paused iterate each timestep.
+                    self.substrate.iterate()  # advance simulation
+                    self.hist.append(copy.deepcopy(self.substrate))
+                # if t == 300:
+                #     self.substrate.add_ablation(self.substrate.maxpos, 2)
+                # if t == 1:
+                #     self.substrate.add_ablation((0,100,100), 2)
 
-            if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
-                self.substrate.activate_pacemaker()
-            if play:  # If viewer is not paused iterate each timestep.
-                self.substrate.iterate()  # advance simulation
-                # self.hist.append(np.copy(self.get_anim_array()))  # append change to list
-            # if t == 300:
-            #     self.substrate.add_ablation(self.substrate.maxpos, 2)
-            # if t == 1:
-            #     self.substrate.add_ablation((0,100,100), 2)
+                if self.settings['skip']:  # Skip without iterating animation
+                    jumps = 0
+                    while self.substrate.maxpos[-1] <= 1 and jumps < 1000:
+                        if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
+                            self.substrate.activate_pacemaker()
+                        self.substrate.iterate()
+                        # self.hist.append(self.substrate.model_array.copy())
+                        jumps += 1
 
-            if self.settings['skip']:  # Skip without iterating animation
-                jumps = 0
-                while self.substrate.maxpos[-1] <= 1 and jumps < 1000:
-                    if self.substrate.time % self.settings['sim']['pacemaker_period'] == 0:
-                        self.substrate.activate_pacemaker()
-                    self.substrate.iterate()
-                    # self.hist.append(self.substrate.model_array.copy())
-                    jumps += 1
+                    self.settings['skip'] = False
+                    self.parent.toggle_pause()
+                    print(jumps)
+            else:
+                try:
+                    self.i += 1
+                    print(self.i)
+                    self.substrate = self.frozenhist[self.i]
+                    print(self.substrate.time)
+                except:
+                    return
 
-                self.settings['skip'] = False
-                self.parent.toggle_pause()
-                print(jumps)
             self.figure.suptitle(
                 'seed={}, t={}, {}'.format(self.substrate.seed, self.substrate.time, self.substrate.maxpos), y=.05)
             # # Update all the plot data with new variables
 
-            arr = self.get_anim_array().copy()  # get array for plotting
+            arr = self.get_anim_array()  # get array for plotting
             dest_arr = self.substrate.destroyed.copy()
 
             # self.ax1.clear()
@@ -708,22 +736,22 @@ class Animation(makeCanvas):
             #                            zorder=5,
             #                            levels=[50])
 
-            output_ims = [linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
-                          lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
-                          im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
-                          destroyed.set_data(dest_arr.copy()[self.settings['QTviewer']['z_cross_pos']]),
+            output_ims = [self.linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
+                          self.lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
+                          self.im.set_data(arr[self.settings['QTviewer']['z_cross_pos']]),
+                          self.im_destroyed.set_data(dest_arr[self.settings['QTviewer']['z_cross_pos']]),
                           # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
                           # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
-                          image.set_data(arr.copy()[-1]),
+                          self.image.set_data(arr[-1]),
                           # image2.set_data(arr[-2]),
                           # image3.set_data(arr[-3]),
-                          v_cross_view.set_data(np.swapaxes(arr.copy()[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
-                          v_cross_destroyed.set_data(
-                              np.swapaxes(dest_arr.copy()[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
-                          h_cross_view.set_data(arr.copy()[:, self.settings['QTviewer']['y_cross_pos'], :]),
-                          h_cross_destroyed.set_data(dest_arr.copy()[:, self.settings['QTviewer']['y_cross_pos'], :])
+                          self.v_cross_view.set_data(np.swapaxes(arr.copy()[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                          self.v_cross_destroyed.set_data(
+                              np.swapaxes(dest_arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                          self.h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :]),
+                          self.h_cross_destroyed.set_data(dest_arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                           ]
-            self.hist.append([linev,lineh,im,destroyed,image,v_cross_view,v_cross_destroyed,h_cross_view,h_cross_destroyed])
+            # self.hist.append(frozenset([self.linev,self.lineh,self.im,destroyed,self.image,self.v_cross_view,self.v_cross_destroyed,self.h_cross_view,self.h_cross_destroyed]))
 
             return output_ims
 
@@ -737,11 +765,17 @@ class Animation(makeCanvas):
                     t += 1
                 yield (t, play)
 
-        def savefunk(t):
-            return self.hist.get()
+        # def savefunk(t):
+        #     return self.hist.get()
 
-        self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False, save_count=100)
-
+        if recall:
+            self.saveani = FuncAnimation(self.figure, func, frames, interval=1,
+                                         blit=False, save_count=len(self.frozenhist))
+            self.i = 0
+            self.saveani.save(recall, writer='imagemagick')
+            print('SAVED to {}'.format(recall))
+        else:
+            self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False, save_count=500)
         # self.saveani = FuncAnimation(self.figure, savefunk, interval=5, save_count=500)
 
 
