@@ -24,15 +24,15 @@ For the purpose of simply running the 3D CMP model other modules may be disregar
 - Run QT.py 
   - Changes plotting design may be made in the *Animation* class.
 
-- The epicardial (z=0) and endocardial (z=24) surfaces with cross sections indicated by cyan dotted lines are displayed alongside the current seed and timestep.
+- The endocardial (z=0) and epicardial (z=24) surfaces with cross sections indicated by cyan dotted lines are displayed alongside the current seed and timestep.
   - ![alt text](Icons/icons8-play-50.png) Play/Pause animation.
   - ![alt text](Icons/icons8-heat-map-50.png) Plot phase spaces for AF risk (may be intensive & time-consuming).
-  - ![alt text](Icons/icons8-settings-50.png) Settings - change structure parameters, animation style, and cross-section position.
+  - ![alt text](Icons/icons8-settings-50.png) Settings - change structure and ablation parameters, animation style, and cross-section position.
   - ![alt text](Icons/icons8-reset-50.png) Reset the animation to time=0.
   - ![alt text](Icons/icons8-advance-50.png) Advance a timestep (time+=1) if animation is paused.
   - ![alt text](Icons/icons8-end-32.png) Skip to first source of AF within 1000 timesteps (skip 1000 timesteps if no source found).
   - ![alt text](Icons/icons8-save-as-50.png) Save animation history to MP4.
-  - ![alt text](Icons/icons8-laser-beam-50.png) Ablate from selected cell (radius=2mm), lesions are highlighted in red.
+  - ![alt text](Icons/icons8-laser-beam-50.png) Ablate from selected cell (radius=2mm by default), lesions are highlighted in red.
  
 ### Generating and Plotting Data:
 
@@ -49,13 +49,13 @@ Scroll to the bottom under the *if __name__ == '__main__':* statement for:
     
 ### Initialising Ablated Tissue
 
-The *ablated_tissue* parameter in config.py takes a list of positions (z, y, x) and ablates them upon tissue initialisation with a default radius of 2mm (this may be changed in the __init__ of model.py). It may be extended to ablate tissue of fixed structure where the positions of possible AF sources is known:
+The *ablated_tissue* parameter in config.py takes a list of positions (z, y, x) and ablates them upon tissue initialisation with a default radius of 2mm (this may be changed in the __init__() of model.py). It may be extended to ablate tissue of fixed structure where the positions of possible AF sources is known:
 
-- gen_risk_curve_data.py and plot_risk_curve_data.py: Generate and read af_pos_data.
-    - The processed data will be saved in it's original folder in numpy format entitled *af_positions_parameters.npy*
-    - Data structure of [runs x [seed, (z, y, x),etc.]]
+- gen_risk_curve_data.py and plot_risk_curve_data.py: Generate and read af_pos_data().
+    - The processed data will be saved in it's original folder in numpy format entitled *af_positions_parameters.npy*.
+    - Data structure of [runs $\times$ [seed, (z, y, x),etc.]].
 
-- config.py: Make changes following the pseudocode below.
+- config.py: Make changes outlined by comments in the file itself and in the pseudocode below.
     ```python
     import numpy as np  # required to load the data from file
     af_pos_runs = np.load("af_positions_parameters.npy")  # location of processed data
