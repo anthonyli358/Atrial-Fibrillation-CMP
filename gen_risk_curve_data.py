@@ -254,7 +254,7 @@ if __name__ == '__main__':
                 nu_yz=y,
                 # to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
-                angle_vars=False,
+                angle_vars=False,  # theta(z=0), theta(z=max), magnitude of connectivity, e.g. [24, 42, 0.35]
                 t=100000,
                 func=af_pos_data,  # risk_curve_data, af_time_data, con_vel_data, or af_pos_data
             )

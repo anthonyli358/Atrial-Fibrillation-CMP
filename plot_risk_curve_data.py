@@ -4,9 +4,10 @@ import glob
 import os
 
 
-def plot_risk_curve_data():
+def plot_risk_curve_data(path=None):
     """
     data structure = [runs [seed, AF?, x, y, z, time AF/end, conduction block?]]
+    :param path: folder path
     :return: plot risk_curve_data
     """
     nu_yz_val = np.arange(0.005, 1, 0.01)
@@ -29,9 +30,11 @@ def plot_risk_curve_data():
             x = X[xi, yi]
             y = Y[xi, yi]
             try:
-                path = "afinduced_data"
                 file = 'risk_curve_data_1000_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
-                filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                if path:
+                    filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                else:
+                    filename = glob.glob("{}".format(file))
                 # check & move duplicate files
                 if len(filename) > 1:
                     if not os.path.exists('{path}/duplicates'.format(path=path)):
@@ -116,9 +119,10 @@ def plot_risk_curve_data():
     plt.show()
 
 
-def plot_af_time_data():
+def plot_af_time_data(path=None):
     """
     data structure = [runs [seed, AF?, {AF_on, AF_off},etc.]]
+    :param path: folder path
     :return: plot af_time_data
     """
     # (nu_x_val, nu_yz_val) = np.load('nu_variables_exact_1821.npy')[90:110].transpose()
@@ -136,9 +140,11 @@ def plot_af_time_data():
             y = Y[xi, yi]
             print(x, y)
             try:
-                path = "af_time_data"
                 file = 'af_time_data_1000_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
-                filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                if path:
+                    filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                else:
+                    filename = glob.glob("{}".format(file))
                 # check & move duplicate files
                 if len(filename) > 1:
                     if not os.path.exists('{path}/duplicates'.format(path=path)):
@@ -195,9 +201,10 @@ def plot_af_time_data():
     plt.show()
 
 
-def plot_con_vel_data():
+def plot_con_vel_data(path=None):
     """
     data structure = [runs[seed, time, bulk (av, max, min), z=0 (av, max, min), z=24 (av, max, min)]]
+    :param path: folder path
     :return: plot con_vel_data
     """
     nu_yz_val = np.arange(0.2, 1.01, 0.2)
@@ -216,9 +223,11 @@ def plot_con_vel_data():
             x = X[xi, yi]
             y = Y[xi, yi]
             try:
-                path = "con_vel_data_test"
                 file = 'con_vel_data_5_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
-                filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                if path:
+                    filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                else:
+                    filename = glob.glob("{}".format(file))
                 # check & move duplicate files
                 if len(filename) > 1:
                     if not os.path.exists('{path}/duplicates'.format(path=path)):
@@ -274,7 +283,7 @@ def plot_con_vel_data():
     plt.show()
 
 
-def read_af_pos_data():
+def read_af_pos_data(path=None):
     """
     data structure = [runs [repeats [seed, dys_seed, AF?, x, y, z]]]
     :return: list of af source positions for each seed [[seed, (z, y, x),etc.],etc.]
@@ -286,9 +295,11 @@ def read_af_pos_data():
     for yi in nu_yz_val:
         for xi in nu_x_val:
             try:
-                path = "af_pos_data_test"
                 file = 'af_pos_data_2_5_25_{:.3f}_{:.3f}*'.format(xi, yi).replace('.', '')
-                filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                if path:
+                    filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                else:
+                    filename = glob.glob("{}".format(file))
                 # check & move duplicate files
                 if len(filename) > 1:
                     if not os.path.exists('{path}/duplicates'.format(path=path)):
@@ -315,13 +326,19 @@ def read_af_pos_data():
             except OSError:
                 raise Exception("File could not be loaded, check path and file name.")
 
-    np.save(os.path.split(filename)[1].replace('af_pos_data', 'af_positions'), af_positions)
+    if path:
+        np.save("{path}/{file}".format(path=path, file=os.path.split(filename)[1].replace(
+            'af_pos_data', 'af_positions')), af_positions)
+    else:
+        np.save(os.path.split(filename)[1].replace('af_pos_data', 'af_positions'), af_positions)
 
     return af_positions
 
 
 if __name__ == '__main__':
-    # plot_risk_curve_data()
-    # plot_af_time_data()
-    # plot_con_vel_data()
-    print(read_af_pos_data())
+    # The 'path' parameter is the folder path for data. Check for the function running that the nu_x, nu_yz / nu_av ranges
+    # are correct and that the 'file' variable is of the correct format.
+    # plot_risk_curve_data(path='afinduced_data')
+    # plot_af_time_data(path='af_time_data')
+    # plot_con_vel_data(path='con_vel_data_test')
+    print(read_af_pos_data('af_pos_data_test'))

@@ -14,7 +14,7 @@ settings = dict(
         dys_seed=None,  # if not None, epsilon fire randomly
         # Ablate a list of points upon tissue initialisation
         # Use read_af_pos_data() in plot_risk_curve_data.py to generate data
-        # Can use np.load("file.npy") to set ablated_tissue=sublist[1:], set seed=sublist[0] where subarray=array[0].etc
+        # Can use np.load("file.npy") to set ablated_tissue=sublist[1:], set seed=sublist[0] where sublist=list[0].etc
         ablated_tissue=None  # list of points to ablate, 2mm by default (can change in model.py)
     ),
     sim=dict(
