@@ -30,6 +30,7 @@ For the purpose of simply running the 3D CMP model other modules may be disregar
   - ![alt text](Icons/icons8-settings-50.png) Settings - change structure parameters, animation style, and cross-section position.
   - ![alt text](Icons/icons8-reset-50.png) Reset the animation to time=0.
   - ![alt text](Icons/icons8-advance-50.png) Advance a timestep (time+=1) if animation is paused.
+  - ![alt text](Icons/icons8-end-32.png) Skip to first source of AF within 1000 timesteps (skip 1000 timesteps if no source found).
 
 ## Development 
 ### Other Modules:
