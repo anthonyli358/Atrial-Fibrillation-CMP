@@ -10,6 +10,8 @@ from matplotlib.figure import Figure
 from matplotlib.animation import FuncAnimation
 from matplotlib.gridspec import GridSpec
 from matplotlib.colors import LinearSegmentedColormap
+import skimage.morphology as morph
+import skimage.restoration as rest
 
 import numpy as np
 from pprint import pprint  # to get readable print output for dicts
@@ -116,10 +118,12 @@ class AFInterface(QtWidgets.QMainWindow):
             self.settings['structure']['seed'] = None
         if self.config.seedCheck.isChecked():
             self.settings['structure']['seed'] = np.uint32(self.config.seedBox.text())
+        else:
+            self.settings['structure']['seed'] = None
         if self.config.dys_seedCheck.isChecked():
             self.settings['structure']['dys_seed'] = np.uint32(self.config.dys_seedBox.text())
         else:
-            self.settings['structure']['seed'] = None
+            self.settings['structure']['dys_seed'] = None
         self.anim.close_event()  # Ends Current animation
         self.anim = Animation(self)  # Overwrites animation with new one
         self.setCentralWidget(self.anim)  # Replaces animation with new one
@@ -138,7 +142,7 @@ class AFInterface(QtWidgets.QMainWindow):
         name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File')
         print(name)
         anim2 = Animation(self)
-        anim2.compute_initial_figure(recall=name[0]+'.mp4')
+        anim2.compute_initial_figure(recall=name[0] + '.mp4')
         try:
             anim2.close_event()
         except Exception:
@@ -229,7 +233,7 @@ class Config(QtWidgets.QWidget):
         validator = QtGui.QIntValidator(0, 4294967295)
         self.seedBox.setValidator(validator)
         self.seedBox.setText(np.str(self.parent.anim.substrate.seed))
-        
+
         self.dys_seedCheck = QtWidgets.QCheckBox()
         self.dys_seedCheck.setCheckState(0)
 
@@ -278,7 +282,7 @@ class Config(QtWidgets.QWidget):
         seedHBox = QtWidgets.QHBoxLayout()
         seedHBox.addWidget(self.seedCheck)
         seedHBox.addWidget(self.seedBox)
-        
+
         dys_seedHBox = QtWidgets.QHBoxLayout()
         dys_seedHBox.addWidget(self.dys_seedCheck)
         dys_seedHBox.addWidget(self.dys_seedBox)
@@ -288,7 +292,7 @@ class Config(QtWidgets.QWidget):
         reset_button.pressed.connect(self.parent.reset)
 
         viewopts = QtWidgets.QComboBox()
-        viewopts.addItems(['activation', 'count', 'direction'])
+        viewopts.addItems(['activation', 'count', 'direction', 'max_filter', 'gauss_filter', 'maxgauss', 'expt'])
         viewopts.currentTextChanged.connect(self.updateview)
 
         v_cross_pos_slider = QtWidgets.QSlider(Qt.Horizontal)
@@ -480,7 +484,7 @@ class makeCanvas(FigureCanvas):
     def __init__(self, parent):
         self.parent = parent
         self.figure = Figure()
-        self.figure.set_size_inches(3.6,6)
+        self.figure.set_size_inches(3.6, 6)
         super().__init__(self.figure)
         self.settings = parent.settings
         self.compute_initial_figure()
@@ -532,10 +536,10 @@ class Animation(makeCanvas):
         cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (.5, .5, .5, 1)], N=50)
         cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (.25, .25, .25, 1)], N=50)
 
-
         cm1 = LinearSegmentedColormap.from_list('100', [(0, 0, 0, 0), (1, 1, 1, .6)], N=50)
         cm2 = LinearSegmentedColormap.from_list('66', [(0, 0, 0, 0), (1, .66, .5, .6)], N=50)
         cm3 = LinearSegmentedColormap.from_list('33', [(0, 0, 0, 1), (1, .33, .25, 1)], N=50)
+        mastermap = 'jet'
 
         gs = GridSpec(3, 2,
                       width_ratios=[1, size[0] / size[1]],
@@ -543,36 +547,41 @@ class Animation(makeCanvas):
 
         self.axtext = self.figure.add_subplot(gs[1])
         self.axtext.axis('off')
-        self.axtext.annotate(xy=(-0.8,0.5), xycoords='axes fraction', s = '$\\nu_x = {:.3f}$\n$\\nu_{{yz}}={:.3f}$'.format(self.substrate.nu_x,
-                                                                                                              self.substrate.nu_yz))
+        if self.settings['structure']['angle_toggle']:
+            s = '$\\theta_\mathrm{{min}} = {:.0f}$\n$\\theta_\mathrm{{max}} = {:.0f}$\n$\\nu_\mathrm{{ave}} = {:.3f}$'.format(
+                *self.settings['structure']['angle_vars'])
+        else:
+            s = '$\\nu_x = {:.3f}$\n$\\nu_{{yz}}={:.3f}$'.format(self.substrate.nu_x,
+                                                                 self.substrate.nu_yz)
+        self.axtext.annotate(xy=(-0.8, 0.5), xycoords='axes fraction',
+                             s=s)
 
         self.ax0 = self.figure.add_subplot(gs[4])
         self.im = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']],
-                             animated=True,
-                             cmap='Greys_r',
-                             vmin=0,
-                             vmax=self.settings['structure']['refractory_period'],
-                             origin='lower',
-                             extent=(0, self.settings['structure']['size'][2],
-                                     0, self.settings['structure']['size'][1]),
-                             interpolation='nearest',
-                             zorder=1
-                             )
+                                  animated=True,
+                                  cmap=mastermap,
+                                  vmin=0,
+                                  vmax=self.settings['structure']['refractory_period'],
+                                  origin='lower',
+                                  extent=(0, self.settings['structure']['size'][2],
+                                          0, self.settings['structure']['size'][1]),
+                                  interpolation='nearest',
+                                  zorder=1
+                                  )
         self.ax0.set_ylabel('y $(z={})$'.format(self.settings['QTviewer']['z_cross_pos']))
         self.ax0.set_xlabel('x')
 
-
         redmap = LinearSegmentedColormap.from_list('red', [(1, 0.2, 0.2, 0), (1, 0.2, 0.2, 1)], N=10)
         self.im_destroyed = self.ax0.imshow(self.substrate.destroyed[self.settings['QTviewer']['z_cross_pos']],
-                                    animated=True,
-                                    cmap=redmap,
-                                    vmin=0,
-                                    vmax=1,
-                                    zorder=2,
-                                    origin='lower',
-                                    extent=(0, self.settings['structure']['size'][2],
-                                            0, self.settings['structure']['size'][1]),
-                                    )
+                                            animated=True,
+                                            cmap=redmap,
+                                            vmin=0,
+                                            vmax=1,
+                                            zorder=2,
+                                            origin='lower',
+                                            extent=(0, self.settings['structure']['size'][2],
+                                                    0, self.settings['structure']['size'][1]),
+                                            )
         # im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
         #                          animated=True,
         #                          cmap=cm2,
@@ -597,32 +606,45 @@ class Animation(makeCanvas):
         #                          )
 
         self.linev = self.ax0.axvline(x=self.settings['QTviewer']['x_cross_pos'],
-                                 color='cyan',
-                                 linestyle='--',
-                                 zorder=4
-                                 )
+                                      color='cyan',
+                                      linestyle='--',
+                                      zorder=4,
+                                      alpha=0
+                                      )
         self.lineh = self.ax0.axhline(y=self.settings['QTviewer']['y_cross_pos'],
-                                 color='cyan',
-                                 linestyle='--',
-                                 zorder=4
-                                 )
+                                      color='cyan',
+                                      linestyle='--',
+                                      zorder=4,
+                                      alpha=0
+                                      )
 
         self.ax1 = self.figure.add_subplot(gs[0])
         clicked = self.figure.canvas.mpl_connect('button_press_event',
                                                  self.onclick)  # Clicking changes the cut through positions
 
         self.image = self.ax1.imshow(self.substrate.model_array[-1],  # View bottom layer
-                                animated=True,
-                                cmap='Greys_r',
-                                vmin=0,
-                                vmax=self.settings['structure']['refractory_period'],
-                                origin='lower',
-                                extent=(0, size[2],
-                                        0, size[1]),
-                                interpolation='nearest',
-                                zorder=3,
-                                )
-        self.ax1.set_ylabel('y $(z={})$'.format(size[0]-1))
+                                     animated=True,
+                                     cmap=mastermap,
+                                     vmin=0,
+                                     vmax=self.settings['structure']['refractory_period'],
+                                     origin='lower',
+                                     extent=(0, size[2],
+                                             0, size[1]),
+                                     interpolation='nearest',
+                                     zorder=3,
+                                     )
+        self.image_destroyed = self.ax1.imshow(self.substrate.destroyed[-1],  # View bottom layer
+                                               animated=True,
+                                               cmap=redmap,
+                                               vmin=0,
+                                               vmax=1,
+                                               origin='lower',
+                                               extent=(0, size[2],
+                                                       0, size[1]),
+                                               interpolation='nearest',
+                                               zorder=4
+                                               )
+        self.ax1.set_ylabel('y $(z={})$'.format(size[0] - 1))
         self.ax1.get_xaxis().set_visible(False)
 
         # image2 = self.ax1.imshow(self.substrate.model_array[-2],
@@ -658,59 +680,58 @@ class Animation(makeCanvas):
         self.ax2.get_yaxis().set_visible(False)
 
         self.v_cross_view = self.ax2.imshow(np.swapaxes(self.substrate.model_array[:, :,
-                                                   self.settings['QTviewer']['x_cross_pos']], 0, 1),
-                                       animated=True,
-                                       vmin=0,
-                                       vmax=self.settings['structure']['refractory_period'],
-                                       origin='lower',
-                                       cmap='Greys_r',
-                                       interpolation='nearest',
-                                       extent=(0, size[0],
-                                               0, size[1]),
-                                       zorder=1,
-                                       )
-
-        self.v_cross_destroyed = self.ax2.imshow(np.swapaxes(self.substrate.destroyed[:, :,
                                                         self.settings['QTviewer']['x_cross_pos']], 0, 1),
                                             animated=True,
-                                            origin='lower',
-                                            cmap=redmap,
                                             vmin=0,
-                                            vmax=1,
+                                            vmax=self.settings['structure']['refractory_period'],
+                                            origin='lower',
+                                            cmap=mastermap,
                                             interpolation='nearest',
-                                            extent=(0, self.settings['structure']['size'][0],
-                                                    0, self.settings['structure']['size'][1]),
-                                            zorder=2
+                                            extent=(0, size[0],
+                                                    0, size[1]),
+                                            zorder=1,
                                             )
+
+        self.v_cross_destroyed = self.ax2.imshow(np.swapaxes(self.substrate.destroyed[:, :,
+                                                             self.settings['QTviewer']['x_cross_pos']], 0, 1),
+                                                 animated=True,
+                                                 origin='lower',
+                                                 cmap=redmap,
+                                                 vmin=0,
+                                                 vmax=1,
+                                                 interpolation='nearest',
+                                                 extent=(0, self.settings['structure']['size'][0],
+                                                         0, self.settings['structure']['size'][1]),
+                                                 zorder=2
+                                                 )
 
         self.ax3 = self.figure.add_subplot(gs[2])  # Plot the y axis cut through
         self.ax3.set_ylabel('z $(y={})$'.format(self.settings['QTviewer']['y_cross_pos']))
         self.ax3.get_xaxis().set_visible(False)
         self.h_cross_view = self.ax3.imshow(self.substrate.model_array[:, self.settings['QTviewer']['y_cross_pos'], :],
-                                       animated=True,
-                                       vmin=0,
-                                       vmax=self.settings['structure']['refractory_period'],
-                                       origin='lower',
-                                       cmap='Greys_r',
-                                       interpolation='nearest',
-                                       extent=(0, self.settings['structure']['size'][2],
-                                               0, self.settings['structure']['size'][0]),
-                                       zorder=1
-                                       )
-
-        self.h_cross_destroyed = self.ax3.imshow(self.substrate.destroyed[:, self.settings['QTviewer']['y_cross_pos'], :],
                                             animated=True,
-                                            origin='lower',
-                                            cmap=redmap,
                                             vmin=0,
-                                            vmax=1,
+                                            vmax=self.settings['structure']['refractory_period'],
+                                            origin='lower',
+                                            cmap=mastermap,
                                             interpolation='nearest',
                                             extent=(0, self.settings['structure']['size'][2],
                                                     0, self.settings['structure']['size'][0]),
-                                            zorder=2
+                                            zorder=1
                                             )
 
-
+        self.h_cross_destroyed = self.ax3.imshow(
+            self.substrate.destroyed[:, self.settings['QTviewer']['y_cross_pos'], :],
+            animated=True,
+            origin='lower',
+            cmap=redmap,
+            vmin=0,
+            vmax=1,
+            interpolation='nearest',
+            extent=(0, self.settings['structure']['size'][2],
+                    0, self.settings['structure']['size'][0]),
+            zorder=2
+        )
 
         def func(framedata):
             """Function to iterate animation, All active changes here"""
@@ -759,13 +780,13 @@ class Animation(makeCanvas):
             dest_arr = self.substrate.destroyed.copy()
 
             arr_act = arr == 50
-            a = 10*(spim.filters.maximum_filter(50*(arr>40),(5,5,5), mode=('mirror','wrap','constant')))
+            a = 10 * (spim.filters.maximum_filter(50 * (arr > 40), (5, 5, 5), mode=('mirror', 'wrap', 'constant')))
             # a = 50 * spim.filters.gaussian_filter((50*(coarse_max==50)), 1)
             # self.ax1.clear()
-            # contour = self.ax1.contour(a[-1],
+            # contour = self.ax1.contourf(arr[0],
             #                            animated=True,
             #                            zorder=5,
-            #                            levels=[50])
+            #                            levels=[40,50])
 
             output_ims = [self.linev.set_xdata(self.settings['QTviewer']['x_cross_pos']),
                           self.lineh.set_ydata(self.settings['QTviewer']['y_cross_pos']),
@@ -774,9 +795,11 @@ class Animation(makeCanvas):
                           # im2.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 1]),
                           # im3.set_data(arr[self.settings['QTviewer']['z_cross_pos'] + 2]),
                           self.image.set_data(arr[-1]),
+                          self.image_destroyed.set_data(dest_arr[-1]),
                           # image2.set_data(arr[-2]),
                           # image3.set_data(arr[-3]),
-                          self.v_cross_view.set_data(np.swapaxes(arr.copy()[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
+                          self.v_cross_view.set_data(
+                              np.swapaxes(arr.copy()[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                           self.v_cross_destroyed.set_data(
                               np.swapaxes(dest_arr[:, :, self.settings['QTviewer']['x_cross_pos']], 0, 1)),
                           self.h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :]),
@@ -809,7 +832,6 @@ class Animation(makeCanvas):
             self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False, save_count=500)
         # self.saveani = FuncAnimation(self.figure, savefunk, interval=5, save_count=500)
 
-
     def onclick(self, event):
         if event.xdata:
             self.parent.config.update_v_cross_pos(int(event.xdata))
@@ -824,11 +846,41 @@ class Animation(makeCanvas):
     def get_anim_array(self):
         method = self.settings['view']
         if method == 'activation':
+            # self.im.set_cmap('viridis')
             return self.substrate.model_array
         if method == 'count':
             return self.substrate.excount % 3 / 3 * self.settings['structure']['refractory_period']
         if method == 'direction':
             return (5 + self.substrate.direction) / 10 * self.settings['structure']['refractory_period']
+        if method == 'max_filter':
+            return spim.filters.maximum_filter(self.substrate.model_array, (3, 2, 2),
+                                               mode=('mirror', 'wrap', 'constant'))
+        if method == 'gauss_filter':
+            # self.im.set_cmap('jet')
+            arr = np.copy(self.substrate.model_array)
+            # arr[arr==50] = 200
+            return 2 * spim.filters.gaussian_filter(arr, (5, 1, 1),
+                                                    mode=('mirror', 'wrap', 'constant'))
+
+        if method =='expt':
+            out = spim.morphological_gradient(self.substrate.model_array, (3,3,3))
+            out[(out>0)&(out<45)] = out[(out>0)&(out<45)]/1.5
+            return 2 * spim.filters.gaussian_filter(out, (1.5, 1.5, 1.5),
+                                                    mode=('mirror', 'wrap', 'constant'))
+
+        # if method == 'expt':
+        #     # strut = spim.generate_binary_structure(3,9)
+        #     array = self.substrate.model_array
+        #     mod_array = spim.grey_closing(array, size=(5,3,3), mode=('mirror', 'wrap', 'constant'))
+        #     # out[(out>0)&(out<45)] = out[(out>0)&(out<45)]/1.5
+        #     return mod_array
+
+        if method == 'maxgauss':
+            arr = np.copy(self.substrate.model_array)
+            spim.maximum_filter(arr,size=(2,2,2), output=arr)
+            # arr[arr==50] = 200
+            return 2 * spim.filters.gaussian_filter(arr, (1.5, 1.5, 1.5),
+                                                    mode=('mirror', 'wrap', 'constant'))
 
 
 if __name__ == '__main__':
