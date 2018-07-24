@@ -335,6 +335,54 @@ def read_af_pos_data(path=None):
     return af_positions
 
 
+def plot_con_data(path=None):
+    nu_yz_val = np.arange(0.005, 1, 0.01)
+    nu_x_val = np.arange(0.005, 1, 0.01)
+    X, Y = np.meshgrid(nu_x_val, nu_yz_val)
+    Z = np.zeros(X.shape)
+    conduction = np.zeros_like(Z)
+
+    for yi in range(len(nu_yz_val)):
+        for xi in range(len(nu_x_val)):
+            x = X[xi, yi]
+            y = Y[xi, yi]
+            print(x, y)
+            try:
+                file = 'conduction_1000_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
+                if path:
+                    filename = glob.glob("{path}/{file}".format(path=path, file=file))
+                else:
+                    filename = glob.glob("{}".format(file))
+                # check & move duplicate files
+                if len(filename) > 1:
+                    if not os.path.exists('{path}/duplicates'.format(path=path)):
+                        os.makedirs('{path}/duplicates'.format(path=path))
+                    for nfile in filename:
+                        risk_data = np.load(nfile)
+                        print("duplicate found, last array value is: {risk_data}".format(risk_data=risk_data[-1, :]))
+                    os.rename(filename[1], filename[1].replace("{}".format(path), "{}/duplicates".format(path)))
+                    filename = filename[0]
+                else:
+                    filename = filename[0]
+                # print(filename)
+                risk_data = np.load(filename)
+
+                conduction[xi,yi] = np.average(risk_data[:,-1])
+
+            except OSError:
+                ave = 0
+                pass
+
+            Z[yi, xi] = ave - .5 * (ave == 0)
+
+        # res = 0.36*X*X - 0.79*X +0.43 <= Y <= 0.375*X*X - 0.825*X +0.65
+    plt.imshow(time, extent=(0, 1, 0, 1), origin='lower', zorder=1)
+    plt.title('Risk curve')
+
+    plt.show()
+
+
+
 if __name__ == '__main__':
     # The 'path' parameter is the folder path for data. Check for the function running that the nu_x, nu_yz / nu_av ranges
     # are correct and that the 'file' variable is of the correct format.

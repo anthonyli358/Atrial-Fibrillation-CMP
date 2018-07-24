@@ -194,6 +194,27 @@ def af_pos_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     return data
 
 
+def conduction(runs, l_z, nu_x, nu_yz, angle_vars=False):
+    data = np.zeros(shape=(runs, 3), dtype='uint32')
+    params = config.settings['structure']
+    params['dys_seed'] = None  # Randomise dysfunctional cell firing for the same structure
+    params['size'][0], params['seed'] = l_z, None
+    params['x_coupling'], params['yz_coupling'] = nu_x, nu_yz
+    params['angle_toggle'], params['angle_vars'] = angle_vars, angle_vars
+    params['dysfunction_parameter'] = 0
+    for i in range(runs):
+        tissue = Model(**params)
+        data[i, 0] = tissue.seed
+        data[i, 1] = tissue.dys_seed
+        tissue.activate_pacemaker()
+        while np.any(tissue.model_array == 50):
+            tissue.iterate()
+            if np.any(tissue.model_array[:, :, -1] == 50):
+                data[i, 2] = 1
+                break
+    return data
+
+
 def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=False):
     """
     Run and np.save risk data to file using selected risk function.
@@ -227,6 +248,10 @@ def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=F
         filename = "{risk}_{runs}_{repeats}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_{time}_{token}".format(
             **file_dict)
         result = risk_type(runs, repeats, l_z, nu_x, nu_yz, angle_vars, t)
+    elif risk_type == conduction:
+        filename = "{risk}_{runs}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_conduction_{token}".format(
+            **file_dict)
+        result = risk_type(runs, l_z, nu_x, nu_yz, angle_vars)
     else:
         filename = "{risk}_{runs}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_{time}_{token}".format(**file_dict)
         result = risk_type(runs, l_z, nu_x, nu_yz, angle_vars, t)
@@ -238,14 +263,14 @@ def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=F
 
 if __name__ == '__main__':
 
-    # input_values = int(sys.argv[1]) + np.array([0, 1000, 2000, 3000])
-    # for input_value in input_values:
-    #     if input_value < 3179:
-    #         [x, y] = np.load('nu_variables_res_3179.npy')[input_value]
+    input_values = int(sys.argv[1]) + np.array([0, 1000, 2000, 3000])
+    for input_value in input_values:
+        if input_value < 3179:
+            [x, y] = np.load('nu_variables_res_3179.npy')[input_value]
 
-    # change the variables, you can loop over nu_x and nu_y
-    for x in [0.9]:
-        for y in [0.1]:
+    # # change the variables, you can loop over nu_x and nu_y
+    # for x in [0.9]:
+    #     for y in [0.1]:
             variables = dict(
                 runs=2,
                 repeats=5,
@@ -256,6 +281,6 @@ if __name__ == '__main__':
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
                 angle_vars=False,  # theta(z=0), theta(z=max), magnitude of connectivity, e.g. [24, 42, 0.35]
                 t=100000,
-                func=af_pos_data,  # risk_curve_data, af_time_data, con_vel_data, or af_pos_data
+                func=conduction,  # risk_curve_data, af_time_data, con_vel_data, or af_pos_data
             )
             gen_risk(**variables)
