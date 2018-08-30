@@ -152,13 +152,15 @@ def con_vel_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
                 break
         print('Run: {}, Data: {}'.format(i + 1, data[i]))
     print("time={}s".format(time.time() - start))
+
     return data
 
 
 def af_pos_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     """
     Generate position of possible AF source positions for the same structure.
-    :param runs: runs - probably look at single runs with lots of repeat to keep same structure.
+    :param runs: runs - probably look at single runs with lots of repeats to keep same structure.
+    :param repeats: repeat run with same seed
     :param l_z: layers
     :param nu_x: x (parallel) coupling
     :param nu_yz: yz (perpendicular) coupling
@@ -192,10 +194,20 @@ def af_pos_data(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
                     break
             print('Run: {}, Repeat: {}, Data: {}'.format(i + 1, j + 1, data[i, j]))
     print("time={}s".format(time.time() - start))
+
     return data
 
 
-def conduction(runs, l_z, nu_x, nu_yz, angle_vars=False):
+def con_data(runs, l_z, nu_x, nu_yz, angle_vars=False):
+    """
+    Generate data for conduction block.
+    :param runs: runs
+    :param l_z: layers
+    :param nu_x: x (parallel) coupling
+    :param nu_yz: yz (perpendicular) coupling
+    :param angle_vars: theta(z=0), theta(z=max), magnitude of connectivity
+    :return:
+    """
     data = np.zeros(shape=(runs, 3), dtype='uint32')
     params = config.settings['structure']
     params['dys_seed'] = None  # Randomise dysfunctional cell firing for the same structure
@@ -213,6 +225,7 @@ def conduction(runs, l_z, nu_x, nu_yz, angle_vars=False):
             if np.any(tissue.model_array[:, :, -1] == 50):
                 data[i, 2] = 1
                 break
+
     return data
 
 
@@ -249,7 +262,7 @@ def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=F
         filename = "{risk}_{runs}_{repeats}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_{time}_{token}".format(
             **file_dict)
         result = risk_type(runs, repeats, l_z, nu_x, nu_yz, angle_vars, t)
-    elif risk_type == conduction:
+    elif risk_type == con_data:
         filename = "{risk}_{runs}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_conduction_{token}".format(
             **file_dict)
         result = risk_type(runs, l_z, nu_x, nu_yz, angle_vars)
@@ -282,6 +295,6 @@ if __name__ == '__main__':
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
                 angle_vars=False,  # theta(z=0), theta(z=max), magnitude of connectivity, e.g. [24, 42, 0.35]
                 t=100000,
-                func=conduction,  # risk_curve_data, af_time_data, con_vel_data, or af_pos_data
+                func=con_data,  # risk_curve_data, af_time_data, con_vel_data, af_pos_data, or con_data
             )
             gen_risk(**variables)

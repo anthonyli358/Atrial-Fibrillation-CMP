@@ -1,6 +1,13 @@
+import copy
+import numpy as np
+from pprint import pprint  # to get readable print output for dicts
+import queue
+import scipy.ndimage as spim
+import skimage.morphology as morph
+import skimage.restoration as rest
 import sys
-from PyQt5 import QtWidgets, QtGui
 
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 from matplotlib import rcParams
 # rcParams['animation.ffmpeg_path'] = "/Users/andrew/Downloads/ffmpeg-4.0.1/ffmpeg.exe"
@@ -10,17 +17,9 @@ from matplotlib.figure import Figure
 from matplotlib.animation import FuncAnimation
 from matplotlib.gridspec import GridSpec
 from matplotlib.colors import LinearSegmentedColormap
-import skimage.morphology as morph
-import skimage.restoration as rest
-
-import numpy as np
-from pprint import pprint  # to get readable print output for dicts
 
 import model
 import config
-import copy
-import queue
-import scipy.ndimage as spim
 
 
 class AFInterface(QtWidgets.QMainWindow):
@@ -41,7 +40,7 @@ class AFInterface(QtWidgets.QMainWindow):
         self.settings['skip'] = False
         self.settings['ablate'] = False
         self.settings['abradius'] = 2
-        self.setWindowIcon(QtGui.QIcon('icons8-heart-with-pulse-50.png'))
+        self.setWindowIcon(QtGui.QIcon('Icons/icons8-heart-with-pulse-50.png'))
         self.anim = Animation(self)
         self.setCentralWidget(self.anim)
 
@@ -98,7 +97,6 @@ class AFInterface(QtWidgets.QMainWindow):
         self.show()
 
     def toggle_pause(self):
-
         self.settings['play'] ^= True  # Toggle play setting
 
     def skip(self):
@@ -109,7 +107,7 @@ class AFInterface(QtWidgets.QMainWindow):
         self.config.show()
 
     def show_phase(self):
-        self.popup = makePhases(self)
+        self.popup = MakePhases(self)
         self.popup.setWindowTitle('Phase Spaces')
         self.popup.show()
 
@@ -478,7 +476,7 @@ class Config(QtWidgets.QWidget):
         self.settings['abradius'] = val
 
 
-class makeCanvas(FigureCanvas):
+class MakeCanvas(FigureCanvas):
     """Parent class of all Canvases. Initiate a figure with a toolbar."""
 
     def __init__(self, parent):
@@ -495,7 +493,7 @@ class makeCanvas(FigureCanvas):
         pass
 
 
-class makePhases(makeCanvas):
+class MakePhases(MakeCanvas):
     """Class for window containing figures of risk for different substrates."""
 
     def compute_initial_figure(self):
@@ -514,7 +512,7 @@ class makePhases(makeCanvas):
             ax.imshow(i, extent=(0, 1, 0, 1), origin='lower')
 
 
-class Animation(makeCanvas):
+class Animation(MakeCanvas):
     """Window with real-time Atrial Fibrillation animation."""
 
     def compute_initial_figure(self, recall=False):
@@ -582,6 +580,7 @@ class Animation(makeCanvas):
                                             extent=(0, self.settings['structure']['size'][2],
                                                     0, self.settings['structure']['size'][1]),
                                             )
+
         # im2 = self.ax0.imshow(self.substrate.model_array[self.settings['QTviewer']['z_cross_pos']+1],
         #                          animated=True,
         #                          cmap=cm2,
@@ -765,7 +764,7 @@ class Animation(makeCanvas):
                     print(self.i)
                     self.substrate = self.frozenhist[self.i]
                     print(self.substrate.time)
-                except:
+                except Exception:
                     return
 
             self.figure.suptitle(
@@ -779,8 +778,8 @@ class Animation(makeCanvas):
             arr = self.get_anim_array()  # get array for plotting
             dest_arr = self.substrate.destroyed.copy()
 
-            arr_act = arr == 50
-            a = 10 * (spim.filters.maximum_filter(50 * (arr > 40), (5, 5, 5), mode=('mirror', 'wrap', 'constant')))
+            # arr_act = arr == 50
+            # a = 10 * (spim.filters.maximum_filter(50 * (arr > 40), (5, 5, 5), mode=('mirror', 'wrap', 'constant')))
             # a = 50 * spim.filters.gaussian_filter((50*(coarse_max==50)), 1)
             # self.ax1.clear()
             # contour = self.ax1.contourf(arr[0],
@@ -805,7 +804,9 @@ class Animation(makeCanvas):
                           self.h_cross_view.set_data(arr[:, self.settings['QTviewer']['y_cross_pos'], :]),
                           self.h_cross_destroyed.set_data(dest_arr[:, self.settings['QTviewer']['y_cross_pos'], :])
                           ]
-            # self.hist.append(frozenset([self.linev,self.lineh,self.im,destroyed,self.image,self.v_cross_view,self.v_cross_destroyed,self.h_cross_view,self.h_cross_destroyed]))
+            # self.hist.append(frozenset([
+            #     self.linev, self.lineh, self.im, destroyed, self.image, self.v_cross_view, self.v_cross_destroyed,
+            #     self.h_cross_view, self.h_cross_destroyed]))
 
             return output_ims
 
@@ -830,7 +831,7 @@ class Animation(makeCanvas):
             print('SAVED to {}'.format(recall))
         else:
             self.ani = FuncAnimation(self.figure, func, frames, interval=1, blit=False, save_count=500)
-        # self.saveani = FuncAnimation(self.figure, savefunk, interval=5, save_count=500)
+            # self.saveani = FuncAnimation(self.figure, savefunk, interval=5, save_count=500)
 
     def onclick(self, event):
         if event.xdata:
@@ -862,9 +863,9 @@ class Animation(makeCanvas):
             return 2 * spim.filters.gaussian_filter(arr, (5, 1, 1),
                                                     mode=('mirror', 'wrap', 'constant'))
 
-        if method =='expt':
-            out = spim.morphological_gradient(self.substrate.model_array, (3,3,3))
-            out[(out>0)&(out<45)] = out[(out>0)&(out<45)]/1.5
+        if method == 'expt':
+            out = spim.morphological_gradient(self.substrate.model_array, (3, 3, 3))
+            out[(out > 0) & (out < 45)] = out[(out > 0) & (out < 45)] / 1.5
             return 2 * spim.filters.gaussian_filter(out, (1.5, 1.5, 1.5),
                                                     mode=('mirror', 'wrap', 'constant'))
 
@@ -877,7 +878,7 @@ class Animation(makeCanvas):
 
         if method == 'maxgauss':
             arr = np.copy(self.substrate.model_array)
-            spim.maximum_filter(arr,size=(2,2,2), output=arr)
+            spim.maximum_filter(arr, size=(2, 2, 2), output=arr)
             # arr[arr==50] = 200
             return 2 * spim.filters.gaussian_filter(arr, (1.5, 1.5, 1.5),
                                                     mode=('mirror', 'wrap', 'constant'))

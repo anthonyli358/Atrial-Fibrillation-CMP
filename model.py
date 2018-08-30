@@ -1,5 +1,4 @@
 import numpy as np
-import random
 
 
 class Model:
@@ -33,7 +32,6 @@ class Model:
         self.seed = seed if seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
         self.dys_seed = dys_seed if dys_seed is not None else np.random.randint(np.iinfo('uint32').max, dtype='uint32')
         np.random.seed(self.seed)
-
 
         self.direction = np.zeros(size, dtype='uint8')
 
@@ -148,6 +146,8 @@ class Model:
     def add_ablation(self, coordinate, radius):
         """
         Destroy tissue within radius(mm) of coordinates.
+        :param coordinate: Coordinate at which to surface ablate
+        :param radius: Radius of ablation
         """
         z = range(self.size[0])
         y = range(self.size[1])
@@ -161,6 +161,8 @@ class Model:
     def multi_ablation(self, coordinate_list, radius):
         """
         Ablate multiple points.
+        :param coordinate_list: List of coordinates at which to surface ablate
+        :param radius: Radius of ablation
         """
         for point in coordinate_list:
             self.add_ablation(point, radius)

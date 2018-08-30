@@ -13,15 +13,10 @@ from viewer import Viewer
 def simulation(substrate, recorder, runtime, pacemaker_period):
     """
      :param substrate: Substrate to run simulaton on
-     :type substrate: af_model.Substrate
      :param recorder: Class to record data with update methods
-     :type recorder: recorder Class
      :param runtime: Number of timesteps in simulation.
-     :type runtime: int
      :param pacemaker_period: Period of the pacemaker cells
-     :type pacemaker_period: int
-     :return: Array of activation arrays at each timestep
-     :rtype: numpy array (runtime, z, y, x)
+     :return: Numpy array of activation arrays at each timestep (runtime, z, y, x)
      """
     result = np.zeros((runtime + 1,) + substrate.size, dtype='uint8')
     for t in range(runtime + 1):
@@ -57,6 +52,12 @@ def main():
 
 
 def risk_sim(substrate, settings):
+    """
+    Count number of excitations per time step.
+    :param substrate: substrate: Substrate to run simulaton on
+    :param settings: Config settings
+    :return: Number of excitations in the [[bulk], [surface]]
+    """
     runtime = settings['sim']['runtime']
     refractory_period = settings["structure"]["refractory_period"]
     pacemaker_period = settings['sim']['pacemaker_period']
@@ -67,10 +68,15 @@ def risk_sim(substrate, settings):
         sub = substrate.iterate()
         sum_result[0].append(np.count_nonzero(sub == refractory_period))
         sum_result[1].append(np.count_nonzero(sub[:, :, -1] == refractory_period))
+
     return sum_result
 
 
 def rotor_position():
+    """
+    Find positions where re-entry circuits form.
+    :return: List of position tuples
+    """
     positions = []
     for _ in range(1000):
         substrate = af.Model(**config.settings['structure'])
@@ -86,10 +92,14 @@ def rotor_position():
         else:
             print(_)
     plt.hist(positions[:][0], 25, (0, 25), True)
+
     return positions
 
 
 def risk_recording_code():
+    """
+    Find risk of re-entry circuit formation throughout the bulk.
+    """
     results = []
     runs = 16
     results.append([config.settings['structure']['size'],
@@ -130,6 +140,12 @@ def risk_recording_code():
 
 
 def risk_pos(x, yz):
+    """
+    Find position of re-entry circuits over time.
+    :param x: nu_x, x (parallel) coupling
+    :param yz: nu_yz, yz (perpendicular) coupling
+    :return: Numpy array of [[positions], [risks]]
+    """
     positions = []
     risks = []
     strut_sett = config.settings['structure']
@@ -159,6 +175,9 @@ def risk_pos(x, yz):
 
 
 def gen_risk_pos():
+    """
+    Save risk of re-entry circuit formation for variable nu_x, nu_yz.
+    """
     for yz in [0.11, 0.12]:
         for x in np.arange(0.8, .85, 0.01):
             name = 'record/' + str(x) + ',' + str(yz) + '.npy'
@@ -169,5 +188,3 @@ def gen_risk_pos():
 
 if __name__ == '__main__':
     gen_risk_pos()
-
-# TODO: KILLSWITCH()

@@ -118,7 +118,7 @@ def oneplot():
     ave = np.average(frac)
     std = np.std(frac)
 
-    print(ave, std)
+    # print(ave, std)
 
     plt.hist(frac / 1000, 100, (0, 1), density=True)
     # plt.title('x: 0.96; yz: 0.07')
@@ -176,7 +176,7 @@ def xriskcurve():
         frac = np.array(frac, dtype='int16')
         aves.append(np.average(frac))
         stds.append(np.std(frac))
-    print(aves)
+    # print(aves)
     plt.figure()
     plt.errorbar(xs, aves, stds)
 
