@@ -21,7 +21,7 @@ For the purpose of simply running the 3D CMP model other modules may be disregar
   - The *QTviewer* dictionary sets the x, y, z positions at which cross-sections are taken and displayed.
   - The *viewer* dictionary is not needed for real-time simulations.
   
-- Run qt.py ![alt text](icons/icons8-heart-with-pulse-50.png)
+- Run qt.py
   - Changes plotting design may be made in the *Animation* class.
 
 - The endocardial (z=0) and epicardial (z=24) surfaces with cross sections indicated by cyan dotted lines are displayed alongside the current seed and timestep.
