@@ -112,8 +112,9 @@ def circuit_quantify(model_array_list, circuit, start_time, layer=0, path=None):
 
     if percent_singular >= 0.9:
         circuit_type = "re-entry"
-    # # TODO: % singular excited move
-    # # TODO: incomplete re-entry
+        # TODO: incomplete re-entry
+        # TODO: stable focal point
+        # TODO: unstable focal point
 
     # plot average excited position
     # c = np.arange(len(excited_moving_average_list))  # colour by order
