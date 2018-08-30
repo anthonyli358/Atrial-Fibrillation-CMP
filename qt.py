@@ -40,39 +40,39 @@ class AFInterface(QtWidgets.QMainWindow):
         self.settings['skip'] = False
         self.settings['ablate'] = False
         self.settings['abradius'] = 2
-        self.setWindowIcon(QtGui.QIcon('Icons/icons8-heart-with-pulse-50.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/icons8-heart-with-pulse-50.png'))
         self.anim = Animation(self)
         self.setCentralWidget(self.anim)
 
         # Defining UI actions
-        settAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-settings-50.png'), 'settings', self)
+        settAct = QtWidgets.QAction(QtGui.QIcon('icons/icons8-settings-50.png'), 'settings', self)
         settAct.triggered.connect(self.show_config)
 
-        phaseAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-heat-map-50.png'), 'View &Phase spaces', self)
+        phaseAct = QtWidgets.QAction(QtGui.QIcon('icons/icons8-heat-map-50.png'), 'View &Phase spaces', self)
         phaseAct.triggered.connect(self.show_phase)
 
-        playAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-play-50.png'), 'play', self)
+        playAct = QtWidgets.QAction(QtGui.QIcon('icons/icons8-play-50.png'), 'play', self)
         playAct.setCheckable(True)
         playAct.setChecked(self.settings['play'])
         playAct.triggered.connect(self.toggle_pause)
         playAct.setShortcut('space')  # Pressing space bar will toggle pause
 
-        resetAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-reset-50.png'), 'reset', self)
+        resetAct = QtWidgets.QAction(QtGui.QIcon('icons/icons8-reset-50.png'), 'reset', self)
         resetAct.triggered.connect(self.reset)
 
-        advAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-advance-50.png'), 'advance', self)
+        advAct = QtWidgets.QAction(QtGui.QIcon('icons/icons8-advance-50.png'), 'advance', self)
         advAct.triggered.connect(self.advance)
         advAct.setShortcut('return')
 
-        skipAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-end-32.png'), 'skip', self)
+        skipAct = QtWidgets.QAction(QtGui.QIcon('icons/icons8-end-32.png'), 'skip', self)
         skipAct.triggered.connect(self.skip)
 
-        saveFile = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-save-as-50.png'), 'save', self)
+        saveFile = QtWidgets.QAction(QtGui.QIcon('icons/icons8-save-as-50.png'), 'save', self)
         saveFile.setShortcut("Ctrl+S")
         saveFile.setStatusTip('Save File')
         saveFile.triggered.connect(self.file_save)
 
-        self.ablateAct = QtWidgets.QAction(QtGui.QIcon('Icons/icons8-laser-beam-50.png'), 'ablate', self)
+        self.ablateAct = QtWidgets.QAction(QtGui.QIcon('icons/icons8-laser-beam-50.png'), 'ablate', self)
         self.ablateAct.setCheckable(True)
         self.ablateAct.setChecked(self.settings['ablate'])
         self.ablateAct.triggered.connect(self.ablate)
@@ -155,7 +155,7 @@ class Config(QtWidgets.QWidget):
         super().__init__()
         self.parent = parent
         self.settings = parent.settings
-        self.setWindowIcon(QtGui.QIcon('icons8-settings-50.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/icons8-settings-50.png'))
         self.sizeq = QtWidgets.QLineEdit(str(self.settings['structure']['size']))
         self.setWindowTitle('Configuration Settings')
         self.initUI()
