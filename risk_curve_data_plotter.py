@@ -388,7 +388,7 @@ if __name__ == '__main__':
     # The 'path' parameter is the folder path for data.
     # Check for the function running that the nu_x, nu_yz / nu_av ranges
     # are correct and that the 'file' variable is of the correct format.
-    # plot_risk_curve_data(path='afinduced_data')
-    # plot_af_time_data(path='af_time_data')
-    # plot_con_vel_data(path='con_vel_data_test')
-    print(read_af_pos_data('af_pos_data_test'))
+    # plot_risk_curve_data(path='data_analysis/data_afinduced/run_2')
+    # plot_af_time_data(path='data_analysis/data_af_time')
+    # plot_con_vel_data(path='data_con_vel')
+    print(read_af_pos_data(path='data_af_pos'))
