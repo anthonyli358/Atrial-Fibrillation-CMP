@@ -44,6 +44,48 @@ def risk_curve_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
 
     return data
 
+def risk_curve_abl_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000, ablates_zyx=[(0, 100, 100)], ablate_rad=2):
+    """
+    Generate risk of inducing AF data.
+    :param runs: runs
+    :param l_z: layers
+    :param nu_x: x (parallel) coupling
+    :param nu_yz: yz (perpendicular) coupling
+    :param angle_vars: theta(z=0), theta(z=max), magnitude of connectivity
+    :param t: timesteps
+    :param ablates_zyx: list of coordinate tuples in z,y,x order
+    :param ablate_rad: radius of ablations
+    :return: data [runs [seed, AF?, x, y, z, time AF/end, conduction block?]]
+    """
+    data = np.zeros(shape=(runs, 7), dtype='uint32')
+    params = config.settings['structure']
+    params['size'][0], params['seed'] = l_z, None
+    params['x_coupling'], params['yz_coupling'] = nu_x, nu_yz
+    params['angle_toggle'], params['angle_vars'] = angle_vars, angle_vars
+    # start = time.time()
+    for i in range(runs):
+        tissue = Model(**params)
+
+        tissue.multi_ablation(ablates_zyx, ablate_rad)
+
+        tissue.activate_pacemaker()  # Initialise new wavefront
+        data[i, 0] = tissue.seed
+        while tissue.time < t:
+            excitations = tissue.iterate()
+            if np.intersect1d(tissue.excount, [2]):
+                data[i, 1] = True
+                data[i, 2:5] = tissue.maxpos
+                data[i, 5] = tissue.time
+                break
+            elif not np.any(excitations == 50):
+                data[i, 5] = tissue.time
+                break
+            if np.any(excitations[:, :, -1]):
+                data[i, 6] = True
+                # print('Run: {}, Data: {}'.format(i + 1, data[i]))
+    # print("time={}s".format(time.time() - start))
+    return data
+
 
 def af_time_data(runs, l_z, nu_x, nu_yz, angle_vars=False, t=100000):
     """
