@@ -257,7 +257,7 @@ def conduction(runs, l_z, nu_x, nu_yz, angle_vars=False):
     return data
 
 
-def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=False):
+def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=False, ablates_zyx=[], ablate_rad=2):
     """
     Run and np.save risk data to file using selected risk function.
     :param runs: runs
@@ -268,10 +268,12 @@ def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=F
     :param angle_vars: theta(z=0), theta(z=max), magnitude of connectivity
     :param t: timesteps
     :param func: risk function: risk_curve_data, af_time_data, con_vel_data, or af_pos_data
+    :param ablates_zyx: list of ablation positions
+    :param ablate_rad: radius of ablations
     :return: np.save data to disk
     """
     if not func:
-        raise Exception("Set func='risk_curve_data, af_time_data, con_vel_data, or af_pos_data' to create data!")
+        raise Exception("Set func='risk_curve_data, risk_curve_abbl_data, af_time_data, con_vel_data, or af_pos_data' to create data!")
     risk_type = func
 
     file_dict = dict(
@@ -283,6 +285,8 @@ def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=F
         nu_yz=nu_yz,
         angle_vars=angle_vars,
         time=t,
+        abls_zyx=ablates_zyx,
+        abl_rad=ablate_rad,
         token=str(binascii.b2a_hex(np.random.random(1)))[2:-1]
     )
 
@@ -290,6 +294,10 @@ def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=F
         filename = "{risk}_{runs}_{repeats}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_{time}_{token}".format(
             **file_dict)
         result = risk_type(runs, repeats, l_z, nu_x, nu_yz, angle_vars, t)
+    elif risk_type == risk_curve_abl_data:
+        filename = "{risk}_{runs}_{repeats}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_{time}_{abls_zyx}_{abl_rad}_{token}".format(
+            **file_dict)
+        result = risk_curve_abl_data(runs, l_z, nu_x, nu_yz, angle_vars, t, ablates_zyx, ablate_rad)
     elif risk_type == conduction:
         filename = "{risk}_{runs}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_conduction_{token}".format(
             **file_dict)
@@ -297,7 +305,7 @@ def gen_risk(runs, repeats, l_z, nu_x, nu_yz, angle_vars=False, t=100000, func=F
     else:
         filename = "{risk}_{runs}_{l_z}_{nu_x:.3f}_{nu_yz:.3f}_{angle_vars}_{time}_{token}".format(**file_dict)
         result = risk_type(runs, l_z, nu_x, nu_yz, angle_vars, t)
-    filename = filename.replace(".", "").replace(', ', '_').replace('[', '').replace(']', '')
+    filename = filename.replace(".", "").replace(', ', '_').replace('[', '').replace(']', '').replace('(', '').replace(')', '')
     # print(filename)
 
     np.save(filename, result)
@@ -314,15 +322,19 @@ if __name__ == '__main__':
     # for x in [0.9]:
     #     for y in [0.1]:
             variables = dict(
-                runs=2,
-                repeats=5,
+                runs=1,
+                repeats=1,
                 l_z=25,
                 nu_x=x,
                 nu_yz=y,
                 # to loop over various angles, do angle_vars=[ang_zmin, ang_zmax, nu_av], looping over nu_av
                 # if angle_vars are defined nu_x, nu_y are ignored (angular fibre simulation)
-                angle_vars=False,  # theta(z=0), theta(z=max), magnitude of connectivity, e.g. [24, 42, 0.35]
-                t=100000,
-                func=conduction,  # risk_curve_data, af_time_data, con_vel_data, or af_pos_data
+                angle_vars=[24,42,.35],  # theta(z=0), theta(z=max), magnitude of connectivity, e.g. [24, 42, 0.35]
+                t=1000,
+                #####
+                ablates_zyx=[(0,100,100)],
+                ablate_rad=2,
+                #####
+                func=risk_curve_abl_data,  # risk_curve_data, af_time_data, con_vel_data, or af_pos_data
             )
             gen_risk(**variables)
