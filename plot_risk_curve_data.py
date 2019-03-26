@@ -1,7 +1,70 @@
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import numpy as np
 import glob
 import os
+
+
+def plot_risk_curve_abl_data(infile, r, f='k-'):
+    """
+    data structure = [runs [seed, AF?, x, y, z, time AF/end, conduction block?]]
+    :param path: folder path
+    :return: plot risk_curve_data
+    """
+    nu_bar = np.arange(0.1, 0.9, 0.005)
+    res = []
+    res2=[]
+    fib_check = 0
+
+    for nb in nu_bar:
+            try:
+                if not r:
+                    file = infile.format(nb).replace('.', '')
+                else:
+                    file = infile.format(round(nb, 5)).replace('.', '')
+                filename = glob.glob(file)
+                if len(filename)!=1:
+                    pass
+                filename = filename[0]
+                risk_data = np.load(filename)
+                ave = np.average(risk_data[:, 1])
+                var = np.std(risk_data[:, 1])/(len(risk_data)*ave)
+                res.append(np.array([nb, ave, var]))
+                hist = np.bincount(risk_data[risk_data[:, 1] == 1][:, 2], minlength=5)
+                print(nb, hist)
+
+            except: # OSError:
+                ave = 0
+                pass
+
+            # try:
+            #     file = 'RiskCurveData/risk_curve_data_200_50_1000_1000_30_70_{}_*'.format(round(nb, 5)).replace('.', '')
+            #     print(file)
+            #     filename = glob.glob(file)
+            #
+            #     if len(filename) < 1:
+            #         pass
+            #     filename = filename[0]
+            #     print(filename)
+            #     risk_data2 = np.load(filename)
+            #     ave2 = np.average(risk_data2[:, 1])
+            #     var2 = np.std(risk_data2[:, 1]) / (len(risk_data2) * ave2)
+            #     res2.append(np.array([nb, ave2, var2]))
+            #
+            # except:  # OSError:
+            #     ave = 0
+            #     pass
+
+    res = np.array(res)
+    # res2 = np.array(res2)
+    # res = 0.36*X*X - 0.79*X +0.43 <= Y <= 0.375*X*X - 0.825*X +0.65
+    # plt.imshow(Z, extent=(0, 1, 0, 1), origin='lower', zorder=1)
+    # plt.contour(X,Y,Z, levels=[.1,.9], colors='w')
+    # plt.errorbar(res[:,0],res[:,1], res[:,2], fmt=f)
+    plt.plot(res[:, 0], res[:, 1], f)
+    return res
+
+
 
 
 def plot_risk_curve_data(path=None):
@@ -62,7 +125,7 @@ def plot_risk_curve_data(path=None):
                 varz[xi, yi] = np.std(normz)
                 conduction_block[xi, yi] = np.average(risk_data[:, -1])
 
-            except OSError:
+            except: # OSError:
                 ave = 0
                 pass
             Z[xi, yi] = ave - .5 * (ave == 0)
@@ -117,7 +180,6 @@ def plot_risk_curve_data(path=None):
     plt.title('Mask')
 
     plt.show()
-
 
 def plot_af_time_data(path=None):
     """
@@ -349,6 +411,7 @@ def plot_con_data(path=None):
             print(x, y)
             try:
                 file = 'conduction_1000_25_{:.3f}_{:.3f}*'.format(x, y).replace('.', '')
+                print(file)
                 if path:
                     filename = glob.glob("{path}/{file}".format(path=path, file=file))
                 else:
@@ -364,20 +427,24 @@ def plot_con_data(path=None):
                     filename = filename[0]
                 else:
                     filename = filename[0]
-                # print(filename)
+                print(filename)
                 risk_data = np.load(filename)
+                ave = np.average(risk_data[:,-1])
+                # conduction[xi,yi] = np.average(risk_data[:,-1])
+                # conduction[yi, xi] = ave - .5 * (ave == 0)
 
-                conduction[xi,yi] = np.average(risk_data[:,-1])
-
-            except OSError:
-                ave = 0
+            except:
+                ave=1
                 pass
+            if ave == 0:
+                conduction[0:yi,xi] = 0
+            conduction[yi, xi] = ave
 
-            Z[yi, xi] = ave - .5 * (ave == 0)
 
         # res = 0.36*X*X - 0.79*X +0.43 <= Y <= 0.375*X*X - 0.825*X +0.65
-    plt.imshow(time, extent=(0, 1, 0, 1), origin='lower', zorder=1)
-    plt.title('Risk curve')
+    plt.imshow(conduction, extent=(0, 1, 0, 1), origin='lower', zorder=1)
+    plt.title('Conduction')
+    np.save('conduction_mask.npy', conduction)
 
     plt.show()
 
@@ -387,6 +454,34 @@ if __name__ == '__main__':
     # The 'path' parameter is the folder path for data. Check for the function running that the nu_x, nu_yz / nu_av ranges
     # are correct and that the 'file' variable is of the correct format.
     # plot_risk_curve_data(path='afinduced_data')
+    # plot_con_data(path='cond_data_new')
     # plot_af_time_data(path='af_time_data')
     # plot_con_vel_data(path='con_vel_data_test')
-    print(read_af_pos_data('af_pos_data_test'))
+    # print(read_af_pos_data('af_pos_data_test'))
+    plt.ylabel('Time in AF')
+    plt.xlabel('Average Connectivity')
+    fmat = 'k'
+    # plot_risk_curve_abl_data('AblateData/risk_curve_abl_data_1000_1_25_1000_1000_24_42_{:.3f}*', r=False, f=fmat)
+    fmat = 'k:'
+    a = mlines.Line2D([],[],color='k', linestyle=':', label='5')
+    # plt.legend([a])
+    np.savetxt('h5_10_45', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_5_1000_1000_10_45_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h5_24_24', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_5_1000_1000_24_24_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h5_30_70', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_5_1000_1000_30_70_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h5_40_60', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_5_1000_1000_40_60_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h5_42_24', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_5_1000_1000_42_24_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h5_42_42', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_5_1000_1000_42_42_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    fmat = 'k-'
+    b = mlines.Line2D([], [], color='k', linestyle='-', label='10')
+    # np.savetxt('d10_10_45', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_10_1000_1000_10_45_{}_*', r=True, f=fmat)[:,:2, fmt='%.3f)
+    np.savetxt('h10_24_24', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_10_1000_1000_24_24_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h10_24_42', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_10_1000_1000_24_42_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h10_30_70', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_10_1000_1000_30_70_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h10_40_60', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_10_1000_1000_40_60_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    fmat = 'k--'
+    c = mlines.Line2D([], [], color='k', linestyle='--', label='50')
+    np.savetxt('h50_24_24', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_50_1000_1000_24_24_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h50_24_42', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_50_1000_1000_24_42_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+    np.savetxt('h50_30_70', plot_risk_curve_abl_data('RiskCurveData/risk_curve_data_200_50_1000_1000_30_70_{}_*', r=True, f=fmat)[:,:2], fmt='%.3f')
+
+    plt.legend(handles=[a,b,c])
