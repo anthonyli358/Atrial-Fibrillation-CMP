@@ -6,6 +6,9 @@ A computational MSci Physics project at Imperial College London using the Christ
 Andrew Ford - andrewjford@hotmail.co.uk  
 Anthony Li - anthonyli358@gmail.com   
 
+## Results
+[arXiv preprint](https://arxiv.org/abs/1810.12062)
+
 ## Getting Started
 ### Modules:
 - config.py: A basic configuration module for changing the initialisation parameters of the model and viewer.
