@@ -39,7 +39,7 @@ For the purpose of simply running the 3D CMP model other modules may be disregar
  
 ### Generating and Plotting Data:
 
-Scroll to the bottom under the *if __name__ == '__main__':* statement for:
+Scroll to the bottom under ```if __name__ == '__main__'``` for:
 
 - [risk_curve_data_generator.py](risk_curve_data_generator.py): 
     - Loop over nu_x/nu_yz or the nu_av for the angle_vars variable e.g. using np.arange(start, stop, step).
