@@ -7,7 +7,7 @@ Andrew Ford - andrewjford@hotmail.co.uk
 Anthony Li - anthonyli358@gmail.com   
 
 ## Results
-[paper](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.100.062406)
+[Published paper](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.100.062406)
 
 ## Getting Started
 ### Modules:
